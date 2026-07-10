@@ -1,0 +1,50 @@
+{
+  "common": {
+    "appName": "TosmFi",
+    "cancel": "Cancel",
+    "confirm": "Confirm"
+  },
+  "auth": {
+    "welcomeTitle": "Welcome back",
+    "welcomeSubtitle": "Sign in to continue managing your finances.",
+    "emailLabel": "Email",
+    "emailPlaceholder": "name@email.com",
+    "passwordLabel": "Password",
+    "rememberMe": "Remember me",
+    "forgotPassword": "Forgot password?",
+    "submit": "Sign in",
+    "showPassword": "Show password",
+    "hidePassword": "Hide password",
+    "genericError": "Something went wrong, please try again.",
+    "credentialsRequired": "Email and password are required",
+    "copyright": "© {{year}} TosmFi. All rights reserved.",
+    "quote": "“Manage your finances with peace of mind, one dashboard for every transaction.”",
+    "quoteAuthor": "The TosmFi Team",
+    "logoutConfirmTitle": "Log out?",
+    "logoutConfirmDescription": "Are you sure you want to log out?",
+    "logoutConfirmAction": "Log out"
+  },
+  "nav": {
+    "dashboard": "Dashboard",
+    "transactions": "Transactions",
+    "wallet": "Wallet",
+    "category": "Category",
+    "reports": "Reports",
+    "language": "Language"
+  },
+  "dashboard": {
+    "greeting": "Hi, {{name}}",
+    "subtitle": "Here's a summary of your finances today.",
+    "recentTransactions": "Recent Transactions",
+    "addTransaction": "Add"
+  },
+  "topbar": {
+    "searchPlaceholder": "Search transactions...",
+    "notifications": "Notifications",
+    "logout": "Log out",
+    "openMenu": "Open menu"
+  },
+  "theme": {
+    "toggle": "Toggle theme"
+  }
+}

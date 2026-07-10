@@ -1,0 +1,50 @@
+{
+  "common": {
+    "appName": "TosmFi",
+    "cancel": "キャンセル",
+    "confirm": "確認"
+  },
+  "auth": {
+    "welcomeTitle": "おかえりなさい",
+    "welcomeSubtitle": "ログインして資産管理を続けましょう。",
+    "emailLabel": "メールアドレス",
+    "emailPlaceholder": "name@email.com",
+    "passwordLabel": "パスワード",
+    "rememberMe": "ログイン情報を保存する",
+    "forgotPassword": "パスワードをお忘れですか?",
+    "submit": "ログイン",
+    "showPassword": "パスワードを表示",
+    "hidePassword": "パスワードを隠す",
+    "genericError": "エラーが発生しました。もう一度お試しください。",
+    "credentialsRequired": "メールアドレスとパスワードを入力してください",
+    "copyright": "© {{year}} TosmFi. 全著作権所有。",
+    "quote": "「安心してお金を管理。すべての取引をひとつのダッシュボードで。」",
+    "quoteAuthor": "TosmFiチーム",
+    "logoutConfirmTitle": "ログアウトしますか?",
+    "logoutConfirmDescription": "本当にログアウトしてもよろしいですか?",
+    "logoutConfirmAction": "ログアウト"
+  },
+  "nav": {
+    "dashboard": "ダッシュボード",
+    "transactions": "取引",
+    "wallet": "ウォレット",
+    "category": "カテゴリー",
+    "reports": "レポート",
+    "language": "言語"
+  },
+  "dashboard": {
+    "greeting": "こんにちは、{{name}}さん",
+    "subtitle": "今日の資産状況のまとめです。",
+    "recentTransactions": "最近の取引",
+    "addTransaction": "追加"
+  },
+  "topbar": {
+    "searchPlaceholder": "取引を検索...",
+    "notifications": "通知",
+    "logout": "ログアウト",
+    "openMenu": "メニューを開く"
+  },
+  "theme": {
+    "toggle": "テーマを切り替え"
+  }
+}

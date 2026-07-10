@@ -1,0 +1,50 @@
+{
+  "common": {
+    "appName": "TosmFi",
+    "cancel": "Batal",
+    "confirm": "Konfirmasi"
+  },
+  "auth": {
+    "welcomeTitle": "Selamat datang kembali",
+    "welcomeSubtitle": "Masuk untuk melanjutkan mengelola keuanganmu.",
+    "emailLabel": "Email",
+    "emailPlaceholder": "nama@email.com",
+    "passwordLabel": "Password",
+    "rememberMe": "Ingat saya",
+    "forgotPassword": "Lupa password?",
+    "submit": "Masuk",
+    "showPassword": "Tampilkan password",
+    "hidePassword": "Sembunyikan password",
+    "genericError": "Terjadi kesalahan, coba lagi.",
+    "credentialsRequired": "Email dan password wajib diisi",
+    "copyright": "© {{year}} TosmFi. Semua hak dilindungi.",
+    "quote": "“Kelola keuanganmu dengan tenang, satu dashboard untuk semua transaksi.”",
+    "quoteAuthor": "Tim TosmFi",
+    "logoutConfirmTitle": "Keluar dari akun?",
+    "logoutConfirmDescription": "Apakah kamu yakin mau keluar?",
+    "logoutConfirmAction": "Keluar"
+  },
+  "nav": {
+    "dashboard": "Dashboard",
+    "transactions": "Transaksi",
+    "wallet": "Dompet",
+    "category": "Kategori",
+    "reports": "Laporan",
+    "language": "Bahasa"
+  },
+  "dashboard": {
+    "greeting": "Halo, {{name}}",
+    "subtitle": "Berikut ringkasan keuanganmu hari ini.",
+    "recentTransactions": "Transaksi Terbaru",
+    "addTransaction": "Tambah"
+  },
+  "topbar": {
+    "searchPlaceholder": "Cari transaksi...",
+    "notifications": "Notifikasi",
+    "logout": "Keluar",
+    "openMenu": "Buka menu"
+  },
+  "theme": {
+    "toggle": "Ubah tema"
+  }
+}
