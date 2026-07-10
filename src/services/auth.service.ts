@@ -7,14 +7,14 @@ export const authService = {
   async login(credentials: LoginCredentials): Promise<AuthUser> {
     await new Promise((resolve) => setTimeout(resolve, FAKE_LATENCY_MS));
 
-    if (!credentials.email || !credentials.password) {
+    if (!credentials.username || !credentials.password) {
       throw new Error(i18n.t("auth.credentialsRequired"));
     }
 
     return {
       id: "user-1",
-      name: credentials.email.split("@")[0] ?? "User",
-      email: credentials.email,
+      name: credentials.username,
+      username: credentials.username,
     };
   },
 };

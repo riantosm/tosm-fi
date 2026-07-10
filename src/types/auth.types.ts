@@ -1,5 +1,5 @@
 export interface LoginCredentials {
-  email: string;
+  username: string;
   password: string;
   remember: boolean;
 }
@@ -7,7 +7,7 @@ export interface LoginCredentials {
 export interface AuthUser {
   id: string;
   name: string;
-  email: string;
+  username: string;
 }
 
 export interface IAuthenticationReduxState {

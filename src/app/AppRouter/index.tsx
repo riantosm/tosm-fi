@@ -6,6 +6,8 @@ import { WalletPage } from "@/app/pages/WalletPage";
 import { CategoriesPage } from "@/app/pages/CategoriesPage";
 import { ReportsPage } from "@/app/pages/ReportsPage";
 import { SettingsPage } from "@/app/pages/SettingsPage";
+import { SettingsApiDocPage } from "@/app/pages/SettingsApiDocPage";
+import { SettingsCurrencyPage } from "@/app/pages/SettingsCurrencyPage";
 import { ProtectedRoute } from "@/app/ProtectedRoute";
 import { ROUTES } from "@/constants/routes";
 
@@ -59,6 +61,22 @@ export function AppRouter() {
         element={
           <ProtectedRoute>
             <SettingsPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path={ROUTES.SETTINGS_API_DOC}
+        element={
+          <ProtectedRoute>
+            <SettingsApiDocPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path={ROUTES.SETTINGS_CURRENCY}
+        element={
+          <ProtectedRoute>
+            <SettingsCurrencyPage />
           </ProtectedRoute>
         }
       />

@@ -3,13 +3,17 @@
     "appName": "TosmFi",
     "cancel": "Cancel",
     "confirm": "Confirm",
-    "close": "Close"
+    "close": "Close",
+    "back": "Back",
+    "copy": "Copy",
+    "copySuccess": "Copied to clipboard",
+    "copyError": "Failed to copy"
   },
   "auth": {
     "welcomeTitle": "Welcome back",
     "welcomeSubtitle": "Sign in to continue managing your finances.",
-    "emailLabel": "Email",
-    "emailPlaceholder": "name@email.com",
+    "usernameLabel": "Username",
+    "usernamePlaceholder": "username",
     "passwordLabel": "Password",
     "rememberMe": "Remember me",
     "forgotPassword": "Forgot password?",
@@ -17,7 +21,7 @@
     "showPassword": "Show password",
     "hidePassword": "Hide password",
     "genericError": "Something went wrong, please try again.",
-    "credentialsRequired": "Email and password are required",
+    "credentialsRequired": "Username and password are required",
     "quote": "“Manage your finances with peace of mind, one dashboard for every transaction.”",
     "quoteAuthor": "The TosmFi Team",
     "logoutConfirmTitle": "Log out?",
@@ -50,5 +54,43 @@
   },
   "footer": {
     "copyright": "© {{year}} TosmFi. Made with ♥."
+  },
+  "settingsMenu": {
+    "apiDoc": {
+      "title": "Backend API",
+      "description": "Endpoint documentation for backend development"
+    },
+    "currency": {
+      "title": "Currency",
+      "description": "Choose which currency is used across the app"
+    }
+  },
+  "apiDoc": {
+    "title": "Backend API Documentation",
+    "subtitle": "List of endpoints, payloads, and responses needed for backend development.",
+    "groups": {
+      "auth": "Authentication"
+    },
+    "payload": "Payload",
+    "noPayload": "No payload required",
+    "required": "required",
+    "optional": "optional",
+    "success": "Success",
+    "error": "Error"
+  },
+  "settingsCurrency": {
+    "title": "Currency",
+    "subtitle": "Choose the currency shown across the app.",
+    "names": {
+      "IDR": "Indonesian Rupiah",
+      "USD": "US Dollar",
+      "JPY": "Japanese Yen"
+    },
+    "decimalTitle": "Decimal Format",
+    "decimalOptions": {
+      "0": "No decimals",
+      "1": "1 decimal place",
+      "2": "2 decimal places"
+    }
   }
 }

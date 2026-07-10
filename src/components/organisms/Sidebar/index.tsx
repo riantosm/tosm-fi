@@ -40,12 +40,12 @@ export function Sidebar({ variant = "desktop", onClose }: SidebarProps) {
   return (
     <aside
       className={cn(
-        "w-72 shrink-0 flex-col gap-4 overflow-y-auto bg-white px-4 py-6 dark:bg-ink-900",
+        "w-72 shrink-0 flex-col bg-white px-4 py-6 dark:bg-ink-900",
         variant === "desktop" && "hidden border-r border-ink-200 dark:border-ink-800 lg:flex",
         variant === "drawer" && "flex h-full w-full",
       )}
     >
-      <div className="mb-2 flex items-center justify-between px-2">
+      <div className="mb-2 flex shrink-0 items-center justify-between px-2">
         <Logo />
         {variant === "drawer" && (
           <button
@@ -59,26 +59,28 @@ export function Sidebar({ variant = "desktop", onClose }: SidebarProps) {
         )}
       </div>
 
-      {NAV_GROUPS.map((group, index) => (
-        <nav
-          key={index}
-          className="flex flex-col overflow-hidden rounded-2xl border border-ink-200 dark:border-ink-800"
-        >
-          <div className="divide-y divide-ink-100 dark:divide-ink-800">
-            {group.map((item) => (
-              <NavLink key={item.labelKey} item={item} />
-            ))}
-          </div>
+      <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto mt-4">
+        {NAV_GROUPS.map((group, index) => (
+          <nav
+            key={index}
+            className="flex shrink-0 flex-col overflow-hidden rounded-2xl border border-ink-200 dark:border-ink-800"
+          >
+            <div className="divide-y divide-ink-100 dark:divide-ink-800">
+              {group.map((item) => (
+                <NavLink key={item.labelKey} item={item} />
+              ))}
+            </div>
+          </nav>
+        ))}
+
+        <nav className="shrink-0 overflow-hidden rounded-2xl border border-ink-200 dark:border-ink-800">
+          <NavLink item={SETTINGS_NAV_ITEM} />
         </nav>
-      ))}
 
-      <LanguageSwitcher />
+        <LanguageSwitcher />
+      </div>
 
-      <nav className="overflow-hidden rounded-2xl border border-ink-200 dark:border-ink-800">
-        <NavLink item={SETTINGS_NAV_ITEM} />
-      </nav>
-
-      <div className="mt-auto overflow-hidden rounded-2xl border border-ink-200 dark:border-ink-800">
+      <div className="mt-4 shrink-0 overflow-hidden rounded-2xl border border-ink-200 dark:border-ink-800">
         <button
           type="button"
           onClick={handleLogout}

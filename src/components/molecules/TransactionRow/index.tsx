@@ -1,7 +1,7 @@
 import { IconArrowDownRight, IconArrowUpRight } from "@/components/atoms/Icons";
 import { Words } from "@/components/atoms/Words";
 import type { Transaction } from "@/types/dashboard.types";
-import { formatCurrency } from "@/utils/format-currency";
+import { useCurrency } from "@/hooks/use-currency";
 import { cn } from "@/utils/cn";
 
 interface TransactionRowProps {
@@ -9,6 +9,7 @@ interface TransactionRowProps {
 }
 
 export function TransactionRow({ transaction }: TransactionRowProps) {
+  const { format } = useCurrency();
   const isIncome = transaction.type === "income";
 
   return (
@@ -49,7 +50,7 @@ export function TransactionRow({ transaction }: TransactionRowProps) {
           isIncome ? "text-primary-700 dark:text-primary-400" : "text-ink-900 dark:text-ink-100",
         )}
       >
-        {isIncome ? "+" : "-"} {formatCurrency(transaction.amount)}
+        {isIncome ? "+" : "-"} {format(transaction.amount)}
       </Words>
     </div>
   );

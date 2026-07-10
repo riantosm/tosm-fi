@@ -1,7 +1,7 @@
 import { IconArrowDownRight, IconArrowUpRight } from "@/components/atoms/Icons";
 import { Words } from "@/components/atoms/Words";
 import type { SummaryStat } from "@/types/dashboard.types";
-import { formatCurrency } from "@/utils/format-currency";
+import { useCurrency } from "@/hooks/use-currency";
 import { cn } from "@/utils/cn";
 
 interface StatCardProps {
@@ -9,6 +9,7 @@ interface StatCardProps {
 }
 
 export function StatCard({ stat }: StatCardProps) {
+  const { format } = useCurrency();
   const isUp = stat.trend === "up";
 
   return (
@@ -17,7 +18,7 @@ export function StatCard({ stat }: StatCardProps) {
         {stat.label}
       </Words>
       <Words type="2xl/bold" className="text-ink-900 dark:text-ink-50">
-        {formatCurrency(stat.value)}
+        {format(stat.value)}
       </Words>
       <div
         className={cn(

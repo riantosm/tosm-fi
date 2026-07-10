@@ -4,7 +4,7 @@ import { useTranslation } from "react-i18next";
 import { Button } from "@/components/atoms/Button";
 import { Input } from "@/components/atoms/Input";
 import { Checkbox } from "@/components/atoms/Checkbox";
-import { IconMail } from "@/components/atoms/Icons";
+import { IconUser } from "@/components/atoms/Icons";
 import { PasswordInput } from "@/components/molecules/PasswordInput";
 import { FormField } from "@/components/molecules/FormField";
 import { LanguageMenuButton } from "@/components/molecules/LanguageMenuButton";
@@ -17,7 +17,7 @@ export function LoginForm() {
   const navigate = useNavigate();
   const { login } = useAuth();
 
-  const [email, setEmail] = useState("user@gmail.com");
+  const [username, setUsername] = useState("user");
   const [password, setPassword] = useState("a");
   const [remember, setRemember] = useState(true);
   const [error, setError] = useState("");
@@ -29,7 +29,7 @@ export function LoginForm() {
     setIsLoading(true);
 
     try {
-      await login({ email, password, remember });
+      await login({ username, password, remember });
       navigate(ROUTES.DASHBOARD, { replace: true });
     } catch (err) {
       setError(err instanceof Error ? err.message : t("auth.genericError"));
@@ -40,15 +40,15 @@ export function LoginForm() {
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-5">
-      <FormField label={t("auth.emailLabel")} htmlFor="email">
+      <FormField label={t("auth.usernameLabel")} htmlFor="username">
         <Input
-          id="email"
-          type="email"
-          placeholder={t("auth.emailPlaceholder")}
-          autoComplete="email"
-          startIcon={<IconMail className="h-4 w-4" />}
-          value={email}
-          onChange={(event) => setEmail(event.target.value)}
+          id="username"
+          type="text"
+          placeholder={t("auth.usernamePlaceholder")}
+          autoComplete="username"
+          startIcon={<IconUser className="h-4 w-4" />}
+          value={username}
+          onChange={(event) => setUsername(event.target.value)}
           required
         />
       </FormField>

@@ -3,7 +3,9 @@ import { Provider } from "react-redux";
 import { PersistGate } from "redux-persist/integration/react";
 import { AppRouter } from "@/app/AppRouter";
 import { ThemeProvider } from "@/hooks/use-theme";
+import { CurrencyProvider } from "@/hooks/use-currency";
 import { ConfirmDialogProvider } from "@/hooks/use-confirm-dialog";
+import { ToastProvider } from "@/hooks/use-toast";
 import { store, persistor } from "@/redux";
 
 export default function App() {
@@ -11,11 +13,15 @@ export default function App() {
     <Provider store={store}>
       <PersistGate loading={null} persistor={persistor}>
         <ThemeProvider>
-          <ConfirmDialogProvider>
-            <BrowserRouter>
-              <AppRouter />
-            </BrowserRouter>
-          </ConfirmDialogProvider>
+          <CurrencyProvider>
+            <ToastProvider>
+              <ConfirmDialogProvider>
+                <BrowserRouter>
+                  <AppRouter />
+                </BrowserRouter>
+              </ConfirmDialogProvider>
+            </ToastProvider>
+          </CurrencyProvider>
         </ThemeProvider>
       </PersistGate>
     </Provider>

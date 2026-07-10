@@ -3,13 +3,17 @@
     "appName": "TosmFi",
     "cancel": "Batal",
     "confirm": "Konfirmasi",
-    "close": "Tutup"
+    "close": "Tutup",
+    "back": "Kembali",
+    "copy": "Salin",
+    "copySuccess": "Berhasil disalin",
+    "copyError": "Gagal menyalin"
   },
   "auth": {
     "welcomeTitle": "Selamat datang kembali",
     "welcomeSubtitle": "Masuk untuk melanjutkan mengelola keuanganmu.",
-    "emailLabel": "Email",
-    "emailPlaceholder": "nama@email.com",
+    "usernameLabel": "Username",
+    "usernamePlaceholder": "username",
     "passwordLabel": "Password",
     "rememberMe": "Ingat saya",
     "forgotPassword": "Lupa password?",
@@ -17,7 +21,7 @@
     "showPassword": "Tampilkan password",
     "hidePassword": "Sembunyikan password",
     "genericError": "Terjadi kesalahan, coba lagi.",
-    "credentialsRequired": "Email dan password wajib diisi",
+    "credentialsRequired": "Username dan password wajib diisi",
     "quote": "“Kelola keuanganmu dengan tenang, satu dashboard untuk semua transaksi.”",
     "quoteAuthor": "Tim TosmFi",
     "logoutConfirmTitle": "Keluar dari akun?",
@@ -50,5 +54,43 @@
   },
   "footer": {
     "copyright": "© {{year}} TosmFi. Dibuat dengan ♥."
+  },
+  "settingsMenu": {
+    "apiDoc": {
+      "title": "Backend API",
+      "description": "Dokumentasi endpoint untuk pengembangan backend"
+    },
+    "currency": {
+      "title": "Mata Uang",
+      "description": "Pilih mata uang yang digunakan di seluruh aplikasi"
+    }
+  },
+  "apiDoc": {
+    "title": "Dokumentasi Backend API",
+    "subtitle": "Daftar endpoint, payload, dan response yang dibutuhkan untuk pengembangan backend.",
+    "groups": {
+      "auth": "Autentikasi"
+    },
+    "payload": "Payload",
+    "noPayload": "Tidak ada payload",
+    "required": "wajib",
+    "optional": "opsional",
+    "success": "Sukses",
+    "error": "Gagal"
+  },
+  "settingsCurrency": {
+    "title": "Mata Uang",
+    "subtitle": "Pilih mata uang yang ditampilkan di seluruh aplikasi.",
+    "names": {
+      "IDR": "Rupiah Indonesia",
+      "USD": "Dolar Amerika",
+      "JPY": "Yen Jepang"
+    },
+    "decimalTitle": "Format Desimal",
+    "decimalOptions": {
+      "0": "Tanpa desimal",
+      "1": "1 angka desimal",
+      "2": "2 angka desimal"
+    }
   }
 }

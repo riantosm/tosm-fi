@@ -3,13 +3,17 @@
     "appName": "TosmFi",
     "cancel": "キャンセル",
     "confirm": "確認",
-    "close": "閉じる"
+    "close": "閉じる",
+    "back": "戻る",
+    "copy": "コピー",
+    "copySuccess": "コピーしました",
+    "copyError": "コピーに失敗しました"
   },
   "auth": {
     "welcomeTitle": "おかえりなさい",
     "welcomeSubtitle": "ログインして資産管理を続けましょう。",
-    "emailLabel": "メールアドレス",
-    "emailPlaceholder": "name@email.com",
+    "usernameLabel": "ユーザー名",
+    "usernamePlaceholder": "username",
     "passwordLabel": "パスワード",
     "rememberMe": "ログイン情報を保存する",
     "forgotPassword": "パスワードをお忘れですか?",
@@ -17,7 +21,7 @@
     "showPassword": "パスワードを表示",
     "hidePassword": "パスワードを隠す",
     "genericError": "エラーが発生しました。もう一度お試しください。",
-    "credentialsRequired": "メールアドレスとパスワードを入力してください",
+    "credentialsRequired": "ユーザー名とパスワードを入力してください",
     "quote": "「安心してお金を管理。すべての取引をひとつのダッシュボードで。」",
     "quoteAuthor": "TosmFiチーム",
     "logoutConfirmTitle": "ログアウトしますか?",
@@ -50,5 +54,43 @@
   },
   "footer": {
     "copyright": "© {{year}} TosmFi. ♥を込めて。"
+  },
+  "settingsMenu": {
+    "apiDoc": {
+      "title": "バックエンドAPI",
+      "description": "バックエンド開発用のエンドポイントドキュメント"
+    },
+    "currency": {
+      "title": "通貨",
+      "description": "アプリ全体で使用する通貨を選択"
+    }
+  },
+  "apiDoc": {
+    "title": "バックエンドAPIドキュメント",
+    "subtitle": "バックエンド開発に必要なエンドポイント、payload、responseの一覧です。",
+    "groups": {
+      "auth": "認証"
+    },
+    "payload": "Payload",
+    "noPayload": "Payloadは不要です",
+    "required": "必須",
+    "optional": "任意",
+    "success": "成功",
+    "error": "失敗"
+  },
+  "settingsCurrency": {
+    "title": "通貨",
+    "subtitle": "アプリ全体で表示する通貨を選択してください。",
+    "names": {
+      "IDR": "インドネシアルピア",
+      "USD": "米ドル",
+      "JPY": "日本円"
+    },
+    "decimalTitle": "小数点フォーマット",
+    "decimalOptions": {
+      "0": "小数点なし",
+      "1": "小数点第1位まで",
+      "2": "小数点第2位まで"
+    }
   }
 }

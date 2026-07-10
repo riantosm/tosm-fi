@@ -6,4 +6,6 @@ export const ROUTES = {
   CATEGORIES: "/categories",
   REPORTS: "/reports",
   SETTINGS: "/settings",
+  SETTINGS_API_DOC: "/settings/api-doc",
+  SETTINGS_CURRENCY: "/settings/currency",
 } as const;
