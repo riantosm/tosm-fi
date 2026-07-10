@@ -3,6 +3,7 @@ import { DashboardLayout } from "@/components/templates/DashboardLayout";
 import { Words } from "@/components/atoms/Words";
 import { SummaryGrid } from "@/layouts/dashboard/SummaryGrid";
 import { TransactionList } from "@/layouts/dashboard/TransactionList";
+import { WalletQuickSwitcher } from "@/layouts/dashboard/WalletQuickSwitcher";
 import { useAuth } from "@/hooks/use-auth";
 import { SUMMARY_STATS, RECENT_TRANSACTIONS } from "@/constants/mock-data";
 
@@ -22,6 +23,7 @@ export function DashboardPage() {
           </Words>
         </div>
 
+        <WalletQuickSwitcher />
         <SummaryGrid stats={SUMMARY_STATS} />
         <TransactionList transactions={RECENT_TRANSACTIONS} />
       </div>

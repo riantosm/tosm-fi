@@ -86,4 +86,110 @@ export const API_DOC_GROUPS: ApiDocGroup[] = [
       },
     ],
   },
+  {
+    key: "wallet",
+    titleKey: "apiDoc.groups.wallet",
+    endpoints: [
+      {
+        id: "list-wallets",
+        title: "List Wallets",
+        method: "GET",
+        endpoint: "/wallets",
+        payload: [],
+        successExample: JSON.stringify(
+          {
+            success: true,
+            data: [
+              {
+                id: "wallet-1",
+                name: "Cash",
+                color: "#a16207",
+                balance: 850000,
+                transactionCount: 42,
+                isPrimary: true,
+              },
+            ],
+          },
+          null,
+          2,
+        ),
+        errorExample: JSON.stringify(
+          {
+            success: false,
+            message: "Token tidak valid atau sudah kedaluwarsa",
+          },
+          null,
+          2,
+        ),
+      },
+      {
+        id: "create-wallet",
+        title: "Create Wallet",
+        method: "POST",
+        endpoint: "/wallets",
+        payload: [
+          { name: "name", type: "string", required: true },
+          { name: "color", type: "string", required: true },
+        ],
+        successExample: JSON.stringify(
+          {
+            success: true,
+            message: "Wallet berhasil dibuat",
+            data: {
+              id: "wallet-6",
+              name: "Dana Liburan",
+              color: "#075985",
+              balance: 0,
+              transactionCount: 0,
+              isPrimary: false,
+            },
+          },
+          null,
+          2,
+        ),
+        errorExample: JSON.stringify(
+          {
+            success: false,
+            message: "Nama wallet wajib diisi",
+          },
+          null,
+          2,
+        ),
+      },
+      {
+        id: "update-wallet",
+        title: "Update Wallet",
+        method: "PATCH",
+        endpoint: "/wallets/:id",
+        payload: [
+          { name: "name", type: "string", required: true },
+          { name: "color", type: "string", required: true },
+        ],
+        successExample: JSON.stringify(
+          {
+            success: true,
+            message: "Wallet berhasil diperbarui",
+            data: {
+              id: "wallet-6",
+              name: "Dana Liburan 2027",
+              color: "#3f6212",
+              balance: 0,
+              transactionCount: 0,
+              isPrimary: false,
+            },
+          },
+          null,
+          2,
+        ),
+        errorExample: JSON.stringify(
+          {
+            success: false,
+            message: "Wallet tidak ditemukan",
+          },
+          null,
+          2,
+        ),
+      },
+    ],
+  },
 ];

@@ -1,6 +1,6 @@
 import { type Action, combineReducers, configureStore, type ThunkAction } from "@reduxjs/toolkit";
 import { persistReducer, persistStore, type Storage } from "redux-persist";
-import { authenticationSlice } from "./slices";
+import { authenticationSlice, walletSlice } from "./slices";
 
 const storage: Storage = {
   getItem: (key) => Promise.resolve(window.localStorage.getItem(key)),
@@ -12,11 +12,12 @@ const persistConfig = {
   key: "tosmfi-root",
   version: 1,
   storage,
-  whitelist: ["authentication"],
+  whitelist: ["authentication", "wallet"],
 };
 
 const reducer = combineReducers({
   authentication: authenticationSlice,
+  wallet: walletSlice,
 });
 
 const persistedReducer = persistReducer(persistConfig, reducer);

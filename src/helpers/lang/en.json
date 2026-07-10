@@ -69,7 +69,8 @@
     "title": "Backend API Documentation",
     "subtitle": "List of endpoints, payloads, and responses needed for backend development.",
     "groups": {
-      "auth": "Authentication"
+      "auth": "Authentication",
+      "wallet": "Wallet"
     },
     "payload": "Payload",
     "noPayload": "No payload required",
@@ -92,5 +93,20 @@
       "1": "1 decimal place",
       "2": "2 decimal places"
     }
+  },
+  "wallet": {
+    "primary": "Primary",
+    "transactionCount": "{{n}} transactions",
+    "addTitle": "Add Account",
+    "editTitle": "Edit Account",
+    "nameLabel": "Name",
+    "namePlaceholder": "e.g. BCA, GoPay, Cash",
+    "colorLabel": "Color",
+    "customColor": "Custom Color",
+    "setPrimaryButton": "Set as Primary",
+    "deleteButton": "Delete",
+    "deleteConfirmTitle": "Delete this wallet?",
+    "deleteConfirmDescription": "This action cannot be undone.",
+    "deleteConfirmAction": "Delete"
   }
 }

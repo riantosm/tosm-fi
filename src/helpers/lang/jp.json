@@ -69,7 +69,8 @@
     "title": "バックエンドAPIドキュメント",
     "subtitle": "バックエンド開発に必要なエンドポイント、payload、responseの一覧です。",
     "groups": {
-      "auth": "認証"
+      "auth": "認証",
+      "wallet": "ウォレット"
     },
     "payload": "Payload",
     "noPayload": "Payloadは不要です",
@@ -92,5 +93,20 @@
       "1": "小数点第1位まで",
       "2": "小数点第2位まで"
     }
+  },
+  "wallet": {
+    "primary": "メイン",
+    "transactionCount": "{{n}}件の取引",
+    "addTitle": "アカウントを追加",
+    "editTitle": "アカウントを編集",
+    "nameLabel": "名前",
+    "namePlaceholder": "例：BCA、GoPay、Cash",
+    "colorLabel": "色",
+    "customColor": "カスタムカラー",
+    "setPrimaryButton": "メインに設定",
+    "deleteButton": "削除",
+    "deleteConfirmTitle": "このウォレットを削除しますか?",
+    "deleteConfirmDescription": "この操作は取り消せません。",
+    "deleteConfirmAction": "削除"
   }
 }
