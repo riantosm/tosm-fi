@@ -1,6 +1,7 @@
 import { NavLink as RouterNavLink } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { HiChevronRight } from "react-icons/hi2";
+import { Words } from "@/components/atoms/Words";
 import type { NavItem } from "@/constants/nav";
 import { cn } from "@/utils/cn";
 
@@ -17,7 +18,7 @@ export function NavLink({ item }: NavLinkProps) {
       to={item.path}
       className={({ isActive }) =>
         cn(
-          "flex items-center gap-3 px-4 py-3 text-sm font-medium transition-colors",
+          "flex items-center gap-3 px-4 py-3 transition-colors",
           isActive
             ? "bg-gradient-to-bl from-primary-400 to-primary-900 text-white"
             : "text-ink-600 hover:bg-ink-50 dark:text-ink-300 dark:hover:bg-ink-800",
@@ -32,7 +33,9 @@ export function NavLink({ item }: NavLinkProps) {
               isActive ? "text-white" : "text-ink-400 dark:text-ink-500",
             )}
           />
-          <span className="flex-1">{t(item.labelKey)}</span>
+          <Words type="sm/bold" as="span" className="flex-1">
+            {t(item.labelKey)}
+          </Words>
           <HiChevronRight
             className={cn(
               "h-4 w-4 shrink-0",

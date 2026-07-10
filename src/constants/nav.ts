@@ -6,6 +6,7 @@ import {
   HiOutlineWallet,
   HiOutlineTag,
   HiOutlineDocumentText,
+  HiOutlineCog6Tooth,
 } from "react-icons/hi2";
 
 export interface NavItem {
@@ -17,11 +18,17 @@ export interface NavItem {
 export const NAV_GROUPS: NavItem[][] = [
   [
     { labelKey: "nav.dashboard", path: ROUTES.DASHBOARD, icon: HiOutlineSquares2X2 },
-    { labelKey: "nav.transactions", path: "/transactions", icon: HiOutlineArrowsRightLeft },
+    { labelKey: "nav.transactions", path: ROUTES.TRANSACTIONS, icon: HiOutlineArrowsRightLeft },
   ],
   [
-    { labelKey: "nav.wallet", path: "/wallet", icon: HiOutlineWallet },
-    { labelKey: "nav.category", path: "/categories", icon: HiOutlineTag },
+    { labelKey: "nav.wallet", path: ROUTES.WALLET, icon: HiOutlineWallet },
+    { labelKey: "nav.category", path: ROUTES.CATEGORIES, icon: HiOutlineTag },
   ],
-  [{ labelKey: "nav.reports", path: "/reports", icon: HiOutlineDocumentText }],
+  [{ labelKey: "nav.reports", path: ROUTES.REPORTS, icon: HiOutlineDocumentText }],
 ];
+
+export const SETTINGS_NAV_ITEM: NavItem = {
+  labelKey: "nav.settings",
+  path: ROUTES.SETTINGS,
+  icon: HiOutlineCog6Tooth,
+};

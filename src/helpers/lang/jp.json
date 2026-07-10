@@ -2,7 +2,8 @@
   "common": {
     "appName": "TosmFi",
     "cancel": "キャンセル",
-    "confirm": "確認"
+    "confirm": "確認",
+    "close": "閉じる"
   },
   "auth": {
     "welcomeTitle": "おかえりなさい",
@@ -17,7 +18,6 @@
     "hidePassword": "パスワードを隠す",
     "genericError": "エラーが発生しました。もう一度お試しください。",
     "credentialsRequired": "メールアドレスとパスワードを入力してください",
-    "copyright": "© {{year}} TosmFi. 全著作権所有。",
     "quote": "「安心してお金を管理。すべての取引をひとつのダッシュボードで。」",
     "quoteAuthor": "TosmFiチーム",
     "logoutConfirmTitle": "ログアウトしますか?",
@@ -30,7 +30,8 @@
     "wallet": "ウォレット",
     "category": "カテゴリー",
     "reports": "レポート",
-    "language": "言語"
+    "language": "言語",
+    "settings": "設定"
   },
   "dashboard": {
     "greeting": "こんにちは、{{name}}さん",
@@ -46,5 +47,8 @@
   },
   "theme": {
     "toggle": "テーマを切り替え"
+  },
+  "footer": {
+    "copyright": "© {{year}} TosmFi. ♥を込めて。"
   }
 }

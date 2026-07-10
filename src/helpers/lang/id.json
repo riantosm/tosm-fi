@@ -2,7 +2,8 @@
   "common": {
     "appName": "TosmFi",
     "cancel": "Batal",
-    "confirm": "Konfirmasi"
+    "confirm": "Konfirmasi",
+    "close": "Tutup"
   },
   "auth": {
     "welcomeTitle": "Selamat datang kembali",
@@ -17,7 +18,6 @@
     "hidePassword": "Sembunyikan password",
     "genericError": "Terjadi kesalahan, coba lagi.",
     "credentialsRequired": "Email dan password wajib diisi",
-    "copyright": "© {{year}} TosmFi. Semua hak dilindungi.",
     "quote": "“Kelola keuanganmu dengan tenang, satu dashboard untuk semua transaksi.”",
     "quoteAuthor": "Tim TosmFi",
     "logoutConfirmTitle": "Keluar dari akun?",
@@ -30,7 +30,8 @@
     "wallet": "Dompet",
     "category": "Kategori",
     "reports": "Laporan",
-    "language": "Bahasa"
+    "language": "Bahasa",
+    "settings": "Pengaturan"
   },
   "dashboard": {
     "greeting": "Halo, {{name}}",
@@ -46,5 +47,8 @@
   },
   "theme": {
     "toggle": "Ubah tema"
+  },
+  "footer": {
+    "copyright": "© {{year}} TosmFi. Dibuat dengan ♥."
   }
 }

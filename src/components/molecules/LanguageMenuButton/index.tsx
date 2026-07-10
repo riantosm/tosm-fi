@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { HiCheck, HiChevronDown, HiOutlineGlobeAlt } from "react-icons/hi2";
+import { Words } from "@/components/atoms/Words";
 import { LANGUAGES } from "@/constants/languages";
 import { useLanguage } from "@/hooks/use-language";
 import { cn } from "@/utils/cn";
@@ -30,11 +31,15 @@ export function LanguageMenuButton() {
         type="button"
         onClick={() => setIsOpen((prev) => !prev)}
         aria-expanded={isOpen}
-        className="flex items-center gap-2 rounded-full border border-ink-200 px-3 py-1.5 text-sm font-medium text-ink-600 transition-colors hover:bg-ink-50 dark:border-ink-700 dark:text-ink-300 dark:hover:bg-ink-800"
+        className="flex items-center gap-2 rounded-full border border-ink-200 px-3 py-1.5 text-ink-600 transition-colors hover:bg-ink-50 dark:border-ink-700 dark:text-ink-300 dark:hover:bg-ink-800"
       >
         <HiOutlineGlobeAlt className="h-4 w-4 text-ink-400 dark:text-ink-500" />
-        <span className="leading-none">{current.flag}</span>
-        <span>{current.nativeLabel}</span>
+        <Words type="sm/bold" as="span" className="leading-none">
+          {current.flag}
+        </Words>
+        <Words type="sm/bold" as="span">
+          {current.nativeLabel}
+        </Words>
         <HiChevronDown
           className={cn(
             "h-3.5 w-3.5 text-ink-400 transition-transform dark:text-ink-500",
@@ -57,14 +62,20 @@ export function LanguageMenuButton() {
                   setIsOpen(false);
                 }}
                 className={cn(
-                  "flex w-full items-center gap-3 px-4 py-2.5 text-sm transition-colors",
+                  "flex w-full items-center gap-3 px-4 py-2.5 transition-colors",
                   isActive
-                    ? "font-medium text-primary-700 dark:text-primary-400"
+                    ? "text-primary-700 dark:text-primary-400"
                     : "text-ink-600 hover:bg-ink-50 dark:text-ink-300 dark:hover:bg-ink-800",
                 )}
               >
                 <span className="text-base leading-none">{option.flag}</span>
-                <span className="flex-1 text-left">{option.nativeLabel}</span>
+                <Words
+                  type={isActive ? "sm/bold" : "sm/regular"}
+                  as="span"
+                  className="flex-1 text-left"
+                >
+                  {option.nativeLabel}
+                </Words>
                 {isActive && <HiCheck className="h-4 w-4 shrink-0" />}
               </button>
             );

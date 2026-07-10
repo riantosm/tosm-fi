@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from "react";
+import { useState, type SubmitEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/atoms/Button";
@@ -8,6 +8,7 @@ import { IconMail } from "@/components/atoms/Icons";
 import { PasswordInput } from "@/components/molecules/PasswordInput";
 import { FormField } from "@/components/molecules/FormField";
 import { LanguageMenuButton } from "@/components/molecules/LanguageMenuButton";
+import { Words } from "@/components/atoms/Words";
 import { useAuth } from "@/hooks/use-auth";
 import { ROUTES } from "@/constants/routes";
 
@@ -22,7 +23,7 @@ export function LoginForm() {
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
-  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+  async function handleSubmit(event: SubmitEvent<HTMLFormElement>) {
     event.preventDefault();
     setError("");
     setIsLoading(true);
@@ -64,26 +65,35 @@ export function LoginForm() {
       </FormField>
 
       {error && (
-        <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600 dark:bg-red-500/10 dark:text-red-400">
+        <Words
+          type="sm/regular"
+          className="rounded-lg bg-red-50 px-3 py-2 text-red-600 dark:bg-red-500/10 dark:text-red-400"
+        >
           {error}
-        </p>
+        </Words>
       )}
 
       <div className="flex items-center justify-between">
-        <label className="flex items-center gap-2 text-sm text-ink-600 dark:text-ink-400">
+        <label className="flex items-center gap-2 text-ink-600 dark:text-ink-400">
           <Checkbox checked={remember} onChange={(event) => setRemember(event.target.checked)} />
-          {t("auth.rememberMe")}
+          <Words type="sm/regular" as="span">
+            {t("auth.rememberMe")}
+          </Words>
         </label>
         <a
           href="#"
-          className="text-sm font-medium text-primary-700 hover:text-primary-600 hover:underline dark:text-primary-400 dark:hover:text-primary-300"
+          className="text-primary-700 hover:text-primary-600 hover:underline dark:text-primary-400 dark:hover:text-primary-300"
         >
-          {t("auth.forgotPassword")}
+          <Words type="sm/bold" as="span">
+            {t("auth.forgotPassword")}
+          </Words>
         </a>
       </div>
 
       <Button type="submit" isLoading={isLoading} className="w-full">
-        {t("auth.submit")}
+        <Words type="sm/bold" as="span">
+          {t("auth.submit")}
+        </Words>
       </Button>
 
       <div className="flex justify-center">

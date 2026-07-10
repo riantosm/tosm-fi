@@ -2,6 +2,7 @@ import { useTranslation } from "react-i18next";
 import { HiOutlineBars3 } from "react-icons/hi2";
 import { IconBell, IconSearch } from "@/components/atoms/Icons";
 import { ThemeToggle } from "@/components/atoms/ThemeToggle";
+import { Words } from "@/components/atoms/Words";
 import { useAuth } from "@/hooks/use-auth";
 
 interface TopbarProps {
@@ -13,7 +14,7 @@ export function Topbar({ onOpenMenu }: TopbarProps) {
   const { user } = useAuth();
 
   return (
-    <header className="flex items-center justify-between gap-3 border-b border-ink-200 bg-white/80 px-4 py-4 backdrop-blur-sm dark:border-ink-800 dark:bg-ink-950/80 sm:gap-4 sm:px-6">
+    <header className="flex items-center justify-between gap-3 border-b border-ink-200 bg-white/80 px-4 py-4 backdrop-blur-sm dark:border-ink-800 dark:bg-ink-900/80 sm:gap-4 sm:px-6">
       <div className="flex min-w-0 flex-1 items-center gap-3 sm:flex-initial">
         <button
           type="button"
@@ -24,9 +25,11 @@ export function Topbar({ onOpenMenu }: TopbarProps) {
           <HiOutlineBars3 className="h-4 w-4" />
         </button>
 
-        <div className="flex min-w-0 items-center gap-2 rounded-xl border border-ink-200 bg-ink-50 px-3 py-2 text-sm text-ink-400 dark:border-ink-800 dark:bg-ink-900 dark:text-ink-500 sm:w-72">
+        <div className="flex min-w-0 items-center gap-2 rounded-xl border border-ink-200 bg-ink-50 px-3 py-2 text-ink-400 dark:border-ink-800 dark:bg-ink-900 dark:text-ink-500 sm:w-72">
           <IconSearch className="h-4 w-4 shrink-0" />
-          <span className="hidden truncate sm:inline">{t("topbar.searchPlaceholder")}</span>
+          <Words type="sm/regular" as="span" className="hidden truncate sm:inline">
+            {t("topbar.searchPlaceholder")}
+          </Words>
         </div>
       </div>
 
@@ -40,12 +43,18 @@ export function Topbar({ onOpenMenu }: TopbarProps) {
           <IconBell className="h-4 w-4" />
         </button>
         <div className="hidden items-center gap-2 sm:flex">
-          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-bl from-primary-400 to-primary-900 text-xs font-semibold uppercase text-white">
-            {user.name?.slice(0, 2)}
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-bl from-primary-400 to-primary-900 uppercase text-white">
+            <Words type="xs/bold" as="span">
+              {user.name?.slice(0, 2)}
+            </Words>
           </div>
-          <span className="hidden max-w-32 truncate text-sm font-medium text-ink-700 dark:text-ink-300 md:inline">
+          <Words
+            type="sm/bold"
+            as="span"
+            className="hidden max-w-32 truncate text-ink-700 dark:text-ink-300 md:inline"
+          >
             {user?.name}
-          </span>
+          </Words>
         </div>
       </div>
     </header>

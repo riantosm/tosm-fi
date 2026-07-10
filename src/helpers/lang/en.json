@@ -2,7 +2,8 @@
   "common": {
     "appName": "TosmFi",
     "cancel": "Cancel",
-    "confirm": "Confirm"
+    "confirm": "Confirm",
+    "close": "Close"
   },
   "auth": {
     "welcomeTitle": "Welcome back",
@@ -17,7 +18,6 @@
     "hidePassword": "Hide password",
     "genericError": "Something went wrong, please try again.",
     "credentialsRequired": "Email and password are required",
-    "copyright": "© {{year}} TosmFi. All rights reserved.",
     "quote": "“Manage your finances with peace of mind, one dashboard for every transaction.”",
     "quoteAuthor": "The TosmFi Team",
     "logoutConfirmTitle": "Log out?",
@@ -30,7 +30,8 @@
     "wallet": "Wallet",
     "category": "Category",
     "reports": "Reports",
-    "language": "Language"
+    "language": "Language",
+    "settings": "Settings"
   },
   "dashboard": {
     "greeting": "Hi, {{name}}",
@@ -46,5 +47,8 @@
   },
   "theme": {
     "toggle": "Toggle theme"
+  },
+  "footer": {
+    "copyright": "© {{year}} TosmFi. Made with ♥."
   }
 }

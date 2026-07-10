@@ -8,6 +8,7 @@ import {
 } from "react-icons/hi2";
 import { Modal } from "@/components/molecules/Modal";
 import { Button } from "@/components/atoms/Button";
+import { Words } from "@/components/atoms/Words";
 import { cn } from "@/utils/cn";
 import type { DialogVariant } from "@/types/dialog.types";
 
@@ -65,8 +66,14 @@ export function AlertDialog({
           <Icon className="h-6 w-6" />
         </div>
         <div className="flex flex-col gap-1">
-          <h2 className="text-base font-semibold text-ink-900 dark:text-ink-50">{title}</h2>
-          {description && <p className="text-sm text-ink-500 dark:text-ink-400">{description}</p>}
+          <Words as="h2" type="base/bold" className="text-ink-900 dark:text-ink-50">
+            {title}
+          </Words>
+          {description && (
+            <Words type="sm/regular" className="text-ink-500 dark:text-ink-400">
+              {description}
+            </Words>
+          )}
         </div>
       </div>
 
@@ -79,7 +86,9 @@ export function AlertDialog({
             onClick={onCancel}
             disabled={isLoading}
           >
-            {cancelLabel}
+            <Words type="sm/bold" as="span">
+              {cancelLabel}
+            </Words>
           </Button>
         )}
         <Button
@@ -89,7 +98,9 @@ export function AlertDialog({
           onClick={onConfirm}
           isLoading={isLoading}
         >
-          {confirmLabel ?? t("common.confirm")}
+          <Words type="sm/bold" as="span">
+            {confirmLabel ?? t("common.confirm")}
+          </Words>
         </Button>
       </div>
     </Modal>

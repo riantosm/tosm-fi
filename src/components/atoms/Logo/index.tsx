@@ -1,4 +1,5 @@
 import { logo } from "@/assets/images";
+import { Words } from "@/components/atoms/Words";
 import { cn } from "@/utils/cn";
 
 interface LogoProps {
@@ -11,7 +12,9 @@ export function Logo({ className }: LogoProps) {
       <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-bl from-primary-400 to-primary-900 p-1.5 shadow-sm">
         <img src={logo.LogoMain} alt="TosmFi" className="h-full w-full object-contain" />
       </div>
-      <span className="text-sm font-semibold text-ink-900 dark:text-ink-50">TosmFi</span>
+      <Words type="sm/bold" as="span" className="text-ink-900 dark:text-ink-50">
+        TosmFi
+      </Words>
     </div>
   );
 }

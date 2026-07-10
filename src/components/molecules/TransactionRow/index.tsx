@@ -1,4 +1,5 @@
 import { IconArrowDownRight, IconArrowUpRight } from "@/components/atoms/Icons";
+import { Words } from "@/components/atoms/Words";
 import type { Transaction } from "@/types/dashboard.types";
 import { formatCurrency } from "@/utils/format-currency";
 import { cn } from "@/utils/cn";
@@ -28,26 +29,28 @@ export function TransactionRow({ transaction }: TransactionRowProps) {
           )}
         </div>
         <div className="flex min-w-0 flex-col">
-          <span className="truncate text-sm font-medium text-ink-900 dark:text-ink-100">
+          <Words type="sm/bold" className="truncate text-ink-900 dark:text-ink-100">
             {transaction.title}
-          </span>
-          <span className="truncate text-xs text-ink-500 dark:text-ink-400">
+          </Words>
+          <Words type="xs/regular" className="truncate text-ink-500 dark:text-ink-400">
             {transaction.category} ·{" "}
             {new Date(transaction.date).toLocaleDateString("id-ID", {
               day: "numeric",
               month: "short",
             })}
-          </span>
+          </Words>
         </div>
       </div>
-      <span
+      <Words
+        type="sm/bold"
+        as="span"
         className={cn(
-          "shrink-0 whitespace-nowrap text-sm font-semibold",
+          "shrink-0 whitespace-nowrap",
           isIncome ? "text-primary-700 dark:text-primary-400" : "text-ink-900 dark:text-ink-100",
         )}
       >
         {isIncome ? "+" : "-"} {formatCurrency(transaction.amount)}
-      </span>
+      </Words>
     </div>
   );
 }

@@ -2,6 +2,7 @@ import { useEffect, useState, type ReactNode } from "react";
 import { useLocation } from "react-router-dom";
 import { Sidebar } from "@/components/organisms/Sidebar";
 import { Topbar } from "@/components/organisms/Topbar";
+import { Footer } from "@/components/molecules/Footer";
 
 interface DashboardLayoutProps {
   children: ReactNode;
@@ -29,7 +30,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   }, [isNavOpen]);
 
   return (
-    <div className="flex min-h-svh bg-ink-50 dark:bg-ink-950">
+    <div className="flex h-svh overflow-hidden bg-ink-50 dark:bg-ink-950">
       <Sidebar />
 
       {isNavOpen && (
@@ -40,14 +41,19 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
             aria-hidden="true"
           />
           <div className="absolute inset-y-0 left-0 w-72 max-w-[85vw] shadow-xl">
-            <Sidebar variant="drawer" />
+            <Sidebar variant="drawer" onClose={() => setIsNavOpen(false)} />
           </div>
         </div>
       )}
 
-      <div className="flex min-h-svh min-w-0 flex-1 flex-col">
+      <div className="flex h-svh min-w-0 flex-1 flex-col">
         <Topbar onOpenMenu={() => setIsNavOpen(true)} />
-        <main className="min-w-0 flex-1 px-4 py-6 sm:px-6">{children}</main>
+        <main className="min-w-0 flex-1 overflow-y-auto">
+          <div className="flex min-h-full flex-col px-4 py-6 sm:px-6">
+            <div className="flex-1">{children}</div>
+            <Footer />
+          </div>
+        </main>
       </div>
     </div>
   );

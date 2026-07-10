@@ -1,5 +1,6 @@
 import { useTranslation } from "react-i18next";
 import { DashboardLayout } from "@/components/templates/DashboardLayout";
+import { Words } from "@/components/atoms/Words";
 import { SummaryGrid } from "@/layouts/dashboard/SummaryGrid";
 import { TransactionList } from "@/layouts/dashboard/TransactionList";
 import { useAuth } from "@/hooks/use-auth";
@@ -13,10 +14,12 @@ export function DashboardPage() {
     <DashboardLayout>
       <div className="flex flex-col gap-6">
         <div>
-          <h1 className="text-xl font-semibold text-ink-900 dark:text-ink-50">
+          <Words as="h1" type="xl/bold" className="text-ink-900 dark:text-ink-50">
             {t("dashboard.greeting", { name: user?.name })}
-          </h1>
-          <p className="text-sm text-ink-500 dark:text-ink-400">{t("dashboard.subtitle")}</p>
+          </Words>
+          <Words type="sm/regular" className="text-ink-500 dark:text-ink-400">
+            {t("dashboard.subtitle")}
+          </Words>
         </div>
 
         <SummaryGrid stats={SUMMARY_STATS} />
