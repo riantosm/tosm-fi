@@ -10,4 +10,5 @@ export interface WalletAccount {
 export interface WalletInput {
   name: string;
   color: string;
+  balance?: number;
 }

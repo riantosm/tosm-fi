@@ -7,7 +7,9 @@
     "back": "戻る",
     "copy": "コピー",
     "copySuccess": "コピーしました",
-    "copyError": "コピーに失敗しました"
+    "copyError": "コピーに失敗しました",
+    "comingSoon": "近日公開",
+    "underConstruction": "このページは現在開発中です。"
   },
   "auth": {
     "welcomeTitle": "おかえりなさい",
@@ -97,9 +99,10 @@
   "wallet": {
     "primary": "メイン",
     "transactionCount": "{{n}}件の取引",
-    "addTitle": "アカウントを追加",
-    "editTitle": "アカウントを編集",
+    "addTitle": "ウォレットを追加",
+    "editTitle": "ウォレットを編集",
     "nameLabel": "名前",
+    "balanceLabel": "開始残高",
     "namePlaceholder": "例：BCA、GoPay、Cash",
     "colorLabel": "色",
     "customColor": "カスタムカラー",
@@ -107,6 +110,9 @@
     "deleteButton": "削除",
     "deleteConfirmTitle": "このウォレットを削除しますか?",
     "deleteConfirmDescription": "この操作は取り消せません。",
-    "deleteConfirmAction": "削除"
+    "deleteConfirmAction": "削除",
+    "toggleViewMode": "グリッド/リスト表示を切り替え",
+    "toggleReorder": "ウォレットの並べ替え",
+    "saveOrder": "並び順を保存"
   }
 }

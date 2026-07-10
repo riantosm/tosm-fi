@@ -56,5 +56,22 @@ export function useWallets() {
     [dispatch, wallets],
   );
 
-  return { wallets, status, loadWallets, createWallet, editWallet, deleteWallet, setPrimaryWallet };
+  const reorderWallets = useCallback(
+    async (orderedIds: string[]) => {
+      const updated = await walletService.reorderWallets(orderedIds, wallets);
+      dispatch(setWallets(updated));
+    },
+    [dispatch, wallets],
+  );
+
+  return {
+    wallets,
+    status,
+    loadWallets,
+    createWallet,
+    editWallet,
+    deleteWallet,
+    setPrimaryWallet,
+    reorderWallets,
+  };
 }

@@ -7,7 +7,9 @@
     "back": "Back",
     "copy": "Copy",
     "copySuccess": "Copied to clipboard",
-    "copyError": "Failed to copy"
+    "copyError": "Failed to copy",
+    "comingSoon": "Soon",
+    "underConstruction": "This page is under construction."
   },
   "auth": {
     "welcomeTitle": "Welcome back",
@@ -97,9 +99,10 @@
   "wallet": {
     "primary": "Primary",
     "transactionCount": "{{n}} transactions",
-    "addTitle": "Add Account",
-    "editTitle": "Edit Account",
+    "addTitle": "Add Wallet",
+    "editTitle": "Edit Wallet",
     "nameLabel": "Name",
+    "balanceLabel": "Start from",
     "namePlaceholder": "e.g. BCA, GoPay, Cash",
     "colorLabel": "Color",
     "customColor": "Custom Color",
@@ -107,6 +110,9 @@
     "deleteButton": "Delete",
     "deleteConfirmTitle": "Delete this wallet?",
     "deleteConfirmDescription": "This action cannot be undone.",
-    "deleteConfirmAction": "Delete"
+    "deleteConfirmAction": "Delete",
+    "toggleViewMode": "Toggle grid or list view",
+    "toggleReorder": "Reorder wallets",
+    "saveOrder": "Save Order"
   }
 }

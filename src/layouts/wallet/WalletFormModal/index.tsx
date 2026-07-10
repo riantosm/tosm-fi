@@ -9,6 +9,9 @@ import { FormField } from "@/components/molecules/FormField";
 import { Words } from "@/components/atoms/Words";
 import { WalletColorPicker } from "@/layouts/wallet/WalletColorPicker";
 import { WALLET_COLOR_PRESETS } from "@/constants/wallet-colors";
+import { CURRENCIES } from "@/constants/currencies";
+import { useCurrency } from "@/hooks/use-currency";
+import { formatNumberInput, parseFormattedNumber } from "@/utils/number-input";
 import type { WalletAccount, WalletInput } from "@/types/wallet.types";
 
 interface WalletFormModalProps {
@@ -74,13 +77,17 @@ function WalletFormFields({
   onSetPrimary,
 }: WalletFormFieldsProps) {
   const { t } = useTranslation();
+  const { currency } = useCurrency();
+  const currencySymbol = CURRENCIES.find((option) => option.code === currency)?.symbol ?? "IDR";
   const [name, setName] = useState(wallet?.name ?? "");
   const [color, setColor] = useState(wallet?.color ?? WALLET_COLOR_PRESETS[0]);
+  const [balanceInput, setBalanceInput] = useState("");
 
   function handleSubmit(event: SubmitEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!name.trim()) return;
-    onSubmit({ name: name.trim(), color });
+    const balance = parseFormattedNumber(balanceInput);
+    onSubmit({ name: name.trim(), color, ...(wallet ? {} : { balance }) });
   }
 
   return (
@@ -135,6 +142,24 @@ function WalletFormFields({
           required
         />
       </FormField>
+
+      {!wallet && (
+        <FormField label={t("wallet.balanceLabel")} htmlFor="wallet-balance">
+          <Input
+            id="wallet-balance"
+            type="text"
+            inputMode="decimal"
+            value={balanceInput}
+            onChange={(event) => setBalanceInput(formatNumberInput(event.target.value))}
+            placeholder="0"
+            startIcon={
+              <Words type="sm/bold" as="span" className="text-ink-400 dark:text-ink-500">
+                {currencySymbol}
+              </Words>
+            }
+          />
+        </FormField>
+      )}
 
       <div className="flex flex-col gap-2">
         <Words type="sm/bold" className="text-ink-700 dark:text-ink-300">

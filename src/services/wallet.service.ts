@@ -19,7 +19,7 @@ export const walletService = {
       id: crypto.randomUUID(),
       name: input.name,
       color: input.color,
-      balance: 0,
+      balance: input.balance ?? 0,
       transactionCount: 0,
       isPrimary: false,
     };
@@ -42,5 +42,13 @@ export const walletService = {
   async setPrimaryWallet(id: string, wallets: WalletAccount[]): Promise<WalletAccount[]> {
     await delay();
     return wallets.map((wallet) => ({ ...wallet, isPrimary: wallet.id === id }));
+  },
+
+  async reorderWallets(orderedIds: string[], wallets: WalletAccount[]): Promise<WalletAccount[]> {
+    await delay();
+    const walletsById = new Map(wallets.map((wallet) => [wallet.id, wallet]));
+    return orderedIds
+      .map((id) => walletsById.get(id))
+      .filter((wallet): wallet is WalletAccount => wallet !== undefined);
   },
 };

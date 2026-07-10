@@ -1,15 +1,19 @@
 import { useTranslation } from "react-i18next";
 import { DashboardLayout } from "@/components/templates/DashboardLayout";
 import { Words } from "@/components/atoms/Words";
+import { UnderConstruction } from "@/components/molecules/UnderConstruction";
 
 export function TransactionsPage() {
   const { t } = useTranslation();
 
   return (
     <DashboardLayout>
-      <Words as="h1" type="2xl/bold" className="text-ink-900 dark:text-ink-50">
-        {t("nav.transactions")}
-      </Words>
+      <div className="flex h-full flex-col gap-6">
+        <Words as="h1" type="2xl/bold" className="text-ink-900 dark:text-ink-50">
+          {t("nav.transactions")}
+        </Words>
+        <UnderConstruction title={t("nav.transactions")} />
+      </div>
     </DashboardLayout>
   );
 }

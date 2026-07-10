@@ -1,7 +1,8 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { HiOutlineWallet } from "react-icons/hi2";
+import { IconLoader } from "@/components/atoms/IconLoader";
 import { Words } from "@/components/atoms/Words";
 import { useCurrency } from "@/hooks/use-currency";
 import { useWallets } from "@/hooks/use-wallets";
@@ -13,10 +14,21 @@ export function WalletQuickSwitcher() {
   const navigate = useNavigate();
   const { wallets, status, loadWallets, setPrimaryWallet } = useWallets();
   const { format } = useCurrency();
+  const [pendingId, setPendingId] = useState<string | null>(null);
 
   useEffect(() => {
     if (status === "idle") void loadWallets();
   }, [status, loadWallets]);
+
+  async function handleSelect(id: string) {
+    if (pendingId) return;
+    setPendingId(id);
+    try {
+      await setPrimaryWallet(id);
+    } finally {
+      setPendingId(null);
+    }
+  }
 
   return (
     <div className="flex flex-col gap-3">
@@ -30,8 +42,9 @@ export function WalletQuickSwitcher() {
             key={wallet.id}
             type="button"
             onClick={() => {
-              if (!wallet.isPrimary) void setPrimaryWallet(wallet.id);
+              if (!wallet.isPrimary) void handleSelect(wallet.id);
             }}
+            disabled={pendingId === wallet.id}
             className={cn(
               "relative flex w-44 shrink-0 flex-col gap-1 rounded-2xl border-2 bg-white p-4 text-left transition-colors dark:bg-ink-900",
               wallet.isPrimary
@@ -41,9 +54,20 @@ export function WalletQuickSwitcher() {
             style={wallet.isPrimary ? { borderColor: wallet.color } : undefined}
           >
             <span
-              className="absolute right-3 top-3 h-3 w-3 shrink-0 rounded-full"
-              style={{ background: wallet.color }}
-            />
+              className={cn(
+                "absolute right-2.5 top-2.5 flex shrink-0 items-center justify-center rounded-full transition-all",
+                pendingId === wallet.id ? "h-6 w-6 bg-ink-100 dark:bg-ink-800" : "h-3 w-3",
+              )}
+            >
+              {pendingId === wallet.id ? (
+                <IconLoader className="h-4 w-4 animate-spin" style={{ color: wallet.color }} />
+              ) : (
+                <span
+                  className="h-3 w-3 rounded-full"
+                  style={{ background: wallet.color }}
+                />
+              )}
+            </span>
             <Words type="base/bold" className="truncate pr-4 text-ink-900 dark:text-ink-50">
               {wallet.name}
             </Words>

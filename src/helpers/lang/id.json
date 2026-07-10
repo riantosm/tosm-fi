@@ -7,7 +7,9 @@
     "back": "Kembali",
     "copy": "Salin",
     "copySuccess": "Berhasil disalin",
-    "copyError": "Gagal menyalin"
+    "copyError": "Gagal menyalin",
+    "comingSoon": "Segera",
+    "underConstruction": "Halaman ini sedang dalam pengembangan."
   },
   "auth": {
     "welcomeTitle": "Selamat datang kembali",
@@ -97,9 +99,10 @@
   "wallet": {
     "primary": "Utama",
     "transactionCount": "{{n}} transaksi",
-    "addTitle": "Tambah Akun",
-    "editTitle": "Edit Akun",
+    "addTitle": "Tambah Dompet",
+    "editTitle": "Edit Dompet",
     "nameLabel": "Nama",
+    "balanceLabel": "Mulai dari",
     "namePlaceholder": "contoh: BCA, GoPay, Cash",
     "colorLabel": "Warna",
     "customColor": "Warna Kustom",
@@ -107,6 +110,9 @@
     "deleteButton": "Hapus",
     "deleteConfirmTitle": "Hapus wallet ini?",
     "deleteConfirmDescription": "Tindakan ini tidak bisa dibatalkan.",
-    "deleteConfirmAction": "Hapus"
+    "deleteConfirmAction": "Hapus",
+    "toggleViewMode": "Ubah tampilan grid atau list",
+    "toggleReorder": "Urutkan wallet",
+    "saveOrder": "Simpan Urutan"
   }
 }
