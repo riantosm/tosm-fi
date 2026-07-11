@@ -4,15 +4,13 @@ import { resolveCategoryIcon } from "@/constants/category-icons";
 import type { SubCategory } from "@/types/category.types";
 
 interface SubCategoryPillProps {
-  subCategory: SubCategory;
-  categoryName: string;
+  subCategory: SubCategory; 
   categoryColor: string;
   onClick: () => void;
 }
 
 export function SubCategoryPill({
-  subCategory,
-  categoryName,
+  subCategory, 
   categoryColor,
   onClick,
 }: SubCategoryPillProps) {
@@ -32,10 +30,7 @@ export function SubCategoryPill({
         className="whitespace-nowrap text-ink-800 dark:text-ink-200"
       >
         {subCategory.name}
-      </Words>
-      {/* <Words type="xs/regular" as="span" className="whitespace-nowrap text-ink-400 dark:text-ink-500">
-        《{categoryName}》
-      </Words> */}
+      </Words> 
     </button>
   );
 }

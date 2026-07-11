@@ -80,7 +80,6 @@ export function CategoryCard({
           <SubCategoryPill
             key={sub.id}
             subCategory={sub}
-            categoryName={category.name}
             categoryColor={category.color}
             onClick={() => onEditSubCategory(sub)}
           />
