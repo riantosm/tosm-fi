@@ -81,7 +81,10 @@ export function ColorWheel({ value, onChange }: ColorWheelProps) {
   const squareThumbY = (1 - hsv.v / 100) * SQUARE_SIZE;
 
   return (
-    <div className="relative mx-auto touch-none select-none" style={{ width: RING_SIZE, height: RING_SIZE }}>
+    <div
+      className="relative mx-auto touch-none select-none"
+      style={{ width: RING_SIZE, height: RING_SIZE }}
+    >
       <div
         ref={ringRef}
         onPointerDown={(event) => {

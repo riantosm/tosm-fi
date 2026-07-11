@@ -36,7 +36,7 @@ export function WalletQuickSwitcher() {
         {t("nav.wallet")}
       </Words>
 
-      <div className="flex gap-3 overflow-x-auto pb-1">
+      <div className="flex gap-3 overflow-x-auto pb-1 scrollbar-hide">
         {wallets.map((wallet) => (
           <button
             key={wallet.id}

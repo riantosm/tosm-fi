@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { HiOutlineHashtag, HiXMark } from "react-icons/hi2";
 import { Words } from "@/components/atoms/Words";
-import { ColorWheel } from "@/layouts/wallet/ColorWheel";
+import { ColorWheel } from "@/components/atoms/ColorWheel";
 
 interface CustomColorPanelProps {
   value: string;
@@ -32,7 +32,7 @@ export function CustomColorPanel({ value, onChange, onClose }: CustomColorPanelP
     <div className="flex flex-col gap-4 rounded-2xl border border-ink-200 bg-ink-50 p-4 dark:border-ink-800 dark:bg-ink-800">
       <div className="flex items-center justify-between">
         <Words type="sm/bold" className="text-ink-800 dark:text-ink-100">
-          {t("wallet.customColor")}
+          {t("common.customColor")}
         </Words>
         <div className="flex items-center gap-2">
           <button

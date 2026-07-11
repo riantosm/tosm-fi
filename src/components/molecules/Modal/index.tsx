@@ -9,16 +9,30 @@ interface ModalProps {
   className?: string;
 }
 
+const openModalCloseHandlers: Array<() => void> = [];
+let isEscapeListenerAttached = false;
+
+function handleGlobalEscape(event: KeyboardEvent) {
+  if (event.key !== "Escape") return;
+  openModalCloseHandlers[openModalCloseHandlers.length - 1]?.();
+}
+
 export function Modal({ isOpen, onClose, children, className }: ModalProps) {
   useEffect(() => {
     if (!isOpen) return;
 
-    function handleKeyDown(event: KeyboardEvent) {
-      if (event.key === "Escape") onClose();
+    if (!isEscapeListenerAttached) {
+      document.addEventListener("keydown", handleGlobalEscape);
+      isEscapeListenerAttached = true;
     }
 
-    document.addEventListener("keydown", handleKeyDown);
-    return () => document.removeEventListener("keydown", handleKeyDown);
+    const closeHandler = () => onClose();
+    openModalCloseHandlers.push(closeHandler);
+
+    return () => {
+      const index = openModalCloseHandlers.lastIndexOf(closeHandler);
+      if (index !== -1) openModalCloseHandlers.splice(index, 1);
+    };
   }, [isOpen, onClose]);
 
   if (!isOpen) return null;

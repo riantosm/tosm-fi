@@ -7,7 +7,7 @@ import { Input } from "@/components/atoms/Input";
 import { IconLoader } from "@/components/atoms/IconLoader";
 import { FormField } from "@/components/molecules/FormField";
 import { Words } from "@/components/atoms/Words";
-import { WalletColorPicker } from "@/layouts/wallet/WalletColorPicker";
+import { ColorPicker } from "@/components/molecules/ColorPicker";
 import { WALLET_COLOR_PRESETS } from "@/constants/wallet-colors";
 import { CURRENCIES } from "@/constants/currencies";
 import { useCurrency } from "@/hooks/use-currency";
@@ -165,7 +165,7 @@ function WalletFormFields({
         <Words type="sm/bold" className="text-ink-700 dark:text-ink-300">
           {t("wallet.colorLabel")}
         </Words>
-        <WalletColorPicker value={color} onChange={setColor} />
+        <ColorPicker value={color} onChange={setColor} presets={WALLET_COLOR_PRESETS} />
       </div>
 
       <div className="flex gap-3">

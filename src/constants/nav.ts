@@ -28,12 +28,7 @@ export const NAV_GROUPS: NavItem[][] = [
   ],
   [
     { labelKey: "nav.wallet", path: ROUTES.WALLET, icon: HiOutlineWallet },
-    {
-      labelKey: "nav.category",
-      path: ROUTES.CATEGORIES,
-      icon: HiOutlineTag,
-      isComingSoon: true,
-    },
+    { labelKey: "nav.category", path: ROUTES.CATEGORIES, icon: HiOutlineTag },
   ],
   [
     {

@@ -40,6 +40,15 @@ html {
   color-scheme: light dark;
 }
 
+@utility scrollbar-hide {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
 body {
   margin: 0;
   font-family: "Plus Jakarta Sans", system-ui, "Segoe UI", Roboto, sans-serif;

@@ -1,24 +1,24 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { HiOutlineEyeDropper } from "react-icons/hi2";
-import { WALLET_COLOR_PRESETS } from "@/constants/wallet-colors";
-import { CustomColorPanel } from "@/layouts/wallet/CustomColorPanel";
+import { CustomColorPanel } from "@/components/molecules/ColorPicker/CustomColorPanel";
 import { cn } from "@/utils/cn";
 
-interface WalletColorPickerProps {
+interface ColorPickerProps {
   value: string;
   onChange: (hex: string) => void;
+  presets: string[];
 }
 
-export function WalletColorPicker({ value, onChange }: WalletColorPickerProps) {
+export function ColorPicker({ value, onChange, presets }: ColorPickerProps) {
   const { t } = useTranslation();
   const [isCustomOpen, setIsCustomOpen] = useState(false);
-  const isPreset = WALLET_COLOR_PRESETS.includes(value);
+  const isPreset = presets.includes(value);
 
   return (
     <div className="flex flex-col gap-3">
-      <div className="flex flex-nowrap gap-2 overflow-x-auto pb-1">
-        {WALLET_COLOR_PRESETS.map((preset) => (
+      <div className="flex flex-nowrap gap-2 overflow-x-auto pb-1 scrollbar-hide">
+        {presets.map((preset) => (
           <button
             key={preset}
             type="button"
@@ -39,7 +39,7 @@ export function WalletColorPicker({ value, onChange }: WalletColorPickerProps) {
         <button
           type="button"
           onClick={() => setIsCustomOpen((prev) => !prev)}
-          aria-label={t("wallet.customColor")}
+          aria-label={t("common.customColor")}
           className={cn(
             "flex h-9 w-9 shrink-0 items-center justify-center rounded-full border-2",
             !isPreset || isCustomOpen
