@@ -11,7 +11,8 @@ export function useAuth() {
   const login = useCallback(
     async (credentials: LoginCredentials) => {
       const authenticatedUser = await authService.login(credentials);
-      dispatch(onLogin({ userDetail: authenticatedUser }));
+      const fullUser = await authService.getUser(authenticatedUser);
+      dispatch(onLogin({ userDetail: fullUser }));
     },
     [dispatch],
   );

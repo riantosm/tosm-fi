@@ -3,9 +3,13 @@ import type { AuthUser, LoginCredentials } from "@/types/auth.types";
 
 const FAKE_LATENCY_MS = 700;
 
+function delay(): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, FAKE_LATENCY_MS));
+}
+
 export const authService = {
   async login(credentials: LoginCredentials): Promise<AuthUser> {
-    await new Promise((resolve) => setTimeout(resolve, FAKE_LATENCY_MS));
+    await delay();
 
     if (!credentials.username || !credentials.password) {
       throw new Error(i18n.t("auth.credentialsRequired"));
@@ -15,6 +19,12 @@ export const authService = {
       id: "user-1",
       name: credentials.username,
       username: credentials.username,
+      netWorth: 0,
     };
+  },
+
+  async getUser(current: AuthUser): Promise<AuthUser> {
+    await delay();
+    return { ...current, netWorth: 0 };
   },
 };

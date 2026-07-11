@@ -8,6 +8,7 @@ export interface AuthUser {
   id: string;
   name: string;
   username: string;
+  netWorth: number;
 }
 
 export interface IAuthenticationReduxState {

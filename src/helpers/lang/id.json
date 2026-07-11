@@ -46,10 +46,10 @@
     "addTransaction": "Tambah"
   },
   "topbar": {
-    "searchPlaceholder": "Cari transaksi...",
-    "notifications": "Notifikasi",
+    "search": "Cari",
     "logout": "Keluar",
-    "openMenu": "Buka menu"
+    "openMenu": "Buka menu",
+    "netWorth": "Total Kekayaan Bersih"
   },
   "theme": {
     "toggle": "Ubah tema"

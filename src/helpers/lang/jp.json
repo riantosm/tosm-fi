@@ -46,10 +46,10 @@
     "addTransaction": "追加"
   },
   "topbar": {
-    "searchPlaceholder": "取引を検索...",
-    "notifications": "通知",
+    "search": "検索",
     "logout": "ログアウト",
-    "openMenu": "メニューを開く"
+    "openMenu": "メニューを開く",
+    "netWorth": "純資産合計"
   },
   "theme": {
     "toggle": "テーマを切り替え"

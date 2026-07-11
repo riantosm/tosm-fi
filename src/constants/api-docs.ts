@@ -62,6 +62,34 @@ export const API_DOC_GROUPS: ApiDocGroup[] = [
         ),
       },
       {
+        id: "get-user",
+        title: "Get User",
+        method: "GET",
+        endpoint: "/auth/me",
+        payload: [],
+        successExample: JSON.stringify(
+          {
+            success: true,
+            data: {
+              id: "1",
+              name: "John Doe",
+              username: "johndoe",
+              netWorth: 0,
+            },
+          },
+          null,
+          2,
+        ),
+        errorExample: JSON.stringify(
+          {
+            success: false,
+            message: "Token tidak valid atau sudah kedaluwarsa",
+          },
+          null,
+          2,
+        ),
+      },
+      {
         id: "logout",
         title: "Logout",
         method: "POST",

@@ -46,10 +46,10 @@
     "addTransaction": "Add"
   },
   "topbar": {
-    "searchPlaceholder": "Search transactions...",
-    "notifications": "Notifications",
+    "search": "Search",
     "logout": "Log out",
-    "openMenu": "Open menu"
+    "openMenu": "Open menu",
+    "netWorth": "Total Net Worth"
   },
   "theme": {
     "toggle": "Toggle theme"
