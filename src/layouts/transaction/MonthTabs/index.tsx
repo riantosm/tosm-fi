@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useLayoutEffect, useRef } from "react";
 import { HiOutlineChevronLeft, HiOutlineChevronRight } from "react-icons/hi2";
 import { Words } from "@/components/atoms/Words";
 import { useLanguage } from "@/hooks/use-language";
@@ -29,12 +29,12 @@ export function MonthTabs({ months, selected, onSelect }: MonthTabsProps) {
     selectedRef.current?.scrollIntoView({ behavior, inline: "center", block: "nearest" });
   }
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     centerSelected(isFirstCenter.current ? "auto" : "smooth");
     isFirstCenter.current = false;
   }, [selected]);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     const container = containerRef.current;
     if (!container) return;
 
@@ -60,7 +60,7 @@ export function MonthTabs({ months, selected, onSelect }: MonthTabsProps) {
 
       <div
         ref={containerRef}
-        className="flex flex-1 gap-6 overflow-x-auto scroll-smooth px-1 scrollbar-hide"
+        className="flex flex-1 gap-6 overflow-x-auto px-1 scrollbar-hide"
       >
         {months.map((month) => {
           const isSelected = isSameMonthAs(month, selected);
