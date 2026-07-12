@@ -1,0 +1,56 @@
+# CLAUDE.md
+
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+
+## Commands
+
+```bash
+npm run dev       # start Vite dev server (port 5173, or $PORT)
+npm run build     # tsc -b (type-check via project references) then vite build
+npm run lint      # eslint .
+npm run preview   # preview the production build
+```
+
+There is no test suite/framework configured in this project.
+
+## Architecture
+
+TosmFi is a React 19 + TypeScript + Vite money-tracking app with **no real backend yet**. All data lives in Redux (persisted to `localStorage` via `redux-persist`), and every "API call" is a service function that awaits a fake `delay()` and returns/mutates mock data. `src/constants/api-docs.ts` is not just documentation — it's the living spec of every endpoint the mock layer already emulates, rendered at Settings → Backend API for whoever builds the real backend later.
+
+### The core pattern — follow it for every new data-owning feature
+
+Every entity (wallet, category, transaction, settings, auth) is wired the same five-part way. When adding a new feature that owns data, replicate all five parts — skipping the api-docs entry or the service seam is the most common way this codebase drifts out of "backend-ready":
+
+1. **Type** — `src/types/<entity>.types.ts`: the entity shape plus an `Input` type for create/update payloads (e.g. `TransactionInput = Omit<Transaction, "idTransaction">`).
+2. **Service** — `src/services/<entity>.service.ts`: async functions that `await delay()` and read/write an in-memory mock array (`src/constants/mock-*.ts`). This is the seam where real `fetch()` calls get dropped in later — no component or hook should touch mock data directly.
+3. **Redux slice** — `src/redux/slices/<entity>Slice/index.ts`: holds the entity list/object plus a `status: "idle" | "loading" | "loaded"` field, with reducers like `set<Entity>Loading`, `set<Entity>`, `add<Entity>`, `update<Entity>`, `remove<Entity>`. Re-export from `src/redux/slices/index.ts`. (The oldest slice, `authenticationSlice`, uses `onLogin`/`onLogout`/`onSetToken` naming instead — new slices should follow the newer `set*`/`add*`/`update*`/`remove*` convention, not that one.)
+4. **Hook** — `src/hooks/use-<entities>.ts`: composes service + slice (`load<Entities>` dispatches loading then the service result; mutating methods call the service then dispatch the result). Components never call services or dispatch slice actions directly — always through the hook.
+5. **API doc entry** — add the endpoint (method, path, payload fields, success/error JSON examples) to the matching group in `src/constants/api-docs.ts`, and add an `apiDoc.groups.<key>` string to all three `src/helpers/lang/*.json` files.
+
+Reference implementation to copy from: wallet (`wallet.types.ts` → `wallet.service.ts` → `walletSlice` → `use-wallets.ts` → "wallet" group in api-docs.ts) or transaction, which additionally shows how a richer entity works — `Transaction.type` is `"income" | "expense" | "transfer" | "correction"`, and `idWallet`/`idCategory`/`idSubCategory`/`idWalletFrom`/`idWalletTo` are all nullable because which ones apply depends on `type` (transfer uses `idWalletFrom`/`idWalletTo` instead of `idWallet`; transfer/correction have no category). `src/hooks/use-transactions.ts` computes wallet-balance and category-count deltas generically from `type` so create/edit/delete stay correct across all four types without per-type branching in the UI layer.
+
+### Redux persistence and the settings exception
+
+`src/redux/store.ts` combines all slices into one `persistReducer` with a single `whitelist` array — there is no per-slice persist config. When adding a slice that should survive reloads, add its key to that `whitelist`.
+
+`settingsSlice` (currency, decimal places, language) is the one place this gets subtle: `src/helpers/i18n.ts` calls `i18n.init()` at module-load time, before React (and therefore Redux/`PersistGate`) has mounted, so it can't read the persisted Redux state yet. It reads a raw `localStorage` key (`LANG_STORAGE_KEY`) directly instead. `src/services/settings.service.ts` writes to that same raw key whenever `language` changes, in addition to the normal Redux round-trip, so the next page load's `i18n.init()` sees the current language before Redux rehydrates. `useCurrency()` and `useLanguage()` are both thin wrappers around `useSettings()` that preserve their pre-Redux public API (`{ currency, setCurrency, decimalPlaces, setDecimalPlaces, format }` / `{ language, changeLanguage }`) — no consumer needed to change when these moved off plain `localStorage`.
+
+Preferences that are genuinely local-only and not meant to sync to a future backend (theme light/dark, wallet grid/list view mode) intentionally stay outside Redux, reading/writing `localStorage` directly via their own hook (`use-theme.tsx`, `use-wallet-view-mode.ts`).
+
+### Component layers
+
+- `src/components/atoms/`, `molecules/`, `organisms/`, `templates/` — generic, feature-agnostic UI primitives (atomic design). `Words` is the text primitive (use it instead of raw `<p>`/`<span>` for anything user-facing so type scale/weight stay consistent); `Modal` is the shared dialog shell every feature modal wraps.
+- `src/layouts/<feature>/` — composite, feature-specific components (e.g. `layouts/transaction/AddTransactionModal`, `layouts/wallet/BalanceCorrectionModal`). This is where most feature work happens; `src/app/pages/*Page` components stay thin and mostly just wire hooks to layout components.
+- Amount entry (calculator-style keypad with `+ - × ÷`, keyboard input, and an expression preview) is shared via `src/hooks/use-amount-calculator.ts` + `src/components/molecules/AmountCalculatorKeypad`, reused by both `AmountCalculatorModal` (transaction amount) and `BalanceCorrectionModal` (new balance).
+
+### Routing and auth gating
+
+Routes are centralized in `src/constants/routes.ts` (`ROUTES`) and wired in `src/app/AppRouter/index.tsx`. Every route except `/login` is wrapped in `src/app/ProtectedRoute/index.tsx`, which redirects to `/login` when `useAuth().isAuthenticated` is false — there's no route-level code splitting or nested layouts beyond that single gate.
+
+### Styling
+
+Tailwind v4, configured entirely in CSS (`src/css/index.css`) via `@theme` — there is no `tailwind.config.js`. Custom color tokens (`primary-*`, `ink-*`) and the font face are defined there. Dark mode is a class variant (`@custom-variant dark (&:where(.dark, .dark *))`) toggled by `use-theme.tsx` adding/removing a `.dark` class, not a media query — always pair `dark:` classes rather than relying on `prefers-color-scheme`.
+
+### i18n
+
+Three languages — `id` (default/fallback), `en`, `jp` — as flat-key JSON files in `src/helpers/lang/`. Every user-facing string goes through `useTranslation()`'s `t()`; when adding a string, add the same key to all three files in the same position (existing files are kept in sync key-for-key, not just per-language supersets).
