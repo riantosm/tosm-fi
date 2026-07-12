@@ -17,3 +17,19 @@ export interface Transaction {
 }
 
 export type TransactionInput = Omit<Transaction, "idTransaction">;
+
+export type TransactionSortOption = "dateDesc" | "dateAsc" | "amountDesc" | "amountAsc";
+
+export interface TransactionListParams {
+  /** "YYYY-MM" */
+  month: string;
+  idWallet?: string;
+  idCategory?: string;
+  idSubCategory?: string;
+  /** "YYYY-MM-DD" */
+  dateFrom?: string;
+  /** "YYYY-MM-DD" */
+  dateTo?: string;
+  search?: string;
+  sort?: TransactionSortOption;
+}

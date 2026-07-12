@@ -1,7 +1,7 @@
 import { useCallback } from "react";
 import { transactionService } from "@/services/transaction.service";
 import type { Category } from "@/types/category.types";
-import type { Transaction, TransactionInput } from "@/types/transaction.types";
+import type { Transaction, TransactionInput, TransactionListParams } from "@/types/transaction.types";
 import type { WalletAccount } from "@/types/wallet.types";
 import {
   addTransaction,
@@ -113,6 +113,11 @@ export function useTransactions() {
     dispatch(setTransactions(data));
   }, [dispatch]);
 
+  const queryTransactions = useCallback(
+    (params: TransactionListParams) => transactionService.queryTransactions(transactions, params),
+    [transactions],
+  );
+
   const applyWalletDeltas = useCallback(
     (revert: WalletDelta[], apply: WalletDelta[]) => {
       const deltas = accumulateWalletDeltas(revert, apply);
@@ -209,6 +214,7 @@ export function useTransactions() {
     transactions,
     status,
     loadTransactions,
+    queryTransactions,
     createTransaction,
     editTransaction,
     deleteTransaction,

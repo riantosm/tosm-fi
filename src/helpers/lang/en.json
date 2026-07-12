@@ -10,7 +10,8 @@
     "copyError": "Failed to copy",
     "comingSoon": "Soon",
     "underConstruction": "This page is under construction.",
-    "customColor": "Custom Color"
+    "customColor": "Custom Color",
+    "all": "All"
   },
   "auth": {
     "welcomeTitle": "Welcome back",
@@ -43,7 +44,7 @@
   "dashboard": {
     "greeting": "Hi, {{name}}",
     "subtitle": "Here's a summary of your finances today.",
-    "recentTransactions": "Recent Transactions",
+    "recentTransactions": "This Month's Transactions",
     "noTransactions": "No transactions yet"
   },
   "topbar": {
@@ -262,6 +263,21 @@
     "deleteConfirmDescription": "The wallet balance will be reverted. This action cannot be undone.",
     "deleteConfirmAction": "Delete",
     "deleteSuccess": "Transaction deleted successfully",
-    "save": "Save"
+    "save": "Save",
+    "searchPlaceholder": "Search transactions...",
+    "dateFilterTitle": "Date Filter",
+    "dateFrom": "From",
+    "dateTo": "To",
+    "applyDateFilter": "Apply",
+    "clearDateFilter": "Clear date filter",
+    "goToCurrentMonth": "This Month",
+    "sortTitle": "Sort",
+    "sortOptions": {
+      "dateDesc": "Newest Date",
+      "dateAsc": "Oldest Date",
+      "amountDesc": "Highest Amount",
+      "amountAsc": "Lowest Amount"
+    },
+    "noDataForFilter": "No transactions match these filters"
   }
 }

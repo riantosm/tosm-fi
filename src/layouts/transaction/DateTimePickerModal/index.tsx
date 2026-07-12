@@ -62,9 +62,18 @@ export function DateTimePickerModal({
   );
 }
 
-type DateTimePickerFieldsProps = Omit<DateTimePickerModalProps, "isOpen">;
+interface DateTimePickerFieldsProps extends Omit<DateTimePickerModalProps, "isOpen"> {
+  dateOnly?: boolean;
+  title?: string;
+}
 
-function DateTimePickerFields({ value, onClose, onConfirm }: DateTimePickerFieldsProps) {
+export function DateTimePickerFields({
+  value,
+  onClose,
+  onConfirm,
+  dateOnly = false,
+  title,
+}: DateTimePickerFieldsProps) {
   const { t } = useTranslation();
   const { language } = useLanguage();
 
@@ -99,9 +108,14 @@ function DateTimePickerFields({ value, onClose, onConfirm }: DateTimePickerField
   }
 
   function handleConfirm() {
+    const result = new Date(selectedDate);
+    if (dateOnly) {
+      onConfirm(result);
+      onClose();
+      return;
+    }
     const clampedHour = Math.min(12, Math.max(1, hour12 || 12));
     const clampedMinute = Math.min(59, Math.max(0, minute || 0));
-    const result = new Date(selectedDate);
     result.setHours(to24Hour(clampedHour, meridiem), clampedMinute, 0, 0);
     onConfirm(result);
     onClose();
@@ -111,7 +125,7 @@ function DateTimePickerFields({ value, onClose, onConfirm }: DateTimePickerField
     <div className="flex flex-col gap-4">
       <div className="flex items-center justify-between">
         <Words as="h2" type="lg/bold" className="text-ink-900 dark:text-ink-50">
-          {t("transaction.selectDateTimeTitle")}
+          {title ?? t("transaction.selectDateTimeTitle")}
         </Words>
         <button
           type="button"
@@ -186,47 +200,49 @@ function DateTimePickerFields({ value, onClose, onConfirm }: DateTimePickerField
         })}
       </div>
 
-      <div className="flex items-center justify-center gap-2 border-t border-ink-100 pt-4 dark:border-ink-800">
-        <Input
-          type="number"
-          min={1}
-          max={12}
-          value={hour12}
-          onChange={(event) => setHour12(Number(event.target.value))}
-          className="w-14 text-center"
-        />
-        <Words type="lg/bold" className="text-ink-400 dark:text-ink-500">
-          :
-        </Words>
-        <Input
-          type="number"
-          min={0}
-          max={59}
-          value={minute}
-          onChange={(event) => setMinute(Number(event.target.value))}
-          className="w-14 text-center"
-        />
+      {!dateOnly && (
+        <div className="flex items-center justify-center gap-2 border-t border-ink-100 pt-4 dark:border-ink-800">
+          <Input
+            type="number"
+            min={1}
+            max={12}
+            value={hour12}
+            onChange={(event) => setHour12(Number(event.target.value))}
+            className="w-14 text-center"
+          />
+          <Words type="lg/bold" className="text-ink-400 dark:text-ink-500">
+            :
+          </Words>
+          <Input
+            type="number"
+            min={0}
+            max={59}
+            value={minute}
+            onChange={(event) => setMinute(Number(event.target.value))}
+            className="w-14 text-center"
+          />
 
-        <div className="flex overflow-hidden rounded-xl border border-ink-200 dark:border-ink-700">
-          {(["AM", "PM"] as const).map((option) => (
-            <button
-              key={option}
-              type="button"
-              onClick={() => setMeridiem(option)}
-              className={cn(
-                "px-3 py-2.5 transition-colors",
-                meridiem === option
-                  ? "bg-primary-500 text-white dark:bg-primary-500 dark:text-ink-950"
-                  : "text-ink-500 hover:bg-ink-100 dark:text-ink-400 dark:hover:bg-ink-800",
-              )}
-            >
-              <Words type="xs/bold" as="span">
-                {option}
-              </Words>
-            </button>
-          ))}
+          <div className="flex overflow-hidden rounded-xl border border-ink-200 dark:border-ink-700">
+            {(["AM", "PM"] as const).map((option) => (
+              <button
+                key={option}
+                type="button"
+                onClick={() => setMeridiem(option)}
+                className={cn(
+                  "px-3 py-2.5 transition-colors",
+                  meridiem === option
+                    ? "bg-primary-500 text-white dark:bg-primary-500 dark:text-ink-950"
+                    : "text-ink-500 hover:bg-ink-100 dark:text-ink-400 dark:hover:bg-ink-800",
+                )}
+              >
+                <Words type="xs/bold" as="span">
+                  {option}
+                </Words>
+              </button>
+            ))}
+          </div>
         </div>
-      </div>
+      )}
 
       <div className="flex gap-3">
         <Button type="button" variant="secondary" className="flex-1" onClick={onClose}>

@@ -581,8 +581,21 @@ export const API_DOC_GROUPS: ApiDocGroup[] = [
         id: "list-transactions",
         title: "List Transactions",
         method: "GET",
-        endpoint: "/transactions",
-        payload: [],
+        endpoint: "/transactions?month=2026-07&idWallet=wallet-1&idCategory=category-1&idSubCategory=subcategory-1&dateFrom=2026-07-01&dateTo=2026-07-15&search=makan&sort=dateDesc",
+        payload: [
+          { name: "month", type: "string (YYYY-MM)", required: true },
+          { name: "idWallet", type: "string", required: false },
+          { name: "idCategory", type: "string", required: false },
+          { name: "idSubCategory", type: "string", required: false },
+          { name: "dateFrom", type: "string (YYYY-MM-DD)", required: false },
+          { name: "dateTo", type: "string (YYYY-MM-DD)", required: false },
+          { name: "search", type: "string", required: false },
+          {
+            name: "sort",
+            type: '"dateDesc" | "dateAsc" | "amountDesc" | "amountAsc"',
+            required: false,
+          },
+        ],
         successExample: JSON.stringify(
           {
             success: true,

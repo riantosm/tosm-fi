@@ -10,7 +10,8 @@
     "copyError": "コピーに失敗しました",
     "comingSoon": "近日公開",
     "underConstruction": "このページは現在開発中です。",
-    "customColor": "カスタムカラー"
+    "customColor": "カスタムカラー",
+    "all": "すべて"
   },
   "auth": {
     "welcomeTitle": "おかえりなさい",
@@ -43,7 +44,7 @@
   "dashboard": {
     "greeting": "こんにちは、{{name}}さん",
     "subtitle": "今日の資産状況のまとめです。",
-    "recentTransactions": "最近の取引",
+    "recentTransactions": "今月の取引",
     "noTransactions": "まだ取引がありません"
   },
   "topbar": {
@@ -262,6 +263,21 @@
     "deleteConfirmDescription": "ウォレット残高は元に戻ります。この操作は取り消せません。",
     "deleteConfirmAction": "削除",
     "deleteSuccess": "取引を削除しました",
-    "save": "保存"
+    "save": "保存",
+    "searchPlaceholder": "取引を検索...",
+    "dateFilterTitle": "日付フィルター",
+    "dateFrom": "開始日",
+    "dateTo": "終了日",
+    "applyDateFilter": "適用",
+    "clearDateFilter": "日付フィルターを解除",
+    "goToCurrentMonth": "今月",
+    "sortTitle": "並び替え",
+    "sortOptions": {
+      "dateDesc": "日付が新しい順",
+      "dateAsc": "日付が古い順",
+      "amountDesc": "金額が高い順",
+      "amountAsc": "金額が低い順"
+    },
+    "noDataForFilter": "このフィルターに一致する取引はありません"
   }
 }

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { DashboardLayout } from "@/components/templates/DashboardLayout";
 import { Words } from "@/components/atoms/Words";
@@ -11,6 +11,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { useCategories } from "@/hooks/use-categories";
 import { useWallets } from "@/hooks/use-wallets";
 import { useTransactions } from "@/hooks/use-transactions";
+import { isSameMonthAs, startOfMonth } from "@/utils/month";
 import type { Transaction } from "@/types/transaction.types";
 import type { WalletAccount } from "@/types/wallet.types";
 
@@ -28,6 +29,13 @@ export function DashboardPage() {
 
   const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
   const [correctionState, setCorrectionState] = useState<CorrectionState | null>(null);
+
+  const currentMonthTransactions = useMemo(() => {
+    const currentMonth = startOfMonth(new Date());
+    return transactions.filter((transaction) =>
+      isSameMonthAs(new Date(transaction.date), currentMonth),
+    );
+  }, [transactions]);
 
   useEffect(() => {
     if (categoriesStatus === "idle") void loadCategories();
@@ -67,7 +75,7 @@ export function DashboardPage() {
         />
 
         <TransactionList
-          transactions={transactions}
+          transactions={currentMonthTransactions}
           categories={categories}
           wallets={wallets}
           onEditTransaction={handleEditTransaction}

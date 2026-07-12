@@ -1,9 +1,11 @@
+import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { HiOutlineBars3 } from "react-icons/hi2";
 import { IconSearch } from "@/components/atoms/Icons";
 import { Logo } from "@/components/atoms/Logo";
 import { ThemeToggle } from "@/components/atoms/ThemeToggle";
 import { Words } from "@/components/atoms/Words";
+import { ROUTES } from "@/constants/routes";
 import { useAuth } from "@/hooks/use-auth";
 import { useCurrency } from "@/hooks/use-currency";
 
@@ -13,6 +15,7 @@ interface TopbarProps {
 
 export function Topbar({ onOpenMenu }: TopbarProps) {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const { user } = useAuth();
   const { format } = useCurrency();
 
@@ -35,6 +38,7 @@ export function Topbar({ onOpenMenu }: TopbarProps) {
         <ThemeToggle />
         <button
           type="button"
+          onClick={() => navigate(ROUTES.TRANSACTIONS, { state: { focusSearch: true } })}
           className="flex h-9 w-9 items-center justify-center rounded-full border border-ink-200 text-ink-500 hover:bg-ink-100 dark:border-ink-800 dark:text-ink-400 dark:hover:bg-ink-800"
           aria-label={t("topbar.search")}
         >

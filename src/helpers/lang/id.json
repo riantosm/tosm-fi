@@ -10,7 +10,8 @@
     "copyError": "Gagal menyalin",
     "comingSoon": "Segera",
     "underConstruction": "Halaman ini sedang dalam pengembangan.",
-    "customColor": "Warna Kustom"
+    "customColor": "Warna Kustom",
+    "all": "Semua"
   },
   "auth": {
     "welcomeTitle": "Selamat datang kembali",
@@ -43,7 +44,7 @@
   "dashboard": {
     "greeting": "Halo, {{name}}",
     "subtitle": "Berikut ringkasan keuanganmu hari ini.",
-    "recentTransactions": "Transaksi Terbaru",
+    "recentTransactions": "Transaksi Bulan Ini",
     "noTransactions": "Belum ada transaksi"
   },
   "topbar": {
@@ -262,6 +263,21 @@
     "deleteConfirmDescription": "Saldo wallet akan dikembalikan. Tindakan ini tidak bisa dibatalkan.",
     "deleteConfirmAction": "Hapus",
     "deleteSuccess": "Transaksi berhasil dihapus",
-    "save": "Simpan"
+    "save": "Simpan",
+    "searchPlaceholder": "Cari transaksi...",
+    "dateFilterTitle": "Filter Tanggal",
+    "dateFrom": "Dari",
+    "dateTo": "Sampai",
+    "applyDateFilter": "Terapkan",
+    "clearDateFilter": "Hapus filter tanggal",
+    "goToCurrentMonth": "Bulan Ini",
+    "sortTitle": "Urutkan",
+    "sortOptions": {
+      "dateDesc": "Tanggal Terbaru",
+      "dateAsc": "Tanggal Terlama",
+      "amountDesc": "Jumlah Tertinggi",
+      "amountAsc": "Jumlah Terendah"
+    },
+    "noDataForFilter": "Tidak ada transaksi untuk filter ini"
   }
 }

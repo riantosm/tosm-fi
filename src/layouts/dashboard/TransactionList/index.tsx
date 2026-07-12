@@ -1,5 +1,6 @@
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
+import { IconLoader } from "@/components/atoms/IconLoader";
 import { Words } from "@/components/atoms/Words";
 import { TransactionRow } from "@/components/molecules/TransactionRow";
 import { TransferRow } from "@/components/molecules/TransferRow";
@@ -14,6 +15,11 @@ interface TransactionListProps {
   categories: Category[];
   wallets: WalletAccount[];
   onEditTransaction: (transaction: Transaction) => void;
+  title?: string;
+  emptyMessage?: string;
+  dateGroupOrder?: "desc" | "asc";
+  sortWithinDay?: "chronological" | "amountDesc" | "amountAsc";
+  isLoading?: boolean;
 }
 
 interface DateGroup {
@@ -41,10 +47,15 @@ function netContribution(transaction: Transaction): number {
   }
 }
 
-function groupByDate(transactions: Transaction[]): DateGroup[] {
-  const sorted = [...transactions].sort(
-    (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime(),
-  );
+function groupByDate(
+  transactions: Transaction[],
+  dateGroupOrder: "desc" | "asc",
+  sortWithinDay: "chronological" | "amountDesc" | "amountAsc",
+): DateGroup[] {
+  const sorted = [...transactions].sort((a, b) => {
+    const diff = new Date(a.date).getTime() - new Date(b.date).getTime();
+    return dateGroupOrder === "desc" ? -diff : diff;
+  });
   const groups = new Map<string, DateGroup>();
 
   for (const transaction of sorted) {
@@ -56,6 +67,15 @@ function groupByDate(transactions: Transaction[]): DateGroup[] {
     }
     group.transactions.push(transaction);
     group.net += netContribution(transaction);
+  }
+
+  if (sortWithinDay !== "chronological") {
+    for (const group of groups.values()) {
+      group.transactions.sort((a, b) => {
+        const diff = Math.abs(a.amount) - Math.abs(b.amount);
+        return sortWithinDay === "amountDesc" ? -diff : diff;
+      });
+    }
   }
 
   return Array.from(groups.values());
@@ -79,12 +99,23 @@ export function TransactionList({
   categories,
   wallets,
   onEditTransaction,
+  title,
+  emptyMessage,
+  dateGroupOrder = "desc",
+  sortWithinDay = "chronological",
+  isLoading = false,
 }: TransactionListProps) {
   const { t } = useTranslation();
   const { language } = useLanguage();
   const { format } = useCurrency();
 
-  const groups = useMemo(() => groupByDate(transactions), [transactions]);
+  const resolvedTitle = title === undefined ? t("dashboard.recentTransactions") : title;
+  const resolvedEmptyMessage = emptyMessage ?? t("dashboard.noTransactions");
+
+  const groups = useMemo(
+    () => groupByDate(transactions, dateGroupOrder, sortWithinDay),
+    [transactions, dateGroupOrder, sortWithinDay],
+  );
 
   function resolveCategory(idCategory: string | null) {
     if (!idCategory) return undefined;
@@ -105,58 +136,68 @@ export function TransactionList({
 
   return (
     <div className="flex flex-col gap-3">
-      <Words as="h2" type="lg/bold" className="text-ink-900 dark:text-ink-100">
-        {t("dashboard.recentTransactions")}
-      </Words>
-
-      {groups.length === 0 ? (
-        <div className="flex flex-col items-center justify-center gap-1 rounded-2xl border border-dashed border-ink-200 py-10 dark:border-ink-800">
-          <Words type="sm/bold" className="text-ink-500 dark:text-ink-400">
-            {t("dashboard.noTransactions")}
-          </Words>
-        </div>
-      ) : (
-        <div className="flex flex-col">
-          {groups.map((group) => (
-            <div key={group.dateKey} className="flex flex-col">
-              <div className="flex items-center justify-between py-2">
-                <Words type="sm/regular" className="text-ink-400 dark:text-ink-500">
-                  {formatDateHeader(group.date, language, t("transaction.today"))}
-                </Words>
-                <Words type="sm/regular" className="text-ink-400 dark:text-ink-500">
-                  {group.net === 0 ? "" : group.net < 0 ? "-" : "+"}
-                  {format(Math.abs(group.net))}
-                </Words>
-              </div>
-              <div className="flex flex-col divide-y divide-ink-100 dark:divide-ink-800">
-                {group.transactions.map((transaction) =>
-                  transaction.type === "transfer" ? (
-                    <TransferRow
-                      key={transaction.idTransaction}
-                      transaction={transaction}
-                      walletFrom={resolveWallet(transaction.idWalletFrom)}
-                      walletTo={resolveWallet(transaction.idWalletTo)}
-                      onClick={() => onEditTransaction(transaction)}
-                    />
-                  ) : (
-                    <TransactionRow
-                      key={transaction.idTransaction}
-                      transaction={transaction}
-                      category={resolveCategory(transaction.idCategory)}
-                      subCategory={resolveSubCategory(
-                        transaction.idCategory,
-                        transaction.idSubCategory,
-                      )}
-                      wallet={resolveWallet(transaction.idWallet)}
-                      onClick={() => onEditTransaction(transaction)}
-                    />
-                  ),
-                )}
-              </div>
-            </div>
-          ))}
-        </div>
+      {resolvedTitle && (
+        <Words as="h2" type="lg/bold" className="text-ink-900 dark:text-ink-100">
+          {resolvedTitle}
+        </Words>
       )}
+
+      <div className="relative">
+        {groups.length === 0 ? (
+          <div className="flex flex-col items-center justify-center gap-1 rounded-2xl border border-dashed border-ink-200 py-10 dark:border-ink-800">
+            <Words type="sm/bold" className="text-ink-500 dark:text-ink-400">
+              {resolvedEmptyMessage}
+            </Words>
+          </div>
+        ) : (
+          <div className="flex flex-col">
+            {groups.map((group) => (
+              <div key={group.dateKey} className="flex flex-col">
+                <div className="flex items-center justify-between py-2">
+                  <Words type="sm/regular" className="text-ink-400 dark:text-ink-500">
+                    {formatDateHeader(group.date, language, t("transaction.today"))}
+                  </Words>
+                  <Words type="sm/regular" className="text-ink-400 dark:text-ink-500">
+                    {group.net === 0 ? "" : group.net < 0 ? "-" : "+"}
+                    {format(Math.abs(group.net))}
+                  </Words>
+                </div>
+                <div className="flex flex-col divide-y divide-ink-100 dark:divide-ink-800">
+                  {group.transactions.map((transaction) =>
+                    transaction.type === "transfer" ? (
+                      <TransferRow
+                        key={transaction.idTransaction}
+                        transaction={transaction}
+                        walletFrom={resolveWallet(transaction.idWalletFrom)}
+                        walletTo={resolveWallet(transaction.idWalletTo)}
+                        onClick={() => onEditTransaction(transaction)}
+                      />
+                    ) : (
+                      <TransactionRow
+                        key={transaction.idTransaction}
+                        transaction={transaction}
+                        category={resolveCategory(transaction.idCategory)}
+                        subCategory={resolveSubCategory(
+                          transaction.idCategory,
+                          transaction.idSubCategory,
+                        )}
+                        wallet={resolveWallet(transaction.idWallet)}
+                        onClick={() => onEditTransaction(transaction)}
+                      />
+                    ),
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {isLoading && (
+          <div className="absolute inset-0 flex items-start justify-center rounded-2xl bg-white/60 pt-12 backdrop-blur-[2px] dark:bg-ink-950/60">
+            <IconLoader className="h-6 w-6 animate-spin text-primary-500" />
+          </div>
+        )}
+      </div>
     </div>
   );
 }
