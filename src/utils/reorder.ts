@@ -1,10 +1,11 @@
-export function moveItem<T extends { id: string }>(
+export function moveItem<T>(
   list: T[],
   draggedId: string,
   targetId: string,
+  getId: (item: T) => string,
 ): T[] {
-  const fromIndex = list.findIndex((item) => item.id === draggedId);
-  const toIndex = list.findIndex((item) => item.id === targetId);
+  const fromIndex = list.findIndex((item) => getId(item) === draggedId);
+  const toIndex = list.findIndex((item) => getId(item) === targetId);
   if (fromIndex === -1 || toIndex === -1) return list;
 
   const next = [...list];

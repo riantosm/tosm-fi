@@ -4,3 +4,7 @@ export { default as walletSlice } from "./walletSlice";
 export * from "./walletSlice";
 export { default as categorySlice } from "./categorySlice";
 export * from "./categorySlice";
+export { default as transactionSlice } from "./transactionSlice";
+export * from "./transactionSlice";
+export { default as settingsSlice } from "./settingsSlice";
+export * from "./settingsSlice";

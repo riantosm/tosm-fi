@@ -79,7 +79,7 @@ function WalletFormFields({
   const { t } = useTranslation();
   const { currency } = useCurrency();
   const currencySymbol = CURRENCIES.find((option) => option.code === currency)?.symbol ?? "IDR";
-  const [name, setName] = useState(wallet?.name ?? "");
+  const [name, setName] = useState(wallet?.nameWallet ?? "");
   const [color, setColor] = useState(wallet?.color ?? WALLET_COLOR_PRESETS[0]);
   const [balanceInput, setBalanceInput] = useState("");
 
@@ -87,7 +87,7 @@ function WalletFormFields({
     event.preventDefault();
     if (!name.trim()) return;
     const balance = parseFormattedNumber(balanceInput);
-    onSubmit({ name: name.trim(), color, ...(wallet ? {} : { balance }) });
+    onSubmit({ nameWallet: name.trim(), color, ...(wallet ? {} : { balance }) });
   }
 
   return (
@@ -102,7 +102,7 @@ function WalletFormFields({
             {!wallet.isPrimary && (
               <button
                 type="button"
-                onClick={() => onSetPrimary?.(wallet.id)}
+                onClick={() => onSetPrimary?.(wallet.idWallet)}
                 disabled={isSettingPrimary}
                 aria-label={t("wallet.setPrimaryButton")}
                 title={t("wallet.setPrimaryButton")}
@@ -117,7 +117,7 @@ function WalletFormFields({
             )}
             <button
               type="button"
-              onClick={() => onDelete?.(wallet.id)}
+              onClick={() => onDelete?.(wallet.idWallet)}
               disabled={isDeleting}
               aria-label={t("wallet.deleteButton")}
               title={t("wallet.deleteButton")}

@@ -68,13 +68,13 @@ function SubCategoryFormFields({
   onDelete,
 }: SubCategoryFormFieldsProps) {
   const { t } = useTranslation();
-  const [name, setName] = useState(subCategory?.name ?? "");
+  const [name, setName] = useState(subCategory?.nameSubCategory ?? "");
   const [icon, setIcon] = useState(subCategory?.icon ?? CATEGORY_ICONS[0].name);
 
   function handleSubmit(event: SubmitEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!name.trim()) return;
-    onSubmit({ name: name.trim(), icon });
+    onSubmit({ nameSubCategory: name.trim(), icon });
   }
 
   return (
@@ -87,7 +87,7 @@ function SubCategoryFormFields({
         {subCategory && (
           <button
             type="button"
-            onClick={() => onDelete?.(subCategory.id)}
+            onClick={() => onDelete?.(subCategory.idSubCategory)}
             disabled={isDeleting}
             aria-label={t("wallet.deleteButton")}
             title={t("wallet.deleteButton")}

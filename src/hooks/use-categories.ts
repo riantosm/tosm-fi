@@ -36,7 +36,7 @@ export function useCategories() {
 
   const editCategory = useCallback(
     async (id: string, input: CategoryInput) => {
-      const existing = categories.find((category) => category.id === id);
+      const existing = categories.find((category) => category.idCategory === id);
       if (!existing) return;
       const updated = await categoryService.updateCategory(id, input, existing);
       dispatch(updateCategory(updated));
@@ -70,8 +70,8 @@ export function useCategories() {
 
   const editSubCategory = useCallback(
     async (categoryId: string, id: string, input: SubCategoryInput) => {
-      const category = categories.find((item) => item.id === categoryId);
-      const existing = category?.subCategories.find((sub) => sub.id === id);
+      const category = categories.find((item) => item.idCategory === categoryId);
+      const existing = category?.subCategories.find((sub) => sub.idSubCategory === id);
       if (!existing) return;
       const updated = await categoryService.updateSubCategory(categoryId, id, input, existing);
       dispatch(updateSubCategory({ categoryId, subCategory: updated }));
@@ -89,7 +89,7 @@ export function useCategories() {
 
   const reorderSubCategories = useCallback(
     async (categoryId: string, orderedIds: string[]) => {
-      const category = categories.find((item) => item.id === categoryId);
+      const category = categories.find((item) => item.idCategory === categoryId);
       if (!category) return;
       const updated = await categoryService.reorderSubCategories(
         categoryId,

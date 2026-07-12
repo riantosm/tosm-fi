@@ -158,6 +158,7 @@ export const API_DOC_GROUPS: ApiDocGroup[] = [
         payload: [
           { name: "nameWallet", type: "string", required: true },
           { name: "color", type: "string", required: true },
+          { name: "balance", type: "number", required: false },
         ],
         successExample: JSON.stringify(
           {
@@ -213,6 +214,79 @@ export const API_DOC_GROUPS: ApiDocGroup[] = [
           {
             success: false,
             message: "Wallet tidak ditemukan",
+          },
+          null,
+          2,
+        ),
+      },
+      {
+        id: "delete-wallet",
+        title: "Delete Wallet",
+        method: "DELETE",
+        endpoint: "/wallets/:idWallet",
+        payload: [],
+        successExample: JSON.stringify(
+          {
+            success: true,
+            message: "Wallet berhasil dihapus",
+          },
+          null,
+          2,
+        ),
+        errorExample: JSON.stringify(
+          {
+            success: false,
+            message: "Wallet tidak ditemukan",
+          },
+          null,
+          2,
+        ),
+      },
+      {
+        id: "set-primary-wallet",
+        title: "Set Primary Wallet",
+        method: "PATCH",
+        endpoint: "/wallets/:idWallet/primary",
+        payload: [],
+        successExample: JSON.stringify(
+          {
+            success: true,
+            message: "Wallet utama berhasil diubah",
+            data: [
+              { idWallet: "wallet-1", isPrimary: false },
+              { idWallet: "wallet-6", isPrimary: true },
+            ],
+          },
+          null,
+          2,
+        ),
+        errorExample: JSON.stringify(
+          {
+            success: false,
+            message: "Wallet tidak ditemukan",
+          },
+          null,
+          2,
+        ),
+      },
+      {
+        id: "reorder-wallets",
+        title: "Reorder Wallets",
+        method: "PATCH",
+        endpoint: "/wallets/reorder",
+        payload: [{ name: "orderedIds", type: "string[]", required: true }],
+        successExample: JSON.stringify(
+          {
+            success: true,
+            data: [{ idWallet: "wallet-6" }, { idWallet: "wallet-1" }],
+          },
+          null,
+          2,
+        ),
+        errorExample: JSON.stringify(
+          {
+            success: false,
+            message: "Token tidak valid atau sudah kedaluwarsa",
           },
           null,
           2,
@@ -492,6 +566,257 @@ export const API_DOC_GROUPS: ApiDocGroup[] = [
           {
             success: false,
             message: "Token tidak valid atau sudah kedaluwarsa",
+          },
+          null,
+          2,
+        ),
+      },
+    ],
+  },
+  {
+    key: "transaction",
+    titleKey: "apiDoc.groups.transaction",
+    endpoints: [
+      {
+        id: "list-transactions",
+        title: "List Transactions",
+        method: "GET",
+        endpoint: "/transactions",
+        payload: [],
+        successExample: JSON.stringify(
+          {
+            success: true,
+            data: [
+              {
+                idTransaction: "transaction-1",
+                type: "expense",
+                idWallet: "wallet-1",
+                idCategory: "category-1",
+                idSubCategory: "subcategory-1",
+                idWalletFrom: null,
+                idWalletTo: null,
+                title: "Warteg nasi, ayam, toge",
+                notes: "",
+                amount: 17000,
+                date: "2026-07-10T09:34:00.000Z",
+              },
+              {
+                idTransaction: "transaction-2",
+                type: "transfer",
+                idWallet: null,
+                idCategory: null,
+                idSubCategory: null,
+                idWalletFrom: "wallet-2",
+                idWalletTo: "wallet-1",
+                title: "Jago Transfer Out → Cash Transfer In",
+                notes: "",
+                amount: 100000,
+                date: "2026-06-28T08:00:00.000Z",
+              },
+              {
+                idTransaction: "transaction-3",
+                type: "correction",
+                idWallet: "wallet-1",
+                idCategory: null,
+                idSubCategory: null,
+                idWalletFrom: null,
+                idWalletTo: null,
+                title: "Balance Correction",
+                notes: "Penyesuaian saldo aktual",
+                amount: 3000,
+                date: "2026-06-25T07:00:00.000Z",
+              },
+            ],
+          },
+          null,
+          2,
+        ),
+        errorExample: JSON.stringify(
+          {
+            success: false,
+            message: "Token tidak valid atau sudah kedaluwarsa",
+          },
+          null,
+          2,
+        ),
+      },
+      {
+        id: "create-transaction",
+        title: "Create Transaction",
+        method: "POST",
+        endpoint: "/transactions",
+        payload: [
+          { name: "type", type: '"income" | "expense" | "transfer" | "correction"', required: true },
+          { name: "idWallet", type: "string | null", required: false },
+          { name: "idCategory", type: "string | null", required: false },
+          { name: "idSubCategory", type: "string | null", required: false },
+          { name: "idWalletFrom", type: "string | null", required: false },
+          { name: "idWalletTo", type: "string | null", required: false },
+          { name: "title", type: "string", required: false },
+          { name: "notes", type: "string", required: false },
+          { name: "amount", type: "number", required: true },
+          { name: "date", type: "string (ISO 8601)", required: true },
+        ],
+        successExample: JSON.stringify(
+          {
+            success: true,
+            message: "Transaksi berhasil ditambahkan",
+            data: {
+              idTransaction: "transaction-4",
+              type: "expense",
+              idWallet: "wallet-1",
+              idCategory: "category-1",
+              idSubCategory: "subcategory-1",
+              idWalletFrom: null,
+              idWalletTo: null,
+              title: "Ngasih",
+              notes: "",
+              amount: 100000,
+              date: "2026-07-10T10:00:00.000Z",
+            },
+          },
+          null,
+          2,
+        ),
+        errorExample: JSON.stringify(
+          {
+            success: false,
+            message: "Kategori wajib diisi",
+          },
+          null,
+          2,
+        ),
+      },
+      {
+        id: "update-transaction",
+        title: "Update Transaction",
+        method: "PATCH",
+        endpoint: "/transactions/:idTransaction",
+        payload: [
+          { name: "type", type: '"income" | "expense" | "transfer" | "correction"', required: true },
+          { name: "idWallet", type: "string | null", required: false },
+          { name: "idCategory", type: "string | null", required: false },
+          { name: "idSubCategory", type: "string | null", required: false },
+          { name: "idWalletFrom", type: "string | null", required: false },
+          { name: "idWalletTo", type: "string | null", required: false },
+          { name: "title", type: "string", required: false },
+          { name: "notes", type: "string", required: false },
+          { name: "amount", type: "number", required: true },
+          { name: "date", type: "string (ISO 8601)", required: true },
+        ],
+        successExample: JSON.stringify(
+          {
+            success: true,
+            message: "Transaksi berhasil diperbarui",
+            data: {
+              idTransaction: "transaction-4",
+              type: "expense",
+              idWallet: "wallet-1",
+              idCategory: "category-1",
+              idSubCategory: "subcategory-1",
+              idWalletFrom: null,
+              idWalletTo: null,
+              title: "Ngasih ke adek",
+              notes: "",
+              amount: 150000,
+              date: "2026-07-10T10:00:00.000Z",
+            },
+          },
+          null,
+          2,
+        ),
+        errorExample: JSON.stringify(
+          {
+            success: false,
+            message: "Transaksi tidak ditemukan",
+          },
+          null,
+          2,
+        ),
+      },
+      {
+        id: "delete-transaction",
+        title: "Delete Transaction",
+        method: "DELETE",
+        endpoint: "/transactions/:idTransaction",
+        payload: [],
+        successExample: JSON.stringify(
+          {
+            success: true,
+            message: "Transaksi berhasil dihapus",
+          },
+          null,
+          2,
+        ),
+        errorExample: JSON.stringify(
+          {
+            success: false,
+            message: "Transaksi tidak ditemukan",
+          },
+          null,
+          2,
+        ),
+      },
+    ],
+  },
+  {
+    key: "settings",
+    titleKey: "apiDoc.groups.settings",
+    endpoints: [
+      {
+        id: "get-settings",
+        title: "Get Settings",
+        method: "GET",
+        endpoint: "/settings",
+        payload: [],
+        successExample: JSON.stringify(
+          {
+            success: true,
+            data: {
+              currency: "IDR",
+              decimalPlaces: 0,
+              language: "id",
+            },
+          },
+          null,
+          2,
+        ),
+        errorExample: JSON.stringify(
+          {
+            success: false,
+            message: "Token tidak valid atau sudah kedaluwarsa",
+          },
+          null,
+          2,
+        ),
+      },
+      {
+        id: "update-settings",
+        title: "Update Settings",
+        method: "PATCH",
+        endpoint: "/settings",
+        payload: [
+          { name: "currency", type: '"IDR" | "USD" | "JPY"', required: false },
+          { name: "decimalPlaces", type: "0 | 1 | 2", required: false },
+          { name: "language", type: '"id" | "en" | "jp"', required: false },
+        ],
+        successExample: JSON.stringify(
+          {
+            success: true,
+            message: "Pengaturan berhasil diperbarui",
+            data: {
+              currency: "USD",
+              decimalPlaces: 2,
+              language: "en",
+            },
+          },
+          null,
+          2,
+        ),
+        errorExample: JSON.stringify(
+          {
+            success: false,
+            message: "Mata uang tidak valid",
           },
           null,
           2,

@@ -60,16 +60,19 @@ export function CategoriesPage() {
   }, [status, loadCategories]);
 
   const editingCategory = categoryModalState?.categoryId
-    ? (categories.find((category) => category.id === categoryModalState.categoryId) ?? null)
+    ? (categories.find((category) => category.idCategory === categoryModalState.categoryId) ??
+      null)
     : null;
 
   const subCategoryParentCategory = subCategoryModalState
-    ? (categories.find((category) => category.id === subCategoryModalState.categoryId) ?? null)
+    ? (categories.find(
+        (category) => category.idCategory === subCategoryModalState.categoryId,
+      ) ?? null)
     : null;
 
   const editingSubCategory = subCategoryModalState?.subCategoryId
     ? (subCategoryParentCategory?.subCategories.find(
-        (sub) => sub.id === subCategoryModalState.subCategoryId,
+        (sub) => sub.idSubCategory === subCategoryModalState.subCategoryId,
       ) ?? null)
     : null;
 
@@ -78,7 +81,7 @@ export function CategoriesPage() {
   }
 
   function openEditCategoryModal(category: Category) {
-    setCategoryModalState({ categoryId: category.id, defaultType: category.type });
+    setCategoryModalState({ categoryId: category.idCategory, defaultType: category.type });
   }
 
   function closeCategoryModal() {
@@ -161,7 +164,7 @@ export function CategoriesPage() {
 
     setIsDeletingSubCategory(true);
     try {
-      await deleteSubCategory(subCategory.categoryId, subCategory.id);
+      await deleteSubCategory(subCategory.idCategory, subCategory.idSubCategory);
       closeSubCategoryModal();
     } finally {
       setIsDeletingSubCategory(false);
@@ -180,7 +183,7 @@ export function CategoriesPage() {
   async function handleSaveOrder() {
     setIsSavingOrder(true);
     try {
-      await reorderCategories(localOrder.map((category) => category.id));
+      await reorderCategories(localOrder.map((category) => category.idCategory));
       setIsReordering(false);
     } finally {
       setIsSavingOrder(false);
@@ -190,7 +193,7 @@ export function CategoriesPage() {
   function handleDragOver(event: DragEvent<HTMLDivElement>, targetId: string) {
     event.preventDefault();
     if (draggedId && draggedId !== targetId) {
-      setLocalOrder((prev) => moveItem(prev, draggedId, targetId));
+      setLocalOrder((prev) => moveItem(prev, draggedId, targetId, (item) => item.idCategory));
     }
   }
 
@@ -244,11 +247,11 @@ export function CategoriesPage() {
           <div className="flex flex-col gap-2">
             {localOrder.map((category) => (
               <CategoryReorderItem
-                key={category.id}
+                key={category.idCategory}
                 category={category}
-                isDragging={draggedId === category.id}
-                onDragStart={() => setDraggedId(category.id)}
-                onDragOver={(event) => handleDragOver(event, category.id)}
+                isDragging={draggedId === category.idCategory}
+                onDragStart={() => setDraggedId(category.idCategory)}
+                onDragOver={(event) => handleDragOver(event, category.idCategory)}
                 onDrop={(event) => event.preventDefault()}
                 onDragEnd={() => setDraggedId(null)}
               />
@@ -264,13 +267,15 @@ export function CategoriesPage() {
           <div className="flex flex-col gap-3">
             {categories.map((category) => (
               <CategoryCard
-                key={category.id}
+                key={category.idCategory}
                 category={category}
-                isDeleting={deletingCategoryId === category.id}
+                isDeleting={deletingCategoryId === category.idCategory}
                 onEdit={() => openEditCategoryModal(category)}
-                onDelete={() => void handleDeleteCategory(category.id)}
-                onEditSubCategory={(sub) => openEditSubCategoryModal(category.id, sub.id)}
-                onAddSubCategory={() => openCreateSubCategoryModal(category.id)}
+                onDelete={() => void handleDeleteCategory(category.idCategory)}
+                onEditSubCategory={(sub) =>
+                  openEditSubCategoryModal(category.idCategory, sub.idSubCategory)
+                }
+                onAddSubCategory={() => openCreateSubCategoryModal(category.idCategory)}
               />
             ))}
           </div>
@@ -285,14 +290,16 @@ export function CategoriesPage() {
         onClose={closeCategoryModal}
         onSubmit={handleCategorySubmit}
         onAddSubCategory={() => {
-          if (editingCategory) openCreateSubCategoryModal(editingCategory.id);
+          if (editingCategory) openCreateSubCategoryModal(editingCategory.idCategory);
         }}
         onEditSubCategory={(sub) => {
-          if (editingCategory) openEditSubCategoryModal(editingCategory.id, sub.id);
+          if (editingCategory) {
+            openEditSubCategoryModal(editingCategory.idCategory, sub.idSubCategory);
+          }
         }}
         onDeleteSubCategory={(sub) => void handleDeleteSubCategory(sub)}
         onReorderSubCategories={(orderedIds) => {
-          if (editingCategory) void reorderSubCategories(editingCategory.id, orderedIds);
+          if (editingCategory) void reorderSubCategories(editingCategory.idCategory, orderedIds);
         }}
       />
 

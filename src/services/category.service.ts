@@ -21,8 +21,8 @@ export const categoryService = {
   async createCategory(input: CategoryInput): Promise<Category> {
     await delay();
     return {
-      id: crypto.randomUUID(),
-      name: input.name,
+      idCategory: crypto.randomUUID(),
+      nameCategory: input.nameCategory,
       type: input.type,
       color: input.color,
       icon: input.icon,
@@ -31,74 +31,88 @@ export const categoryService = {
     };
   },
 
-  async updateCategory(id: string, input: CategoryInput, current: Category): Promise<Category> {
+  async updateCategory(
+    idCategory: string,
+    input: CategoryInput,
+    current: Category,
+  ): Promise<Category> {
     await delay();
     return {
       ...current,
-      id,
-      name: input.name,
+      idCategory,
+      nameCategory: input.nameCategory,
       type: input.type,
       color: input.color,
       icon: input.icon,
     };
   },
 
-  async deleteCategory(id: string): Promise<void> {
+  async deleteCategory(idCategory: string): Promise<void> {
     await delay();
-    void id;
+    void idCategory;
   },
 
   async reorderCategories(orderedIds: string[], categories: Category[]): Promise<Category[]> {
     await delay();
     const idSet = new Set(orderedIds);
     const reordered = orderedIds
-      .map((id) => categories.find((category) => category.id === id))
+      .map((id) => categories.find((category) => category.idCategory === id))
       .filter((category): category is Category => category !== undefined);
 
     let cursor = 0;
-    return categories.map((category) => (idSet.has(category.id) ? reordered[cursor++] : category));
+    return categories.map((category) =>
+      idSet.has(category.idCategory) ? reordered[cursor++] : category,
+    );
   },
 
-  async createSubCategory(categoryId: string, input: SubCategoryInput): Promise<SubCategory> {
+  async createSubCategory(idCategory: string, input: SubCategoryInput): Promise<SubCategory> {
     await delay();
     return {
-      id: crypto.randomUUID(),
-      categoryId,
-      name: input.name,
+      idSubCategory: crypto.randomUUID(),
+      idCategory,
+      nameSubCategory: input.nameSubCategory,
       icon: input.icon,
       transactionCount: 0,
     };
   },
 
   async updateSubCategory(
-    categoryId: string,
-    id: string,
+    idCategory: string,
+    idSubCategory: string,
     input: SubCategoryInput,
     current: SubCategory,
   ): Promise<SubCategory> {
     await delay();
-    return { ...current, id, categoryId, name: input.name, icon: input.icon };
+    return {
+      ...current,
+      idSubCategory,
+      idCategory,
+      nameSubCategory: input.nameSubCategory,
+      icon: input.icon,
+    };
   },
 
-  async deleteSubCategory(categoryId: string, id: string): Promise<void> {
+  async deleteSubCategory(idCategory: string, idSubCategory: string): Promise<void> {
     await delay();
-    void categoryId;
-    void id;
+    void idCategory;
+    void idSubCategory;
   },
 
   async reorderSubCategories(
-    categoryId: string,
+    idCategory: string,
     orderedIds: string[],
     subCategories: SubCategory[],
   ): Promise<SubCategory[]> {
     await delay();
-    void categoryId;
+    void idCategory;
     const idSet = new Set(orderedIds);
     const reordered = orderedIds
-      .map((id) => subCategories.find((sub) => sub.id === id))
+      .map((id) => subCategories.find((sub) => sub.idSubCategory === id))
       .filter((sub): sub is SubCategory => sub !== undefined);
 
     let cursor = 0;
-    return subCategories.map((sub) => (idSet.has(sub.id) ? reordered[cursor++] : sub));
+    return subCategories.map((sub) =>
+      idSet.has(sub.idSubCategory) ? reordered[cursor++] : sub,
+    );
   },
 };

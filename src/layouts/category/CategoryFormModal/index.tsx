@@ -77,7 +77,7 @@ function CategoryFormFields({
 }: CategoryFormFieldsProps) {
   const { t } = useTranslation();
   const [type, setType] = useState<CategoryType>(category?.type ?? defaultType);
-  const [name, setName] = useState(category?.name ?? "");
+  const [name, setName] = useState(category?.nameCategory ?? "");
   const [color, setColor] = useState(category?.color ?? WALLET_COLOR_PRESETS[0]);
   const [icon, setIcon] = useState(category?.icon ?? CATEGORY_ICONS[0].name);
   const [dragState, setDragState] = useState<SubCategoryDragState | null>(null);
@@ -87,20 +87,23 @@ function CategoryFormFields({
   function handleSubmit(event: SubmitEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!name.trim()) return;
-    onSubmit({ name: name.trim(), type, color, icon });
+    onSubmit({ nameCategory: name.trim(), type, color, icon });
   }
 
   function handleSubDragOver(event: DragEvent<HTMLDivElement>, targetId: string) {
     event.preventDefault();
     setDragState((prev) => {
       if (!prev || prev.draggedId === targetId) return prev;
-      return { draggedId: prev.draggedId, order: moveItem(prev.order, prev.draggedId, targetId) };
+      return {
+        draggedId: prev.draggedId,
+        order: moveItem(prev.order, prev.draggedId, targetId, (item) => item.idSubCategory),
+      };
     });
   }
 
   function handleSubDrop(event: DragEvent<HTMLDivElement>) {
     event.preventDefault();
-    if (dragState) onReorderSubCategories(dragState.order.map((sub) => sub.id));
+    if (dragState) onReorderSubCategories(dragState.order.map((sub) => sub.idSubCategory));
   }
 
   return (
@@ -189,13 +192,15 @@ function CategoryFormFields({
             )}
             {subCategories.map((sub) => (
               <SubCategoryListRow
-                key={sub.id}
+                key={sub.idSubCategory}
                 subCategory={sub}
                 categoryColor={category.color}
                 onEdit={() => onEditSubCategory(sub)}
                 onDelete={() => onDeleteSubCategory(sub)}
-                onDragStart={() => setDragState({ draggedId: sub.id, order: category.subCategories })}
-                onDragOver={(event) => handleSubDragOver(event, sub.id)}
+                onDragStart={() =>
+                  setDragState({ draggedId: sub.idSubCategory, order: category.subCategories })
+                }
+                onDragOver={(event) => handleSubDragOver(event, sub.idSubCategory)}
                 onDrop={handleSubDrop}
                 onDragEnd={() => setDragState(null)}
               />
@@ -259,7 +264,7 @@ function SubCategoryListRow({
         </div>
         <div className="flex min-w-0 flex-col">
           <Words type="sm/bold" className="truncate text-ink-900 dark:text-ink-50">
-            {subCategory.name}
+            {subCategory.nameSubCategory}
           </Words>
           <Words type="xs/regular" className="text-ink-400 dark:text-ink-500">
             {t("wallet.transactionCount", { n: subCategory.transactionCount })}

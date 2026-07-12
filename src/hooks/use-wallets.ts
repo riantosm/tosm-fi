@@ -32,7 +32,7 @@ export function useWallets() {
 
   const editWallet = useCallback(
     async (id: string, input: WalletInput) => {
-      const existing = wallets.find((wallet) => wallet.id === id);
+      const existing = wallets.find((wallet) => wallet.idWallet === id);
       if (!existing) return;
       const updated = await walletService.updateWallet(id, input, existing);
       dispatch(updateWallet(updated));

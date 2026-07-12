@@ -52,7 +52,7 @@ export function CategoryCard({
               </Words>
             </span>
             <Words type="base/bold" className="truncate text-ink-900 dark:text-ink-50">
-              {category.name}
+              {category.nameCategory}
             </Words>
             <Words type="xs/regular" className="text-ink-400 dark:text-ink-500">
               {t("wallet.transactionCount", { n: category.transactionCount })}
@@ -78,7 +78,7 @@ export function CategoryCard({
       <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
         {category.subCategories.map((sub) => (
           <SubCategoryPill
-            key={sub.id}
+            key={sub.idSubCategory}
             subCategory={sub}
             categoryColor={category.color}
             onClick={() => onEditSubCategory(sub)}

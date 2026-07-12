@@ -2,11 +2,23 @@ import { useEffect, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { cn } from "@/utils/cn";
 
+type ModalSize = "sm" | "md" | "lg" | "xl" | "2xl" | "3xl";
+
+const SIZE_CLASS: Record<ModalSize, string> = {
+  sm: "max-w-sm",
+  md: "max-w-md",
+  lg: "max-w-lg",
+  xl: "max-w-xl",
+  "2xl": "max-w-2xl",
+  "3xl": "max-w-3xl",
+};
+
 interface ModalProps {
   isOpen: boolean;
   onClose: () => void;
   children: ReactNode;
   className?: string;
+  size?: ModalSize;
 }
 
 const openModalCloseHandlers: Array<() => void> = [];
@@ -17,7 +29,7 @@ function handleGlobalEscape(event: KeyboardEvent) {
   openModalCloseHandlers[openModalCloseHandlers.length - 1]?.();
 }
 
-export function Modal({ isOpen, onClose, children, className }: ModalProps) {
+export function Modal({ isOpen, onClose, children, className, size = "sm" }: ModalProps) {
   useEffect(() => {
     if (!isOpen) return;
 
@@ -48,7 +60,8 @@ export function Modal({ isOpen, onClose, children, className }: ModalProps) {
         role="dialog"
         aria-modal="true"
         className={cn(
-          "relative w-full max-w-sm rounded-2xl border border-ink-200 bg-white p-6 shadow-xl dark:border-ink-800 dark:bg-ink-900",
+          "relative w-full rounded-2xl border border-ink-200 bg-white p-6 shadow-xl dark:border-ink-800 dark:bg-ink-900",
+          SIZE_CLASS[size],
           className,
         )}
       >

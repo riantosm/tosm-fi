@@ -44,7 +44,7 @@
     "greeting": "こんにちは、{{name}}さん",
     "subtitle": "今日の資産状況のまとめです。",
     "recentTransactions": "最近の取引",
-    "addTransaction": "追加"
+    "noTransactions": "まだ取引がありません"
   },
   "topbar": {
     "search": "検索",
@@ -68,13 +68,24 @@
       "description": "アプリ全体で使用する通貨を選択"
     }
   },
+  "settingsDanger": {
+    "title": "危険な操作",
+    "description": "テスト用の機能です — このブラウザに保存されているウォレット、カテゴリ、取引がすべて削除されます。",
+    "resetButton": "データをリセット",
+    "resetConfirmTitle": "すべてのデータをリセットしますか?",
+    "resetConfirmDescription": "このブラウザに保存されているウォレット、カテゴリ、取引がすべて完全に削除されます。この操作は取り消せません。",
+    "resetConfirmAction": "リセット",
+    "resetSuccess": "データをリセットしました"
+  },
   "apiDoc": {
     "title": "バックエンドAPIドキュメント",
     "subtitle": "バックエンド開発に必要なエンドポイント、payload、responseの一覧です。",
     "groups": {
       "auth": "認証",
       "wallet": "ウォレット",
-      "category": "カテゴリ"
+      "category": "カテゴリ",
+      "transaction": "取引",
+      "settings": "設定"
     },
     "payload": "Payload",
     "noPayload": "Payloadは不要です",
@@ -114,7 +125,9 @@
     "deleteConfirmAction": "削除",
     "toggleViewMode": "グリッド/リスト表示を切り替え",
     "toggleReorder": "ウォレットの並べ替え",
-    "saveOrder": "並び順を保存"
+    "saveOrder": "並び順を保存",
+    "currentBalance": "現在の残高",
+    "newBalanceHint": "実際の残高を入力してください"
   },
   "category": {
     "income": "収入",
@@ -229,5 +242,40 @@
     "deleteConfirmTitle": "このカテゴリを削除しますか?",
     "deleteConfirmDescription": "サブカテゴリも削除されます。この操作は取り消せません。",
     "deleteSubCategoryConfirmTitle": "このサブカテゴリを削除しますか?"
+  },
+  "transaction": {
+    "addTransaction": "取引を追加",
+    "editTransaction": "取引を編集",
+    "expense": "支出",
+    "income": "収入",
+    "transfer": "振替",
+    "titlePlaceholder": "タイトル（任意）",
+    "notesPlaceholder": "メモ（任意）",
+    "selectCategoryPlaceholder": "カテゴリを選択",
+    "selectCategoryTitle": "カテゴリを選択",
+    "selectSubCategoryTitle": "サブカテゴリを選択",
+    "noSubCategory": "サブカテゴリなし",
+    "enterAmountTitle": "金額を入力",
+    "setAmount": "金額を設定",
+    "selectDateTimeTitle": "日時を選択",
+    "today": "今日",
+    "walletLabel": "ウォレット",
+    "transferFrom": "送金元",
+    "transferTo": "送金先",
+    "transferTitleTemplate": "{{from}} → {{to}} 振替",
+    "balanceCorrection": "残高修正",
+    "categoryRequiredError": "先にカテゴリを選択してください",
+    "amountRequiredError": "金額を入力してください",
+    "walletRequiredError": "先にウォレットを選択してください",
+    "transferWalletRequiredError": "両方のウォレットを選択してください",
+    "transferSameWalletError": "送金元と送金先は別のウォレットにしてください",
+    "createSuccess": "取引を追加しました",
+    "updateSuccess": "取引を更新しました",
+    "deleteButton": "削除",
+    "deleteConfirmTitle": "この取引を削除しますか?",
+    "deleteConfirmDescription": "ウォレット残高は元に戻ります。この操作は取り消せません。",
+    "deleteConfirmAction": "削除",
+    "deleteSuccess": "取引を削除しました",
+    "save": "保存"
   }
 }

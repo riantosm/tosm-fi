@@ -28,27 +28,35 @@ export const categorySlice = createSlice({
       state.categories.push(action.payload);
     },
     updateCategory: (state, action: PayloadAction<Category>) => {
-      const index = state.categories.findIndex((category) => category.id === action.payload.id);
+      const index = state.categories.findIndex(
+        (category) => category.idCategory === action.payload.idCategory,
+      );
       if (index !== -1) state.categories[index] = action.payload;
     },
     removeCategory: (state, action: PayloadAction<string>) => {
-      state.categories = state.categories.filter((category) => category.id !== action.payload);
+      state.categories = state.categories.filter(
+        (category) => category.idCategory !== action.payload,
+      );
     },
     addSubCategory: (
       state,
       action: PayloadAction<{ categoryId: string; subCategory: SubCategory }>,
     ) => {
-      const category = state.categories.find((item) => item.id === action.payload.categoryId);
+      const category = state.categories.find(
+        (item) => item.idCategory === action.payload.categoryId,
+      );
       if (category) category.subCategories.push(action.payload.subCategory);
     },
     updateSubCategory: (
       state,
       action: PayloadAction<{ categoryId: string; subCategory: SubCategory }>,
     ) => {
-      const category = state.categories.find((item) => item.id === action.payload.categoryId);
+      const category = state.categories.find(
+        (item) => item.idCategory === action.payload.categoryId,
+      );
       if (!category) return;
       const index = category.subCategories.findIndex(
-        (sub) => sub.id === action.payload.subCategory.id,
+        (sub) => sub.idSubCategory === action.payload.subCategory.idSubCategory,
       );
       if (index !== -1) category.subCategories[index] = action.payload.subCategory;
     },
@@ -56,19 +64,24 @@ export const categorySlice = createSlice({
       state,
       action: PayloadAction<{ categoryId: string; subCategoryId: string }>,
     ) => {
-      const category = state.categories.find((item) => item.id === action.payload.categoryId);
+      const category = state.categories.find(
+        (item) => item.idCategory === action.payload.categoryId,
+      );
       if (!category) return;
       category.subCategories = category.subCategories.filter(
-        (sub) => sub.id !== action.payload.subCategoryId,
+        (sub) => sub.idSubCategory !== action.payload.subCategoryId,
       );
     },
     setSubCategoryOrder: (
       state,
       action: PayloadAction<{ categoryId: string; subCategories: SubCategory[] }>,
     ) => {
-      const category = state.categories.find((item) => item.id === action.payload.categoryId);
+      const category = state.categories.find(
+        (item) => item.idCategory === action.payload.categoryId,
+      );
       if (category) category.subCategories = action.payload.subCategories;
     },
+    resetCategories: () => initialState,
   },
 });
 
@@ -82,6 +95,7 @@ export const {
   updateSubCategory,
   removeSubCategory,
   setSubCategoryOrder,
+  resetCategories,
 } = categorySlice.actions;
 
 export default categorySlice.reducer;

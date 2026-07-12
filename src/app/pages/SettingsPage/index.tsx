@@ -1,12 +1,33 @@
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { HiChevronRight } from "react-icons/hi2";
+import { HiChevronRight, HiOutlineTrash } from "react-icons/hi2";
 import { DashboardLayout } from "@/components/templates/DashboardLayout";
+import { Button } from "@/components/atoms/Button";
 import { Words } from "@/components/atoms/Words";
 import { SETTINGS_MENU_ITEMS } from "@/constants/settings-menu";
+import { useResetData } from "@/hooks/use-reset-data";
+import { useConfirmDialog } from "@/hooks/use-confirm-dialog";
+import { useToast } from "@/hooks/use-toast";
 
 export function SettingsPage() {
   const { t } = useTranslation();
+  const { resetData } = useResetData();
+  const { confirm } = useConfirmDialog();
+  const { showToast } = useToast();
+
+  async function handleResetData() {
+    const confirmed = await confirm({
+      title: t("settingsDanger.resetConfirmTitle"),
+      description: t("settingsDanger.resetConfirmDescription"),
+      confirmLabel: t("settingsDanger.resetConfirmAction"),
+      cancelLabel: t("common.cancel"),
+      destructive: true,
+    });
+    if (!confirmed) return;
+
+    resetData();
+    showToast(t("settingsDanger.resetSuccess"), "success");
+  }
 
   return (
     <DashboardLayout>
@@ -41,6 +62,27 @@ export function SettingsPage() {
             })}
           </div>
         </nav>
+
+        <div className="flex flex-col gap-3 rounded-2xl border border-red-200 p-4 dark:border-red-500/30">
+          <div className="flex flex-col gap-1">
+            <Words type="sm/bold" className="text-red-600 dark:text-red-400">
+              {t("settingsDanger.title")}
+            </Words>
+            <Words type="xs/regular" className="text-ink-500 dark:text-ink-400">
+              {t("settingsDanger.description")}
+            </Words>
+          </div>
+          <Button
+            variant="danger"
+            onClick={() => void handleResetData()}
+            className="w-fit"
+          >
+            <HiOutlineTrash className="h-4 w-4" />
+            <Words type="sm/bold" as="span">
+              {t("settingsDanger.resetButton")}
+            </Words>
+          </Button>
+        </div>
       </div>
     </DashboardLayout>
   );

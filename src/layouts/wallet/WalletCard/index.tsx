@@ -21,7 +21,7 @@ export function WalletCard({ wallet, onClick }: WalletCardProps) {
     >
       <div className="flex items-center justify-between gap-2">
         <Words type="lg/bold" className="text-ink-900 dark:text-ink-50">
-          {wallet.name}
+          {wallet.nameWallet}
         </Words>
         {wallet.isPrimary && (
           <span className="flex shrink-0 items-center justify-center rounded-full bg-ink-100 px-2 py-0.5 dark:bg-ink-800">

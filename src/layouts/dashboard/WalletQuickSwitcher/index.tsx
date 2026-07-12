@@ -7,9 +7,14 @@ import { Words } from "@/components/atoms/Words";
 import { useCurrency } from "@/hooks/use-currency";
 import { useWallets } from "@/hooks/use-wallets";
 import { ROUTES } from "@/constants/routes";
+import type { WalletAccount } from "@/types/wallet.types";
 import { cn } from "@/utils/cn";
 
-export function WalletQuickSwitcher() {
+interface WalletQuickSwitcherProps {
+  onCorrectBalance: (wallet: WalletAccount) => void;
+}
+
+export function WalletQuickSwitcher({ onCorrectBalance }: WalletQuickSwitcherProps) {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { wallets, status, loadWallets, setPrimaryWallet } = useWallets();
@@ -39,12 +44,16 @@ export function WalletQuickSwitcher() {
       <div className="flex gap-3 overflow-x-auto pb-1 scrollbar-hide">
         {wallets.map((wallet) => (
           <button
-            key={wallet.id}
+            key={wallet.idWallet}
             type="button"
             onClick={() => {
-              if (!wallet.isPrimary) void handleSelect(wallet.id);
+              if (wallet.isPrimary) {
+                onCorrectBalance(wallet);
+              } else {
+                void handleSelect(wallet.idWallet);
+              }
             }}
-            disabled={pendingId === wallet.id}
+            disabled={pendingId === wallet.idWallet}
             className={cn(
               "relative flex w-44 shrink-0 flex-col gap-1 rounded-2xl border-2 bg-white p-4 text-left transition-colors dark:bg-ink-900",
               wallet.isPrimary
@@ -56,10 +65,10 @@ export function WalletQuickSwitcher() {
             <span
               className={cn(
                 "absolute right-2.5 top-2.5 flex shrink-0 items-center justify-center rounded-full transition-all",
-                pendingId === wallet.id ? "h-6 w-6 bg-ink-100 dark:bg-ink-800" : "h-3 w-3",
+                pendingId === wallet.idWallet ? "h-6 w-6 bg-ink-100 dark:bg-ink-800" : "h-3 w-3",
               )}
             >
-              {pendingId === wallet.id ? (
+              {pendingId === wallet.idWallet ? (
                 <IconLoader className="h-4 w-4 animate-spin" style={{ color: wallet.color }} />
               ) : (
                 <span
@@ -69,7 +78,7 @@ export function WalletQuickSwitcher() {
               )}
             </span>
             <Words type="base/bold" className="truncate pr-4 text-ink-900 dark:text-ink-50">
-              {wallet.name}
+              {wallet.nameWallet}
             </Words>
             <Words type="sm/bold" className="text-ink-900 dark:text-ink-50">
               {format(wallet.balance)}

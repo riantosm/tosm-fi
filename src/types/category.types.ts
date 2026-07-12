@@ -1,16 +1,16 @@
 export type CategoryType = "income" | "expense";
 
 export interface SubCategory {
-  id: string;
-  categoryId: string;
-  name: string;
+  idSubCategory: string;
+  idCategory: string;
+  nameSubCategory: string;
   icon: string;
   transactionCount: number;
 }
 
 export interface Category {
-  id: string;
-  name: string;
+  idCategory: string;
+  nameCategory: string;
   type: CategoryType;
   color: string;
   icon: string;
@@ -19,13 +19,13 @@ export interface Category {
 }
 
 export interface CategoryInput {
-  name: string;
+  nameCategory: string;
   type: CategoryType;
   color: string;
   icon: string;
 }
 
 export interface SubCategoryInput {
-  name: string;
+  nameSubCategory: string;
   icon: string;
 }

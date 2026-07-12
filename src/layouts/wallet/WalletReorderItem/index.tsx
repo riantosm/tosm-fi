@@ -39,7 +39,7 @@ export function WalletReorderItem({
     >
       <HiOutlineBars3 className="h-5 w-5 shrink-0 text-ink-300 dark:text-ink-600" />
       <Words type="sm/bold" className="flex-1 truncate text-ink-900 dark:text-ink-50">
-        {wallet.name}
+        {wallet.nameWallet}
       </Words>
       {wallet.isPrimary && (
         <span className="flex shrink-0 items-center justify-center rounded-full bg-ink-100 px-2 py-0.5 dark:bg-ink-800">

@@ -44,7 +44,7 @@
     "greeting": "Halo, {{name}}",
     "subtitle": "Berikut ringkasan keuanganmu hari ini.",
     "recentTransactions": "Transaksi Terbaru",
-    "addTransaction": "Tambah"
+    "noTransactions": "Belum ada transaksi"
   },
   "topbar": {
     "search": "Cari",
@@ -68,13 +68,24 @@
       "description": "Pilih mata uang yang digunakan di seluruh aplikasi"
     }
   },
+  "settingsDanger": {
+    "title": "Zona Berbahaya",
+    "description": "Hanya untuk testing — menghapus semua wallet, kategori, dan transaksi yang tersimpan di browser ini.",
+    "resetButton": "Reset Data",
+    "resetConfirmTitle": "Reset semua data?",
+    "resetConfirmDescription": "Semua wallet, kategori, dan transaksi akan dihapus permanen dari browser ini. Tindakan ini tidak bisa dibatalkan.",
+    "resetConfirmAction": "Reset",
+    "resetSuccess": "Data berhasil direset"
+  },
   "apiDoc": {
     "title": "Dokumentasi Backend API",
     "subtitle": "Daftar endpoint, payload, dan response yang dibutuhkan untuk pengembangan backend.",
     "groups": {
       "auth": "Autentikasi",
       "wallet": "Wallet",
-      "category": "Kategori"
+      "category": "Kategori",
+      "transaction": "Transaksi",
+      "settings": "Pengaturan"
     },
     "payload": "Payload",
     "noPayload": "Tidak ada payload",
@@ -114,7 +125,9 @@
     "deleteConfirmAction": "Hapus",
     "toggleViewMode": "Ubah tampilan grid atau list",
     "toggleReorder": "Urutkan wallet",
-    "saveOrder": "Simpan Urutan"
+    "saveOrder": "Simpan Urutan",
+    "currentBalance": "Saldo saat ini",
+    "newBalanceHint": "Masukkan saldo yang sebenarnya"
   },
   "category": {
     "income": "Pemasukan",
@@ -229,5 +242,40 @@
     "deleteConfirmTitle": "Hapus kategori ini?",
     "deleteConfirmDescription": "Ini juga akan menghapus subkategorinya. Tindakan ini tidak bisa dibatalkan.",
     "deleteSubCategoryConfirmTitle": "Hapus subkategori ini?"
+  },
+  "transaction": {
+    "addTransaction": "Tambah Transaksi",
+    "editTransaction": "Edit Transaksi",
+    "expense": "Pengeluaran",
+    "income": "Pemasukan",
+    "transfer": "Transfer",
+    "titlePlaceholder": "Judul (opsional)",
+    "notesPlaceholder": "Catatan (opsional)",
+    "selectCategoryPlaceholder": "Pilih Kategori",
+    "selectCategoryTitle": "Pilih Kategori",
+    "selectSubCategoryTitle": "Pilih Subkategori",
+    "noSubCategory": "Tanpa Subkategori",
+    "enterAmountTitle": "Masukkan Jumlah",
+    "setAmount": "Set Jumlah",
+    "selectDateTimeTitle": "Pilih Tanggal & Waktu",
+    "today": "Hari Ini",
+    "walletLabel": "Dompet",
+    "transferFrom": "Dari Dompet",
+    "transferTo": "Ke Dompet",
+    "transferTitleTemplate": "{{from}} Transfer Keluar → {{to}} Transfer Masuk",
+    "balanceCorrection": "Koreksi Saldo",
+    "categoryRequiredError": "Pilih kategori terlebih dahulu",
+    "amountRequiredError": "Masukkan jumlah terlebih dahulu",
+    "walletRequiredError": "Pilih dompet terlebih dahulu",
+    "transferWalletRequiredError": "Pilih kedua dompet terlebih dahulu",
+    "transferSameWalletError": "Dompet asal dan tujuan harus berbeda",
+    "createSuccess": "Transaksi berhasil ditambahkan",
+    "updateSuccess": "Transaksi berhasil diperbarui",
+    "deleteButton": "Hapus",
+    "deleteConfirmTitle": "Hapus transaksi ini?",
+    "deleteConfirmDescription": "Saldo wallet akan dikembalikan. Tindakan ini tidak bisa dibatalkan.",
+    "deleteConfirmAction": "Hapus",
+    "deleteSuccess": "Transaksi berhasil dihapus",
+    "save": "Simpan"
   }
 }

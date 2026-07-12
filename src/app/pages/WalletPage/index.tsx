@@ -15,8 +15,8 @@ import { useWalletViewMode } from "@/hooks/use-wallet-view-mode";
 import type { WalletAccount, WalletInput } from "@/types/wallet.types";
 
 function moveItem(list: WalletAccount[], draggedId: string, targetId: string): WalletAccount[] {
-  const fromIndex = list.findIndex((item) => item.id === draggedId);
-  const toIndex = list.findIndex((item) => item.id === targetId);
+  const fromIndex = list.findIndex((item) => item.idWallet === draggedId);
+  const toIndex = list.findIndex((item) => item.idWallet === targetId);
   if (fromIndex === -1 || toIndex === -1) return list;
 
   const next = [...list];
@@ -69,7 +69,7 @@ export function WalletPage() {
     setIsSubmitting(true);
     try {
       if (editingWallet) {
-        await editWallet(editingWallet.id, input);
+        await editWallet(editingWallet.idWallet, input);
       } else {
         await createWallet(input);
       }
@@ -120,7 +120,7 @@ export function WalletPage() {
   async function handleSaveOrder() {
     setIsSavingOrder(true);
     try {
-      await reorderWallets(localOrder.map((wallet) => wallet.id));
+      await reorderWallets(localOrder.map((wallet) => wallet.idWallet));
       setIsReordering(false);
     } finally {
       setIsSavingOrder(false);
@@ -175,11 +175,11 @@ export function WalletPage() {
           <div className="flex flex-col gap-2">
             {localOrder.map((wallet) => (
               <WalletReorderItem
-                key={wallet.id}
+                key={wallet.idWallet}
                 wallet={wallet}
-                isDragging={draggedId === wallet.id}
-                onDragStart={() => setDraggedId(wallet.id)}
-                onDragOver={(event) => handleDragOver(event, wallet.id)}
+                isDragging={draggedId === wallet.idWallet}
+                onDragStart={() => setDraggedId(wallet.idWallet)}
+                onDragOver={(event) => handleDragOver(event, wallet.idWallet)}
                 onDrop={(event) => event.preventDefault()}
                 onDragEnd={() => setDraggedId(null)}
               />
@@ -194,7 +194,7 @@ export function WalletPage() {
             }
           >
             {wallets.map((wallet) => (
-              <WalletCard key={wallet.id} wallet={wallet} onClick={() => openEditModal(wallet)} />
+              <WalletCard key={wallet.idWallet} wallet={wallet} onClick={() => openEditModal(wallet)} />
             ))}
             <AddWalletCard onClick={openCreateModal} />
           </div>

@@ -28,20 +28,31 @@ export const walletSlice = createSlice({
       state.wallets.push(action.payload);
     },
     updateWallet: (state, action: PayloadAction<WalletAccount>) => {
-      const index = state.wallets.findIndex((wallet) => wallet.id === action.payload.id);
+      const index = state.wallets.findIndex(
+        (wallet) => wallet.idWallet === action.payload.idWallet,
+      );
       if (index !== -1) state.wallets[index] = action.payload;
     },
     removeWallet: (state, action: PayloadAction<string>) => {
-      const wasPrimary = state.wallets.find((wallet) => wallet.id === action.payload)?.isPrimary;
-      state.wallets = state.wallets.filter((wallet) => wallet.id !== action.payload);
+      const wasPrimary = state.wallets.find(
+        (wallet) => wallet.idWallet === action.payload,
+      )?.isPrimary;
+      state.wallets = state.wallets.filter((wallet) => wallet.idWallet !== action.payload);
       if (wasPrimary && state.wallets.length > 0) {
         state.wallets[0].isPrimary = true;
       }
     },
+    resetWallets: () => initialState,
   },
 });
 
-export const { setWalletsLoading, setWallets, addWallet, updateWallet, removeWallet } =
-  walletSlice.actions;
+export const {
+  setWalletsLoading,
+  setWallets,
+  addWallet,
+  updateWallet,
+  removeWallet,
+  resetWallets,
+} = walletSlice.actions;
 
 export default walletSlice.reducer;

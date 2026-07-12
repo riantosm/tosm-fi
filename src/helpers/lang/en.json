@@ -44,7 +44,7 @@
     "greeting": "Hi, {{name}}",
     "subtitle": "Here's a summary of your finances today.",
     "recentTransactions": "Recent Transactions",
-    "addTransaction": "Add"
+    "noTransactions": "No transactions yet"
   },
   "topbar": {
     "search": "Search",
@@ -68,13 +68,24 @@
       "description": "Choose which currency is used across the app"
     }
   },
+  "settingsDanger": {
+    "title": "Danger Zone",
+    "description": "For testing only — clears all wallets, categories, and transactions stored in this browser.",
+    "resetButton": "Reset Data",
+    "resetConfirmTitle": "Reset all data?",
+    "resetConfirmDescription": "All wallets, categories, and transactions will be permanently deleted from this browser. This action cannot be undone.",
+    "resetConfirmAction": "Reset",
+    "resetSuccess": "Data has been reset"
+  },
   "apiDoc": {
     "title": "Backend API Documentation",
     "subtitle": "List of endpoints, payloads, and responses needed for backend development.",
     "groups": {
       "auth": "Authentication",
       "wallet": "Wallet",
-      "category": "Category"
+      "category": "Category",
+      "transaction": "Transaction",
+      "settings": "Settings"
     },
     "payload": "Payload",
     "noPayload": "No payload required",
@@ -114,7 +125,9 @@
     "deleteConfirmAction": "Delete",
     "toggleViewMode": "Toggle grid or list view",
     "toggleReorder": "Reorder wallets",
-    "saveOrder": "Save Order"
+    "saveOrder": "Save Order",
+    "currentBalance": "Current balance",
+    "newBalanceHint": "Enter the actual balance"
   },
   "category": {
     "income": "Income",
@@ -229,5 +242,40 @@
     "deleteConfirmTitle": "Delete this category?",
     "deleteConfirmDescription": "This will also remove its subcategories. This action cannot be undone.",
     "deleteSubCategoryConfirmTitle": "Delete this subcategory?"
+  },
+  "transaction": {
+    "addTransaction": "Add Transaction",
+    "editTransaction": "Edit Transaction",
+    "expense": "Expense",
+    "income": "Income",
+    "transfer": "Transfer",
+    "titlePlaceholder": "Title (optional)",
+    "notesPlaceholder": "Notes (optional)",
+    "selectCategoryPlaceholder": "Select Category",
+    "selectCategoryTitle": "Select Category",
+    "selectSubCategoryTitle": "Select Subcategory",
+    "noSubCategory": "No Subcategory",
+    "enterAmountTitle": "Enter Amount",
+    "setAmount": "Set Amount",
+    "selectDateTimeTitle": "Select Date & Time",
+    "today": "Today",
+    "walletLabel": "Wallet",
+    "transferFrom": "From Wallet",
+    "transferTo": "To Wallet",
+    "transferTitleTemplate": "{{from}} Transfer Out → {{to}} Transfer In",
+    "balanceCorrection": "Balance Correction",
+    "categoryRequiredError": "Please select a category first",
+    "amountRequiredError": "Please enter an amount",
+    "walletRequiredError": "Please select a wallet first",
+    "transferWalletRequiredError": "Please select both wallets",
+    "transferSameWalletError": "From and to wallets must be different",
+    "createSuccess": "Transaction added successfully",
+    "updateSuccess": "Transaction updated successfully",
+    "deleteButton": "Delete",
+    "deleteConfirmTitle": "Delete this transaction?",
+    "deleteConfirmDescription": "The wallet balance will be reverted. This action cannot be undone.",
+    "deleteConfirmAction": "Delete",
+    "deleteSuccess": "Transaction deleted successfully",
+    "save": "Save"
   }
 }

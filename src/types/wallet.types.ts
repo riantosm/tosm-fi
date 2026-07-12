@@ -1,6 +1,6 @@
 export interface WalletAccount {
-  id: string;
-  name: string;
+  idWallet: string;
+  nameWallet: string;
   color: string;
   balance: number;
   transactionCount: number;
@@ -8,7 +8,7 @@ export interface WalletAccount {
 }
 
 export interface WalletInput {
-  name: string;
+  nameWallet: string;
   color: string;
   balance?: number;
 }

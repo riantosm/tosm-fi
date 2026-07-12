@@ -43,7 +43,7 @@ export function Topbar({ onOpenMenu }: TopbarProps) {
         <div className="hidden items-center gap-2 sm:flex">
           <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-bl from-primary-400 to-primary-900 uppercase text-white">
             <Words type="xs/bold" as="span">
-              {user.name?.slice(0, 2)}
+              {user.nameUser?.slice(0, 2)}
             </Words>
           </div>
           <div className="hidden flex-col md:flex">
@@ -52,7 +52,7 @@ export function Topbar({ onOpenMenu }: TopbarProps) {
               as="span"
               className="max-w-32 truncate text-ink-700 dark:text-ink-300"
             >
-              {user?.name}
+              {user?.nameUser}
             </Words>
             <Words
               type="xxs/regular"

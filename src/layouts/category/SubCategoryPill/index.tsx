@@ -29,7 +29,7 @@ export function SubCategoryPill({
         as="span"
         className="whitespace-nowrap text-ink-800 dark:text-ink-200"
       >
-        {subCategory.name}
+        {subCategory.nameSubCategory}
       </Words> 
     </button>
   );

@@ -16,8 +16,8 @@ export const authService = {
     }
 
     return {
-      id: "user-1",
-      name: credentials.username,
+      idUser: "user-1",
+      nameUser: credentials.username,
       username: credentials.username,
       netWorth: 0,
     };
