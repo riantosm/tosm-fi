@@ -1,5 +1,9 @@
 import type { IconType } from "react-icons";
-import { HiOutlineBanknotes, HiOutlineCodeBracketSquare } from "react-icons/hi2";
+import {
+  HiOutlineBanknotes,
+  HiOutlineCodeBracketSquare,
+  HiOutlineUserGroup,
+} from "react-icons/hi2";
 import { ROUTES } from "@/constants/routes";
 
 export interface SettingsMenuItem {
@@ -8,9 +12,18 @@ export interface SettingsMenuItem {
   descriptionKey: string;
   path: string;
   icon: IconType;
+  adminOnly?: boolean;
 }
 
 export const SETTINGS_MENU_ITEMS: SettingsMenuItem[] = [
+  {
+    key: "user-approval",
+    titleKey: "settingsMenu.userApproval.title",
+    descriptionKey: "settingsMenu.userApproval.description",
+    path: ROUTES.SETTINGS_USER_APPROVAL,
+    icon: HiOutlineUserGroup,
+    adminOnly: true,
+  },
   {
     key: "api-doc",
     titleKey: "settingsMenu.apiDoc.title",

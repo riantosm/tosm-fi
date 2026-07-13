@@ -1,12 +1,19 @@
 import { useCallback } from "react";
 import { authService } from "@/services/auth.service";
-import type { LoginCredentials } from "@/types/auth.types";
+import type { LoginCredentials, RegisterInput } from "@/types/auth.types";
 import { onLogin, onLogout, useAppDispatch, useAppSelector } from "@/redux";
 
 export function useAuth() {
   const dispatch = useAppDispatch();
   const isLogin = useAppSelector((state) => state.authentication.isLogin);
   const userDetail = useAppSelector((state) => state.authentication.userDetail);
+
+  const register = useCallback(async (input: RegisterInput) => {
+    // Register never logs the caller in (no token is issued) — the first
+    // account bootstraps as an active admin, everyone after starts pending,
+    // either way they still go through the normal login flow afterward.
+    return authService.register(input);
+  }, []);
 
   const login = useCallback(
     async (credentials: LoginCredentials) => {
@@ -34,6 +41,7 @@ export function useAuth() {
   return {
     user: userDetail,
     isAuthenticated: isLogin,
+    register,
     login,
     logout,
   };

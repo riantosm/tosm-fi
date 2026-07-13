@@ -31,7 +31,17 @@
     "quoteAuthor": "The TosmFi Team",
     "logoutConfirmTitle": "Log out?",
     "logoutConfirmDescription": "Are you sure you want to log out?",
-    "logoutConfirmAction": "Log out"
+    "logoutConfirmAction": "Log out",
+    "noAccount": "Don't have an account?",
+    "registerLink": "Sign up",
+    "registerTitle": "Create an account",
+    "registerSubtitle": "Sign up to start managing your finances.",
+    "nameLabel": "Full Name",
+    "namePlaceholder": "full name",
+    "registerSubmit": "Sign up",
+    "registerSuccess": "Registration successful, please sign in.",
+    "alreadyHaveAccount": "Already have an account?",
+    "loginLink": "Sign in"
   },
   "nav": {
     "dashboard": "Dashboard",
@@ -67,6 +77,10 @@
     "copyright": "© {{year}} TosmFi. Made with ♥."
   },
   "settingsMenu": {
+    "userApproval": {
+      "title": "User Requests",
+      "description": "Review and activate new user registrations"
+    },
     "apiDoc": {
       "title": "Backend API",
       "description": "Endpoint documentation for backend development"
@@ -75,6 +89,16 @@
       "title": "Currency",
       "description": "Choose which currency is used across the app"
     }
+  },
+  "userApproval": {
+    "title": "User Requests",
+    "subtitle": "Review new user registrations and activate their accounts.",
+    "empty": "No user registrations yet",
+    "registeredAt": "Registered on {{date}}",
+    "statusActive": "Active",
+    "activateButton": "Activate",
+    "activateSuccess": "User activated successfully",
+    "genericError": "Something went wrong, please try again."
   },
   "settingsDanger": {
     "title": "Danger Zone",

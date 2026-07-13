@@ -31,7 +31,17 @@
     "quoteAuthor": "Tim TosmFi",
     "logoutConfirmTitle": "Keluar dari akun?",
     "logoutConfirmDescription": "Apakah kamu yakin mau keluar?",
-    "logoutConfirmAction": "Keluar"
+    "logoutConfirmAction": "Keluar",
+    "noAccount": "Belum punya akun?",
+    "registerLink": "Daftar",
+    "registerTitle": "Buat akun baru",
+    "registerSubtitle": "Daftar untuk mulai mengelola keuanganmu.",
+    "nameLabel": "Nama Lengkap",
+    "namePlaceholder": "nama lengkap",
+    "registerSubmit": "Daftar",
+    "registerSuccess": "Registrasi berhasil, silakan masuk.",
+    "alreadyHaveAccount": "Sudah punya akun?",
+    "loginLink": "Masuk"
   },
   "nav": {
     "dashboard": "Dashboard",
@@ -67,6 +77,10 @@
     "copyright": "© {{year}} TosmFi. Dibuat dengan ♥."
   },
   "settingsMenu": {
+    "userApproval": {
+      "title": "Permintaan Pengguna",
+      "description": "Tinjau dan aktifkan pendaftaran pengguna baru"
+    },
     "apiDoc": {
       "title": "Backend API",
       "description": "Dokumentasi endpoint untuk pengembangan backend"
@@ -75,6 +89,16 @@
       "title": "Mata Uang",
       "description": "Pilih mata uang yang digunakan di seluruh aplikasi"
     }
+  },
+  "userApproval": {
+    "title": "Permintaan Pengguna",
+    "subtitle": "Tinjau pendaftaran pengguna baru dan aktifkan akun mereka.",
+    "empty": "Belum ada pendaftaran pengguna",
+    "registeredAt": "Daftar pada {{date}}",
+    "statusActive": "Aktif",
+    "activateButton": "Aktifkan",
+    "activateSuccess": "Pengguna berhasil diaktifkan",
+    "genericError": "Terjadi kesalahan, coba lagi."
   },
   "settingsDanger": {
     "title": "Zona Berbahaya",

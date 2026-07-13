@@ -1,6 +1,6 @@
 import i18n from "@/helpers/i18n";
 import { getApiErrorMessage, httpClient } from "@/services/http-client";
-import type { AuthUser, LoginCredentials } from "@/types/auth.types";
+import type { AuthUser, LoginCredentials, RegisterInput } from "@/types/auth.types";
 
 interface LoginResponse {
   token: string;
@@ -8,6 +8,15 @@ interface LoginResponse {
 }
 
 export const authService = {
+  async register(input: RegisterInput): Promise<AuthUser> {
+    try {
+      const { data } = await httpClient.post("/auth/register", input);
+      return data.data as AuthUser;
+    } catch (error) {
+      throw new Error(getApiErrorMessage(error, i18n.t("auth.genericError")));
+    }
+  },
+
   async login(credentials: LoginCredentials): Promise<LoginResponse> {
     try {
       const { data } = await httpClient.post("/auth/login", {

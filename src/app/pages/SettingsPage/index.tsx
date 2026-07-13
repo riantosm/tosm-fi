@@ -5,15 +5,20 @@ import { DashboardLayout } from "@/components/templates/DashboardLayout";
 import { Button } from "@/components/atoms/Button";
 import { Words } from "@/components/atoms/Words";
 import { SETTINGS_MENU_ITEMS } from "@/constants/settings-menu";
+import { useAuth } from "@/hooks/use-auth";
 import { useResetData } from "@/hooks/use-reset-data";
 import { useConfirmDialog } from "@/hooks/use-confirm-dialog";
 import { useToast } from "@/hooks/use-toast";
 
 export function SettingsPage() {
   const { t } = useTranslation();
+  const { user } = useAuth();
   const { resetData } = useResetData();
   const { confirm } = useConfirmDialog();
   const { showToast } = useToast();
+  const visibleMenuItems = SETTINGS_MENU_ITEMS.filter(
+    (item) => !item.adminOnly || user.role === "admin",
+  );
 
   async function handleResetData() {
     const confirmed = await confirm({
@@ -38,7 +43,7 @@ export function SettingsPage() {
 
         <nav className="flex flex-col overflow-hidden rounded-2xl border border-ink-200 dark:border-ink-800">
           <div className="divide-y divide-ink-100 dark:divide-ink-800">
-            {SETTINGS_MENU_ITEMS.map((item) => {
+            {visibleMenuItems.map((item) => {
               const Icon = item.icon;
 
               return (

@@ -5,6 +5,7 @@ import {
   categorySlice,
   settingsSlice,
   transactionSlice,
+  userApprovalSlice,
   walletSlice,
 } from "./slices";
 
@@ -15,7 +16,7 @@ const storage: Storage = {
 };
 
 const persistConfig = {
-  key: "tosmfi-root",
+  key: "tosmfi-root-1",
   version: 1,
   storage,
   whitelist: ["authentication", "wallet", "category", "transaction", "settings"],
@@ -27,6 +28,9 @@ const reducer = combineReducers({
   category: categorySlice,
   transaction: transactionSlice,
   settings: settingsSlice,
+  // Not persisted — always refetched from the server, since it's an
+  // admin-only view of other users' pending requests.
+  userApproval: userApprovalSlice,
 });
 
 const persistedReducer = persistReducer(persistConfig, reducer);

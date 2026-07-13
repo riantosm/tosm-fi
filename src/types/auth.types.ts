@@ -4,6 +4,12 @@ export interface LoginCredentials {
   remember: boolean;
 }
 
+export interface RegisterInput {
+  nameUser: string;
+  username: string;
+  password: string;
+}
+
 export type UserRole = "admin" | "user";
 export type UserStatus = "pending" | "active";
 
@@ -13,6 +19,7 @@ export interface AuthUser {
   username: string;
   role: UserRole;
   status: UserStatus;
+  createdAt: string;
   netWorth?: number;
 }
 

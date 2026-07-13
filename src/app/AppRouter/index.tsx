@@ -7,6 +7,9 @@ import { ROUTES } from "@/constants/routes";
 const LoginPage = lazy(() =>
   import("@/app/pages/LoginPage").then((m) => ({ default: m.LoginPage })),
 );
+const RegisterPage = lazy(() =>
+  import("@/app/pages/RegisterPage").then((m) => ({ default: m.RegisterPage })),
+);
 const DashboardPage = lazy(() =>
   import("@/app/pages/DashboardPage").then((m) => ({ default: m.DashboardPage })),
 );
@@ -31,6 +34,11 @@ const SettingsApiDocPage = lazy(() =>
 const SettingsCurrencyPage = lazy(() =>
   import("@/app/pages/SettingsCurrencyPage").then((m) => ({ default: m.SettingsCurrencyPage })),
 );
+const SettingsUserApprovalPage = lazy(() =>
+  import("@/app/pages/SettingsUserApprovalPage").then((m) => ({
+    default: m.SettingsUserApprovalPage,
+  })),
+);
 
 function RouteFallback() {
   return (
@@ -46,6 +54,7 @@ export function AppRouter() {
       <Routes>
         <Route path="/" element={<Navigate to={ROUTES.DASHBOARD} replace />} />
         <Route path={ROUTES.LOGIN} element={<LoginPage />} />
+        <Route path={ROUTES.REGISTER} element={<RegisterPage />} />
         <Route
           path={ROUTES.DASHBOARD}
           element={
@@ -107,6 +116,14 @@ export function AppRouter() {
           element={
             <ProtectedRoute>
               <SettingsCurrencyPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path={ROUTES.SETTINGS_USER_APPROVAL}
+          element={
+            <ProtectedRoute>
+              <SettingsUserApprovalPage />
             </ProtectedRoute>
           }
         />
