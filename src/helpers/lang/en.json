@@ -26,6 +26,7 @@
     "hidePassword": "Hide password",
     "genericError": "Something went wrong, please try again.",
     "credentialsRequired": "Username and password are required",
+    "sessionExpired": "Your session has expired, please log in again.",
     "quote": "“Manage your finances with peace of mind, one dashboard for every transaction.”",
     "quoteAuthor": "The TosmFi Team",
     "logoutConfirmTitle": "Log out?",

@@ -26,6 +26,7 @@
     "hidePassword": "Sembunyikan password",
     "genericError": "Terjadi kesalahan, coba lagi.",
     "credentialsRequired": "Username dan password wajib diisi",
+    "sessionExpired": "Sesi kamu telah berakhir, silakan login kembali.",
     "quote": "“Kelola keuanganmu dengan tenang, satu dashboard untuk semua transaksi.”",
     "quoteAuthor": "Tim TosmFi",
     "logoutConfirmTitle": "Keluar dari akun?",

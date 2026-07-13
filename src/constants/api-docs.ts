@@ -28,6 +28,43 @@ export const API_DOC_GROUPS: ApiDocGroup[] = [
     titleKey: "apiDoc.groups.auth",
     endpoints: [
       {
+        id: "register",
+        title: "Register",
+        method: "POST",
+        endpoint: "/auth/register",
+        payload: [
+          { name: "nameUser", type: "string", required: true },
+          { name: "username", type: "string", required: true },
+          { name: "password", type: "string", required: true },
+        ],
+        successExample: JSON.stringify(
+          {
+            message: "Registrasi berhasil, menunggu validasi admin",
+            data: {
+              idUser: "2",
+              nameUser: "Jane Doe",
+              username: "janedoe",
+              role: "user",
+              status: "pending",
+            },
+            isSuccess: true,
+            status: 201,
+          },
+          null,
+          2,
+        ),
+        errorExample: JSON.stringify(
+          {
+            message: "Username sudah terdaftar",
+            data: { error: "Username sudah terdaftar" },
+            isSuccess: false,
+            status: 400,
+          },
+          null,
+          2,
+        ),
+      },
+      {
         id: "login",
         title: "Login",
         method: "POST",
@@ -38,7 +75,6 @@ export const API_DOC_GROUPS: ApiDocGroup[] = [
         ],
         successExample: JSON.stringify(
           {
-            success: true,
             message: "Login berhasil",
             data: {
               token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
@@ -46,16 +82,22 @@ export const API_DOC_GROUPS: ApiDocGroup[] = [
                 idUser: "1",
                 nameUser: "John Doe",
                 username: "johndoe",
+                role: "admin",
+                status: "active",
               },
             },
+            isSuccess: true,
+            status: 200,
           },
           null,
           2,
         ),
         errorExample: JSON.stringify(
           {
-            success: false,
             message: "Username atau password salah",
+            data: { error: "Username atau password salah" },
+            isSuccess: false,
+            status: 401,
           },
           null,
           2,
@@ -65,25 +107,105 @@ export const API_DOC_GROUPS: ApiDocGroup[] = [
         id: "get-user",
         title: "Get User",
         method: "GET",
-        endpoint: "/auth/me",
+        endpoint: "/user/me",
         payload: [],
         successExample: JSON.stringify(
           {
-            success: true,
+            message: "Berhasil mengambil data user",
             data: {
               idUser: "1",
               nameUser: "John Doe",
               username: "johndoe",
-              netWorth: 0,
+              role: "admin",
+              status: "active",
             },
+            isSuccess: true,
+            status: 200,
           },
           null,
           2,
         ),
         errorExample: JSON.stringify(
           {
-            success: false,
-            message: "Token tidak valid atau sudah kedaluwarsa",
+            message: "Menunggu validasi",
+            data: {},
+            isSuccess: false,
+            status: 403,
+          },
+          null,
+          2,
+        ),
+      },
+      {
+        id: "get-list-user",
+        title: "Get List User",
+        method: "GET",
+        endpoint: "/user/get-list-user",
+        payload: [],
+        successExample: JSON.stringify(
+          {
+            message: "Berhasil mengambil daftar user",
+            data: [
+              {
+                idUser: "1",
+                nameUser: "John Doe",
+                username: "johndoe",
+                role: "admin",
+                status: "active",
+              },
+              {
+                idUser: "2",
+                nameUser: "Jane Doe",
+                username: "janedoe",
+                role: "user",
+                status: "pending",
+              },
+            ],
+            isSuccess: true,
+            status: 200,
+          },
+          null,
+          2,
+        ),
+        errorExample: JSON.stringify(
+          {
+            message: "Forbidden: admin only",
+            data: {},
+            isSuccess: false,
+            status: 403,
+          },
+          null,
+          2,
+        ),
+      },
+      {
+        id: "accept-user",
+        title: "Accept User",
+        method: "POST",
+        endpoint: "/user/accept-user",
+        payload: [{ name: "idUser", type: "string", required: true }],
+        successExample: JSON.stringify(
+          {
+            message: "User berhasil divalidasi",
+            data: {
+              idUser: "2",
+              nameUser: "Jane Doe",
+              username: "janedoe",
+              role: "user",
+              status: "active",
+            },
+            isSuccess: true,
+            status: 200,
+          },
+          null,
+          2,
+        ),
+        errorExample: JSON.stringify(
+          {
+            message: "User tidak ditemukan",
+            data: { error: "User tidak ditemukan" },
+            isSuccess: false,
+            status: 400,
           },
           null,
           2,
@@ -97,16 +219,20 @@ export const API_DOC_GROUPS: ApiDocGroup[] = [
         payload: [],
         successExample: JSON.stringify(
           {
-            success: true,
             message: "Logout berhasil",
+            data: {},
+            isSuccess: true,
+            status: 200,
           },
           null,
           2,
         ),
         errorExample: JSON.stringify(
           {
-            success: false,
-            message: "Token tidak valid atau sudah kedaluwarsa",
+            message: "Invalid or expired token",
+            data: {},
+            isSuccess: false,
+            status: 401,
           },
           null,
           2,

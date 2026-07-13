@@ -1,4 +1,4 @@
-import { useState, type SubmitEvent } from "react";
+import { useEffect, useState, type SubmitEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/atoms/Button";
@@ -11,17 +11,27 @@ import { LanguageMenuButton } from "@/components/molecules/LanguageMenuButton";
 import { Words } from "@/components/atoms/Words";
 import { useAuth } from "@/hooks/use-auth";
 import { ROUTES } from "@/constants/routes";
+import { onDismissSessionExpired, useAppDispatch, useAppSelector } from "@/redux";
 
 export function LoginForm() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { login } = useAuth();
+  const dispatch = useAppDispatch();
+  const sessionExpired = useAppSelector((state) => state.authentication.sessionExpired);
 
-  const [username, setUsername] = useState("user");
-  const [password, setPassword] = useState("a");
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
   const [remember, setRemember] = useState(true);
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+    if (sessionExpired) {
+      setError(t("auth.sessionExpired"));
+      dispatch(onDismissSessionExpired());
+    }
+  }, [sessionExpired, dispatch, t]);
 
   async function handleSubmit(event: SubmitEvent<HTMLFormElement>) {
     event.preventDefault();

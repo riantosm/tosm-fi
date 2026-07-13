@@ -26,6 +26,7 @@
     "hidePassword": "パスワードを隠す",
     "genericError": "エラーが発生しました。もう一度お試しください。",
     "credentialsRequired": "ユーザー名とパスワードを入力してください",
+    "sessionExpired": "セッションの有効期限が切れました。再度ログインしてください。",
     "quote": "「安心してお金を管理。すべての取引をひとつのダッシュボードで。」",
     "quoteAuthor": "TosmFiチーム",
     "logoutConfirmTitle": "ログアウトしますか?",

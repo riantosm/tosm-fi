@@ -1,30 +1,39 @@
 import i18n from "@/helpers/i18n";
+import { getApiErrorMessage, httpClient } from "@/services/http-client";
 import type { AuthUser, LoginCredentials } from "@/types/auth.types";
 
-const FAKE_LATENCY_MS = 700;
-
-function delay(): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, FAKE_LATENCY_MS));
+interface LoginResponse {
+  token: string;
+  user: AuthUser;
 }
 
 export const authService = {
-  async login(credentials: LoginCredentials): Promise<AuthUser> {
-    await delay();
-
-    if (!credentials.username || !credentials.password) {
-      throw new Error(i18n.t("auth.credentialsRequired"));
+  async login(credentials: LoginCredentials): Promise<LoginResponse> {
+    try {
+      const { data } = await httpClient.post("/auth/login", {
+        username: credentials.username,
+        password: credentials.password,
+      });
+      return data.data as LoginResponse;
+    } catch (error) {
+      throw new Error(getApiErrorMessage(error, i18n.t("auth.genericError")));
     }
-
-    return {
-      idUser: "user-1",
-      nameUser: credentials.username,
-      username: credentials.username,
-      netWorth: 0,
-    };
   },
 
-  async getUser(current: AuthUser): Promise<AuthUser> {
-    await delay();
-    return { ...current, netWorth: 0 };
+  async getMe(token: string): Promise<AuthUser> {
+    try {
+      const { data } = await httpClient.get("/user/me", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      return data.data as AuthUser;
+    } catch (error) {
+      throw new Error(getApiErrorMessage(error, i18n.t("auth.genericError")));
+    }
+  },
+
+  async logout(): Promise<void> {
+    // Relies on http-client's request interceptor to attach the current
+    // token — must be called before the caller clears it from Redux.
+    await httpClient.post("/auth/logout");
   },
 };

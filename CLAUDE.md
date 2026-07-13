@@ -15,7 +15,18 @@ There is no test suite/framework configured in this project.
 
 ## Architecture
 
-TosmFi is a React 19 + TypeScript + Vite money-tracking app with **no real backend yet**. All data lives in Redux (persisted to `localStorage` via `redux-persist`), and every "API call" is a service function that awaits a fake `delay()` and returns/mutates mock data. `src/constants/api-docs.ts` is not just documentation — it's the living spec of every endpoint the mock layer already emulates, rendered at Settings → Backend API for whoever builds the real backend later.
+TosmFi is a React 19 + TypeScript + Vite money-tracking app. **Auth is wired to a real backend; everything else is still mocked.** All non-auth data lives in Redux (persisted to `localStorage` via `redux-persist`), and every "API call" for those entities is a service function that awaits a fake `delay()` and returns/mutates mock data. `src/constants/api-docs.ts` is not just documentation — it's the living spec of every endpoint the mock layer already emulates (or, for the "auth" group, the real contract already implemented), rendered at Settings → Backend API for whoever builds the rest of the real backend later.
+
+### Real backend integration (auth only)
+
+The sibling repo `../tosm-fi-be` (Express/Mongoose, see its own `CLAUDE.md`) implements `/auth/{register,login,logout}` and `/user/{me,get-list-user,accept-user}` for real, at `http://localhost:3000/api`. Nothing else (wallet/category/transaction/report/settings) has a real backend yet — don't assume the pattern below extends to those until they're actually built.
+
+- `src/services/http-client.ts` — a single axios instance every real call goes through. Its request interceptor attaches `Authorization: Bearer <token>` from the Redux store automatically; its response interceptor watches for `401` and, **only if the session was already logged in** (not a wrong-password 401 from the login call itself), dispatches `onSessionExpired()` — auto-logout on an invalid/expired/revoked token, with no explicit call site needed anywhere else.
+- `src/services/auth.service.ts` calls the real endpoints. `src/hooks/use-auth.ts`'s `login()` calls `authService.login()` then immediately `authService.getMe()` — `onLogin` only dispatches if **both** succeed. This is what blocks a not-yet-approved (`pending`) user: login succeeds and returns a token, but `/user/me` 403s with "Menunggu validasi", so the user is never actually signed in even though a token exists momentarily.
+- `authenticationSlice` has a `sessionExpired` flag, distinct from a normal `onLogout` — set only by the interceptor's auto-logout path. `LoginForm` reads it once, shows it as the existing red error banner ("Sesi kamu telah berakhir..."), then dismisses it via `onDismissSessionExpired` so it doesn't reappear on a later visit.
+- `logout()` calls the real `/auth/logout` best-effort (wrapped in try/catch) and always clears local state in a `finally` — a dead token or network error should never trap the user in a logged-in-looking-but-broken state.
+- `AuthUser` fields are camelCase matching the backend exactly: `idUser`, `nameUser`, `username`, `role`, `status`. `netWorth` is optional and currently always absent — the backend doesn't compute it (that's a wallet-aggregation concern, not implemented yet); `Topbar` already falls back to `?? 0`.
+- The backend's response envelope is `{ message, data, isSuccess, status }` (not `{ success, ... }`) — reflected in `api-docs.ts`'s "auth" group examples specifically, since that group is real now. Every *other* group in that file still shows the old mock's `{ success, ... }` shape on purpose — don't "fix" those to match until their backend actually exists, and don't copy the auth group's envelope into a new mocked entity either.
 
 ### The core pattern — follow it for every new data-owning feature
 

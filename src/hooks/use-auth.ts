@@ -10,15 +10,25 @@ export function useAuth() {
 
   const login = useCallback(
     async (credentials: LoginCredentials) => {
-      const authenticatedUser = await authService.login(credentials);
-      const fullUser = await authService.getUser(authenticatedUser);
-      dispatch(onLogin({ userDetail: fullUser }));
+      const { token } = await authService.login(credentials);
+      // Login can succeed for a pending user — getMe is what actually
+      // blocks them (403 "Menunggu validasi"), so onLogin only fires once
+      // both steps succeed.
+      const fullUser = await authService.getMe(token);
+      dispatch(onLogin({ userDetail: fullUser, token }));
     },
     [dispatch],
   );
 
-  const logout = useCallback(() => {
-    dispatch(onLogout());
+  const logout = useCallback(async () => {
+    try {
+      await authService.logout();
+    } catch {
+      // Best-effort — an already-invalid/expired token or a network error
+      // shouldn't block the user from clearing their local session.
+    } finally {
+      dispatch(onLogout());
+    }
   }, [dispatch]);
 
   return {

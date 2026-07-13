@@ -32,7 +32,7 @@ export function Sidebar({ variant = "desktop", onClose }: SidebarProps) {
     });
 
     if (confirmed) {
-      logout();
+      await logout();
       navigate(ROUTES.LOGIN, { replace: true });
     }
   }
