@@ -143,6 +143,7 @@
     }
   },
   "wallet": {
+    "genericError": "Something went wrong, please try again.",
     "primary": "Primary",
     "transactionCount": "{{n}} transactions",
     "addTitle": "Add Wallet",

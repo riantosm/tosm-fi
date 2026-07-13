@@ -32,12 +32,10 @@ export function useWallets() {
 
   const editWallet = useCallback(
     async (id: string, input: WalletInput) => {
-      const existing = wallets.find((wallet) => wallet.idWallet === id);
-      if (!existing) return;
-      const updated = await walletService.updateWallet(id, input, existing);
+      const updated = await walletService.updateWallet(id, input);
       dispatch(updateWallet(updated));
     },
-    [dispatch, wallets],
+    [dispatch],
   );
 
   const deleteWallet = useCallback(
@@ -50,18 +48,18 @@ export function useWallets() {
 
   const setPrimaryWallet = useCallback(
     async (id: string) => {
-      const updated = await walletService.setPrimaryWallet(id, wallets);
+      const updated = await walletService.setPrimaryWallet(id);
       dispatch(setWallets(updated));
     },
-    [dispatch, wallets],
+    [dispatch],
   );
 
   const reorderWallets = useCallback(
     async (orderedIds: string[]) => {
-      const updated = await walletService.reorderWallets(orderedIds, wallets);
+      const updated = await walletService.reorderWallets(orderedIds);
       dispatch(setWallets(updated));
     },
-    [dispatch, wallets],
+    [dispatch],
   );
 
   return {

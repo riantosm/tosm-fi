@@ -143,6 +143,7 @@
     }
   },
   "wallet": {
+    "genericError": "Terjadi kesalahan, coba lagi.",
     "primary": "Utama",
     "transactionCount": "{{n}} transaksi",
     "addTitle": "Tambah Dompet",

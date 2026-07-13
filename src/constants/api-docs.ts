@@ -258,10 +258,10 @@ export const API_DOC_GROUPS: ApiDocGroup[] = [
         payload: [],
         successExample: JSON.stringify(
           {
-            success: true,
+            message: "Berhasil mengambil daftar wallet",
             data: [
               {
-                idWallet: "wallet-1",
+                idWallet: "6a54775fb2c4f567c96e74f4",
                 nameWallet: "Cash",
                 color: "#a16207",
                 balance: 850000,
@@ -269,14 +269,18 @@ export const API_DOC_GROUPS: ApiDocGroup[] = [
                 isPrimary: true,
               },
             ],
+            isSuccess: true,
+            status: 200,
           },
           null,
           2,
         ),
         errorExample: JSON.stringify(
           {
-            success: false,
-            message: "Token tidak valid atau sudah kedaluwarsa",
+            message: "Unauthorized",
+            data: {},
+            isSuccess: false,
+            status: 401,
           },
           null,
           2,
@@ -294,24 +298,27 @@ export const API_DOC_GROUPS: ApiDocGroup[] = [
         ],
         successExample: JSON.stringify(
           {
-            success: true,
             message: "Wallet berhasil dibuat",
             data: {
-              idWallet: "wallet-6",
+              idWallet: "6a54775fb2c4f567c96e74f6",
               nameWallet: "Dana Liburan",
               color: "#075985",
               balance: 0,
               transactionCount: 0,
               isPrimary: false,
             },
+            isSuccess: true,
+            status: 201,
           },
           null,
           2,
         ),
         errorExample: JSON.stringify(
           {
-            success: false,
-            message: "Nama wallet wajib diisi",
+            message: "nameWallet dan color wajib diisi",
+            data: { error: "nameWallet dan color wajib diisi" },
+            isSuccess: false,
+            status: 400,
           },
           null,
           2,
@@ -328,24 +335,27 @@ export const API_DOC_GROUPS: ApiDocGroup[] = [
         ],
         successExample: JSON.stringify(
           {
-            success: true,
             message: "Wallet berhasil diperbarui",
             data: {
-              idWallet: "wallet-6",
+              idWallet: "6a54775fb2c4f567c96e74f6",
               nameWallet: "Dana Liburan 2027",
               color: "#3f6212",
               balance: 0,
               transactionCount: 0,
               isPrimary: false,
             },
+            isSuccess: true,
+            status: 200,
           },
           null,
           2,
         ),
         errorExample: JSON.stringify(
           {
-            success: false,
             message: "Wallet tidak ditemukan",
+            data: { error: "Wallet tidak ditemukan" },
+            isSuccess: false,
+            status: 400,
           },
           null,
           2,
@@ -359,16 +369,20 @@ export const API_DOC_GROUPS: ApiDocGroup[] = [
         payload: [],
         successExample: JSON.stringify(
           {
-            success: true,
             message: "Wallet berhasil dihapus",
+            data: {},
+            isSuccess: true,
+            status: 200,
           },
           null,
           2,
         ),
         errorExample: JSON.stringify(
           {
-            success: false,
             message: "Wallet tidak ditemukan",
+            data: { error: "Wallet tidak ditemukan" },
+            isSuccess: false,
+            status: 400,
           },
           null,
           2,
@@ -382,20 +396,37 @@ export const API_DOC_GROUPS: ApiDocGroup[] = [
         payload: [],
         successExample: JSON.stringify(
           {
-            success: true,
             message: "Wallet utama berhasil diubah",
             data: [
-              { idWallet: "wallet-1", isPrimary: false },
-              { idWallet: "wallet-6", isPrimary: true },
+              {
+                idWallet: "6a54775fb2c4f567c96e74f4",
+                nameWallet: "Cash",
+                color: "#a16207",
+                balance: 850000,
+                transactionCount: 42,
+                isPrimary: false,
+              },
+              {
+                idWallet: "6a54775fb2c4f567c96e74f6",
+                nameWallet: "Dana Liburan",
+                color: "#075985",
+                balance: 0,
+                transactionCount: 0,
+                isPrimary: true,
+              },
             ],
+            isSuccess: true,
+            status: 200,
           },
           null,
           2,
         ),
         errorExample: JSON.stringify(
           {
-            success: false,
             message: "Wallet tidak ditemukan",
+            data: { error: "Wallet tidak ditemukan" },
+            isSuccess: false,
+            status: 400,
           },
           null,
           2,
@@ -409,16 +440,37 @@ export const API_DOC_GROUPS: ApiDocGroup[] = [
         payload: [{ name: "orderedIds", type: "string[]", required: true }],
         successExample: JSON.stringify(
           {
-            success: true,
-            data: [{ idWallet: "wallet-6" }, { idWallet: "wallet-1" }],
+            message: "Urutan wallet berhasil disimpan",
+            data: [
+              {
+                idWallet: "6a54775fb2c4f567c96e74f6",
+                nameWallet: "Dana Liburan",
+                color: "#075985",
+                balance: 0,
+                transactionCount: 0,
+                isPrimary: true,
+              },
+              {
+                idWallet: "6a54775fb2c4f567c96e74f4",
+                nameWallet: "Cash",
+                color: "#a16207",
+                balance: 850000,
+                transactionCount: 42,
+                isPrimary: false,
+              },
+            ],
+            isSuccess: true,
+            status: 200,
           },
           null,
           2,
         ),
         errorExample: JSON.stringify(
           {
-            success: false,
-            message: "Token tidak valid atau sudah kedaluwarsa",
+            message: "orderedIds wajib diisi",
+            data: { error: "orderedIds wajib diisi" },
+            isSuccess: false,
+            status: 400,
           },
           null,
           2,

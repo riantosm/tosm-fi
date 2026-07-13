@@ -1,54 +1,61 @@
-import { MOCK_WALLETS } from "@/constants/mock-wallets";
+import i18n from "@/helpers/i18n";
+import { getApiErrorMessage, httpClient } from "@/services/http-client";
 import type { WalletAccount, WalletInput } from "@/types/wallet.types";
-
-const FAKE_LATENCY_MS = 500;
-
-function delay(): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, FAKE_LATENCY_MS));
-}
 
 export const walletService = {
   async fetchWallets(): Promise<WalletAccount[]> {
-    await delay();
-    return MOCK_WALLETS;
+    try {
+      const { data } = await httpClient.get("/wallets");
+      return data.data as WalletAccount[];
+    } catch (error) {
+      throw new Error(getApiErrorMessage(error, i18n.t("wallet.genericError")));
+    }
   },
 
   async createWallet(input: WalletInput): Promise<WalletAccount> {
-    await delay();
-    return {
-      idWallet: crypto.randomUUID(),
-      nameWallet: input.nameWallet,
-      color: input.color,
-      balance: input.balance ?? 0,
-      transactionCount: 0,
-      isPrimary: false,
-    };
+    try {
+      const { data } = await httpClient.post("/wallets", input);
+      return data.data as WalletAccount;
+    } catch (error) {
+      throw new Error(getApiErrorMessage(error, i18n.t("wallet.genericError")));
+    }
   },
 
-  async updateWallet(
-    id: string,
-    input: WalletInput,
-    current: WalletAccount,
-  ): Promise<WalletAccount> {
-    await delay();
-    return { ...current, idWallet: id, nameWallet: input.nameWallet, color: input.color };
+  async updateWallet(id: string, input: WalletInput): Promise<WalletAccount> {
+    try {
+      const { data } = await httpClient.patch(`/wallets/${id}`, {
+        nameWallet: input.nameWallet,
+        color: input.color,
+      });
+      return data.data as WalletAccount;
+    } catch (error) {
+      throw new Error(getApiErrorMessage(error, i18n.t("wallet.genericError")));
+    }
   },
 
   async deleteWallet(id: string): Promise<void> {
-    await delay();
-    void id;
+    try {
+      await httpClient.delete(`/wallets/${id}`);
+    } catch (error) {
+      throw new Error(getApiErrorMessage(error, i18n.t("wallet.genericError")));
+    }
   },
 
-  async setPrimaryWallet(id: string, wallets: WalletAccount[]): Promise<WalletAccount[]> {
-    await delay();
-    return wallets.map((wallet) => ({ ...wallet, isPrimary: wallet.idWallet === id }));
+  async setPrimaryWallet(id: string): Promise<WalletAccount[]> {
+    try {
+      const { data } = await httpClient.patch(`/wallets/${id}/primary`);
+      return data.data as WalletAccount[];
+    } catch (error) {
+      throw new Error(getApiErrorMessage(error, i18n.t("wallet.genericError")));
+    }
   },
 
-  async reorderWallets(orderedIds: string[], wallets: WalletAccount[]): Promise<WalletAccount[]> {
-    await delay();
-    const walletsById = new Map(wallets.map((wallet) => [wallet.idWallet, wallet]));
-    return orderedIds
-      .map((id) => walletsById.get(id))
-      .filter((wallet): wallet is WalletAccount => wallet !== undefined);
+  async reorderWallets(orderedIds: string[]): Promise<WalletAccount[]> {
+    try {
+      const { data } = await httpClient.patch("/wallets/reorder", { orderedIds });
+      return data.data as WalletAccount[];
+    } catch (error) {
+      throw new Error(getApiErrorMessage(error, i18n.t("wallet.genericError")));
+    }
   },
 };

@@ -143,6 +143,7 @@
     }
   },
   "wallet": {
+    "genericError": "エラーが発生しました。もう一度お試しください。",
     "primary": "メイン",
     "transactionCount": "{{n}}件の取引",
     "addTitle": "ウォレットを追加",
