@@ -36,12 +36,10 @@ export function useCategories() {
 
   const editCategory = useCallback(
     async (id: string, input: CategoryInput) => {
-      const existing = categories.find((category) => category.idCategory === id);
-      if (!existing) return;
-      const updated = await categoryService.updateCategory(id, input, existing);
+      const updated = await categoryService.updateCategory(id, input);
       dispatch(updateCategory(updated));
     },
-    [dispatch, categories],
+    [dispatch],
   );
 
   const deleteCategory = useCallback(
@@ -54,10 +52,10 @@ export function useCategories() {
 
   const reorderCategories = useCallback(
     async (orderedIds: string[]) => {
-      const updated = await categoryService.reorderCategories(orderedIds, categories);
+      const updated = await categoryService.reorderCategories(orderedIds);
       dispatch(setCategories(updated));
     },
-    [dispatch, categories],
+    [dispatch],
   );
 
   const createSubCategory = useCallback(
@@ -70,13 +68,10 @@ export function useCategories() {
 
   const editSubCategory = useCallback(
     async (categoryId: string, id: string, input: SubCategoryInput) => {
-      const category = categories.find((item) => item.idCategory === categoryId);
-      const existing = category?.subCategories.find((sub) => sub.idSubCategory === id);
-      if (!existing) return;
-      const updated = await categoryService.updateSubCategory(categoryId, id, input, existing);
+      const updated = await categoryService.updateSubCategory(categoryId, id, input);
       dispatch(updateSubCategory({ categoryId, subCategory: updated }));
     },
-    [dispatch, categories],
+    [dispatch],
   );
 
   const deleteSubCategory = useCallback(
@@ -89,16 +84,10 @@ export function useCategories() {
 
   const reorderSubCategories = useCallback(
     async (categoryId: string, orderedIds: string[]) => {
-      const category = categories.find((item) => item.idCategory === categoryId);
-      if (!category) return;
-      const updated = await categoryService.reorderSubCategories(
-        categoryId,
-        orderedIds,
-        category.subCategories,
-      );
+      const updated = await categoryService.reorderSubCategories(categoryId, orderedIds);
       dispatch(setSubCategoryOrder({ categoryId, subCategories: updated }));
     },
-    [dispatch, categories],
+    [dispatch],
   );
 
   return {

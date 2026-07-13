@@ -490,10 +490,10 @@ export const API_DOC_GROUPS: ApiDocGroup[] = [
         payload: [],
         successExample: JSON.stringify(
           {
-            success: true,
+            message: "Berhasil mengambil daftar kategori",
             data: [
               {
-                idCategory: "category-1",
+                idCategory: "6a54caaa84245dacc470c8c1",
                 nameCategory: "Makan",
                 type: "expense",
                 color: "#E2574C",
@@ -501,8 +501,8 @@ export const API_DOC_GROUPS: ApiDocGroup[] = [
                 transactionCount: 12,
                 subCategories: [
                   {
-                    idSubCategory: "subcategory-1",
-                    idCategory: "category-1",
+                    idSubCategory: "6a54cab784245dacc470c8ca",
+                    idCategory: "6a54caaa84245dacc470c8c1",
                     nameSubCategory: "Warteg",
                     icon: "HiOutlineBuildingStorefront",
                     transactionCount: 5,
@@ -510,14 +510,18 @@ export const API_DOC_GROUPS: ApiDocGroup[] = [
                 ],
               },
             ],
+            isSuccess: true,
+            status: 200,
           },
           null,
           2,
         ),
         errorExample: JSON.stringify(
           {
-            success: false,
-            message: "Token tidak valid atau sudah kedaluwarsa",
+            message: "Unauthorized",
+            data: {},
+            isSuccess: false,
+            status: 401,
           },
           null,
           2,
@@ -536,10 +540,9 @@ export const API_DOC_GROUPS: ApiDocGroup[] = [
         ],
         successExample: JSON.stringify(
           {
-            success: true,
             message: "Kategori berhasil dibuat",
             data: {
-              idCategory: "category-2",
+              idCategory: "6a54cab784245dacc470c8c6",
               nameCategory: "Gaji",
               type: "income",
               color: "#7CB87C",
@@ -547,14 +550,18 @@ export const API_DOC_GROUPS: ApiDocGroup[] = [
               transactionCount: 0,
               subCategories: [],
             },
+            isSuccess: true,
+            status: 201,
           },
           null,
           2,
         ),
         errorExample: JSON.stringify(
           {
-            success: false,
-            message: "Nama kategori wajib diisi",
+            message: "nameCategory, type, color, dan icon wajib diisi",
+            data: { error: "nameCategory, type, color, dan icon wajib diisi" },
+            isSuccess: false,
+            status: 400,
           },
           null,
           2,
@@ -573,10 +580,9 @@ export const API_DOC_GROUPS: ApiDocGroup[] = [
         ],
         successExample: JSON.stringify(
           {
-            success: true,
             message: "Kategori berhasil diperbarui",
             data: {
-              idCategory: "category-2",
+              idCategory: "6a54cab784245dacc470c8c6",
               nameCategory: "Gaji Bulanan",
               type: "income",
               color: "#075985",
@@ -584,14 +590,18 @@ export const API_DOC_GROUPS: ApiDocGroup[] = [
               transactionCount: 0,
               subCategories: [],
             },
+            isSuccess: true,
+            status: 200,
           },
           null,
           2,
         ),
         errorExample: JSON.stringify(
           {
-            success: false,
             message: "Kategori tidak ditemukan",
+            data: { error: "Kategori tidak ditemukan" },
+            isSuccess: false,
+            status: 400,
           },
           null,
           2,
@@ -605,16 +615,20 @@ export const API_DOC_GROUPS: ApiDocGroup[] = [
         payload: [],
         successExample: JSON.stringify(
           {
-            success: true,
             message: "Kategori berhasil dihapus",
+            data: {},
+            isSuccess: true,
+            status: 200,
           },
           null,
           2,
         ),
         errorExample: JSON.stringify(
           {
-            success: false,
             message: "Kategori tidak ditemukan",
+            data: { error: "Kategori tidak ditemukan" },
+            isSuccess: false,
+            status: 400,
           },
           null,
           2,
@@ -628,16 +642,39 @@ export const API_DOC_GROUPS: ApiDocGroup[] = [
         payload: [{ name: "orderedIds", type: "string[]", required: true }],
         successExample: JSON.stringify(
           {
-            success: true,
-            data: [{ idCategory: "category-2" }, { idCategory: "category-1" }],
+            message: "Urutan kategori berhasil disimpan",
+            data: [
+              {
+                idCategory: "6a54cab784245dacc470c8c6",
+                nameCategory: "Gaji",
+                type: "income",
+                color: "#7CB87C",
+                icon: "HiOutlineBriefcase",
+                transactionCount: 0,
+                subCategories: [],
+              },
+              {
+                idCategory: "6a54caaa84245dacc470c8c1",
+                nameCategory: "Makan",
+                type: "expense",
+                color: "#E2574C",
+                icon: "HiOutlineCake",
+                transactionCount: 12,
+                subCategories: [],
+              },
+            ],
+            isSuccess: true,
+            status: 200,
           },
           null,
           2,
         ),
         errorExample: JSON.stringify(
           {
-            success: false,
-            message: "Token tidak valid atau sudah kedaluwarsa",
+            message: "orderedIds wajib diisi",
+            data: { error: "orderedIds wajib diisi" },
+            isSuccess: false,
+            status: 400,
           },
           null,
           2,
@@ -654,23 +691,26 @@ export const API_DOC_GROUPS: ApiDocGroup[] = [
         ],
         successExample: JSON.stringify(
           {
-            success: true,
             message: "Subkategori berhasil dibuat",
             data: {
-              idSubCategory: "subcategory-2",
-              idCategory: "category-1",
+              idSubCategory: "6a54cab784245dacc470c8cf",
+              idCategory: "6a54caaa84245dacc470c8c1",
               nameSubCategory: "Restoran",
               icon: "HiOutlineBuildingStorefront",
               transactionCount: 0,
             },
+            isSuccess: true,
+            status: 201,
           },
           null,
           2,
         ),
         errorExample: JSON.stringify(
           {
-            success: false,
-            message: "Nama subkategori wajib diisi",
+            message: "nameSubCategory dan icon wajib diisi",
+            data: { error: "nameSubCategory dan icon wajib diisi" },
+            isSuccess: false,
+            status: 400,
           },
           null,
           2,
@@ -687,23 +727,26 @@ export const API_DOC_GROUPS: ApiDocGroup[] = [
         ],
         successExample: JSON.stringify(
           {
-            success: true,
             message: "Subkategori berhasil diperbarui",
             data: {
-              idSubCategory: "subcategory-2",
-              idCategory: "category-1",
+              idSubCategory: "6a54cab784245dacc470c8cf",
+              idCategory: "6a54caaa84245dacc470c8c1",
               nameSubCategory: "Restoran Padang",
               icon: "HiOutlineBuildingStorefront",
               transactionCount: 0,
             },
+            isSuccess: true,
+            status: 200,
           },
           null,
           2,
         ),
         errorExample: JSON.stringify(
           {
-            success: false,
             message: "Subkategori tidak ditemukan",
+            data: { error: "Subkategori tidak ditemukan" },
+            isSuccess: false,
+            status: 400,
           },
           null,
           2,
@@ -717,16 +760,20 @@ export const API_DOC_GROUPS: ApiDocGroup[] = [
         payload: [],
         successExample: JSON.stringify(
           {
-            success: true,
             message: "Subkategori berhasil dihapus",
+            data: {},
+            isSuccess: true,
+            status: 200,
           },
           null,
           2,
         ),
         errorExample: JSON.stringify(
           {
-            success: false,
             message: "Subkategori tidak ditemukan",
+            data: { error: "Subkategori tidak ditemukan" },
+            isSuccess: false,
+            status: 400,
           },
           null,
           2,
@@ -740,16 +787,35 @@ export const API_DOC_GROUPS: ApiDocGroup[] = [
         payload: [{ name: "orderedIds", type: "string[]", required: true }],
         successExample: JSON.stringify(
           {
-            success: true,
-            data: [{ idSubCategory: "subcategory-2" }, { idSubCategory: "subcategory-1" }],
+            message: "Urutan subkategori berhasil disimpan",
+            data: [
+              {
+                idSubCategory: "6a54cab784245dacc470c8cf",
+                idCategory: "6a54caaa84245dacc470c8c1",
+                nameSubCategory: "Kopi",
+                icon: "HiOutlineCake",
+                transactionCount: 0,
+              },
+              {
+                idSubCategory: "6a54cab784245dacc470c8ca",
+                idCategory: "6a54caaa84245dacc470c8c1",
+                nameSubCategory: "Warteg",
+                icon: "HiOutlineBuildingStorefront",
+                transactionCount: 5,
+              },
+            ],
+            isSuccess: true,
+            status: 200,
           },
           null,
           2,
         ),
         errorExample: JSON.stringify(
           {
-            success: false,
-            message: "Token tidak valid atau sudah kedaluwarsa",
+            message: "orderedIds wajib diisi",
+            data: { error: "orderedIds wajib diisi" },
+            isSuccess: false,
+            status: 400,
           },
           null,
           2,

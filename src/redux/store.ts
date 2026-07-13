@@ -13,6 +13,7 @@ import {
   transactionSlice,
   userApprovalSlice,
   walletSlice,
+  type ICategoryReduxState,
   type IWalletReduxState,
 } from "./slices";
 
@@ -22,12 +23,6 @@ const storage: Storage = {
   removeItem: (key) => Promise.resolve(window.localStorage.removeItem(key)),
 };
 
-// Persisted `status: "loaded"` would otherwise make every consumer's
-// `if (status === "idle") load…()` guard skip refetching after a reload —
-// showing indefinitely-stale data (a previous account's wallets, or changes
-// made directly via the API). Forcing it back to "idle" on rehydrate makes
-// every such guard refetch fresh data on the next mount. Scoped to slices
-// backed by a real API today; add a slice here once its backend exists.
 const reducer = combineReducers({
   authentication: authenticationSlice,
   wallet: walletSlice,
@@ -39,18 +34,32 @@ const reducer = combineReducers({
   userApproval: userApprovalSlice,
 });
 
-const forceIdleStatusOnRehydrate = createTransform<IWalletReduxState, IWalletReduxState>(
-  (inboundState) => inboundState,
-  (outboundState) => ({ ...outboundState, status: "idle" }),
-  { whitelist: ["wallet"] },
-);
+// Persisted `status: "loaded"` would otherwise make every consumer's
+// `if (status === "idle") load…()` guard skip refetching after a reload —
+// showing indefinitely-stale data (a previous account's wallets/categories,
+// or changes made directly via the API). Forcing it back to "idle" on
+// rehydrate makes every such guard refetch fresh data on the next mount.
+// One transform per slice backed by a real API today; add another here
+// once transaction's backend exists too.
+function createResetStatusOnRehydrateTransform<T extends { status: string }>(
+  sliceKey: "wallet" | "category",
+) {
+  return createTransform<T, T>(
+    (inboundState) => inboundState,
+    (outboundState) => ({ ...outboundState, status: "idle" }),
+    { whitelist: [sliceKey] },
+  );
+}
 
 const persistConfig: PersistConfig<ReturnType<typeof reducer>> = {
   key: "tosmfi-root-1",
   version: 1,
   storage,
   whitelist: ["authentication", "wallet", "category", "transaction", "settings"],
-  transforms: [forceIdleStatusOnRehydrate],
+  transforms: [
+    createResetStatusOnRehydrateTransform<IWalletReduxState>("wallet"),
+    createResetStatusOnRehydrateTransform<ICategoryReduxState>("category"),
+  ],
 };
 
 const persistedReducer = persistReducer(persistConfig, reducer);

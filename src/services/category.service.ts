@@ -1,4 +1,5 @@
-import { MOCK_CATEGORIES } from "@/constants/mock-categories";
+import i18n from "@/helpers/i18n";
+import { getApiErrorMessage, httpClient } from "@/services/http-client";
 import type {
   Category,
   CategoryInput,
@@ -6,113 +7,93 @@ import type {
   SubCategoryInput,
 } from "@/types/category.types";
 
-const FAKE_LATENCY_MS = 500;
-
-function delay(): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, FAKE_LATENCY_MS));
-}
-
 export const categoryService = {
   async fetchCategories(): Promise<Category[]> {
-    await delay();
-    return MOCK_CATEGORIES;
+    try {
+      const { data } = await httpClient.get("/categories");
+      return data.data as Category[];
+    } catch (error) {
+      throw new Error(getApiErrorMessage(error, i18n.t("category.genericError")));
+    }
   },
 
   async createCategory(input: CategoryInput): Promise<Category> {
-    await delay();
-    return {
-      idCategory: crypto.randomUUID(),
-      nameCategory: input.nameCategory,
-      type: input.type,
-      color: input.color,
-      icon: input.icon,
-      transactionCount: 0,
-      subCategories: [],
-    };
+    try {
+      const { data } = await httpClient.post("/categories", input);
+      return data.data as Category;
+    } catch (error) {
+      throw new Error(getApiErrorMessage(error, i18n.t("category.genericError")));
+    }
   },
 
-  async updateCategory(
-    idCategory: string,
-    input: CategoryInput,
-    current: Category,
-  ): Promise<Category> {
-    await delay();
-    return {
-      ...current,
-      idCategory,
-      nameCategory: input.nameCategory,
-      type: input.type,
-      color: input.color,
-      icon: input.icon,
-    };
+  async updateCategory(idCategory: string, input: CategoryInput): Promise<Category> {
+    try {
+      const { data } = await httpClient.patch(`/categories/${idCategory}`, input);
+      return data.data as Category;
+    } catch (error) {
+      throw new Error(getApiErrorMessage(error, i18n.t("category.genericError")));
+    }
   },
 
   async deleteCategory(idCategory: string): Promise<void> {
-    await delay();
-    void idCategory;
+    try {
+      await httpClient.delete(`/categories/${idCategory}`);
+    } catch (error) {
+      throw new Error(getApiErrorMessage(error, i18n.t("category.genericError")));
+    }
   },
 
-  async reorderCategories(orderedIds: string[], categories: Category[]): Promise<Category[]> {
-    await delay();
-    const idSet = new Set(orderedIds);
-    const reordered = orderedIds
-      .map((id) => categories.find((category) => category.idCategory === id))
-      .filter((category): category is Category => category !== undefined);
-
-    let cursor = 0;
-    return categories.map((category) =>
-      idSet.has(category.idCategory) ? reordered[cursor++] : category,
-    );
+  async reorderCategories(orderedIds: string[]): Promise<Category[]> {
+    try {
+      const { data } = await httpClient.patch("/categories/reorder", { orderedIds });
+      return data.data as Category[];
+    } catch (error) {
+      throw new Error(getApiErrorMessage(error, i18n.t("category.genericError")));
+    }
   },
 
   async createSubCategory(idCategory: string, input: SubCategoryInput): Promise<SubCategory> {
-    await delay();
-    return {
-      idSubCategory: crypto.randomUUID(),
-      idCategory,
-      nameSubCategory: input.nameSubCategory,
-      icon: input.icon,
-      transactionCount: 0,
-    };
+    try {
+      const { data } = await httpClient.post(`/categories/${idCategory}/subcategories`, input);
+      return data.data as SubCategory;
+    } catch (error) {
+      throw new Error(getApiErrorMessage(error, i18n.t("category.genericError")));
+    }
   },
 
   async updateSubCategory(
     idCategory: string,
     idSubCategory: string,
     input: SubCategoryInput,
-    current: SubCategory,
   ): Promise<SubCategory> {
-    await delay();
-    return {
-      ...current,
-      idSubCategory,
-      idCategory,
-      nameSubCategory: input.nameSubCategory,
-      icon: input.icon,
-    };
+    try {
+      const { data } = await httpClient.patch(
+        `/categories/${idCategory}/subcategories/${idSubCategory}`,
+        input,
+      );
+      return data.data as SubCategory;
+    } catch (error) {
+      throw new Error(getApiErrorMessage(error, i18n.t("category.genericError")));
+    }
   },
 
   async deleteSubCategory(idCategory: string, idSubCategory: string): Promise<void> {
-    await delay();
-    void idCategory;
-    void idSubCategory;
+    try {
+      await httpClient.delete(`/categories/${idCategory}/subcategories/${idSubCategory}`);
+    } catch (error) {
+      throw new Error(getApiErrorMessage(error, i18n.t("category.genericError")));
+    }
   },
 
-  async reorderSubCategories(
-    idCategory: string,
-    orderedIds: string[],
-    subCategories: SubCategory[],
-  ): Promise<SubCategory[]> {
-    await delay();
-    void idCategory;
-    const idSet = new Set(orderedIds);
-    const reordered = orderedIds
-      .map((id) => subCategories.find((sub) => sub.idSubCategory === id))
-      .filter((sub): sub is SubCategory => sub !== undefined);
-
-    let cursor = 0;
-    return subCategories.map((sub) =>
-      idSet.has(sub.idSubCategory) ? reordered[cursor++] : sub,
-    );
+  async reorderSubCategories(idCategory: string, orderedIds: string[]): Promise<SubCategory[]> {
+    try {
+      const { data } = await httpClient.patch(
+        `/categories/${idCategory}/subcategories/reorder`,
+        { orderedIds },
+      );
+      return data.data as SubCategory[];
+    } catch (error) {
+      throw new Error(getApiErrorMessage(error, i18n.t("category.genericError")));
+    }
   },
 };
