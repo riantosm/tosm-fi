@@ -92,7 +92,8 @@
       "wallet": "Wallet",
       "category": "Kategori",
       "transaction": "Transaksi",
-      "settings": "Pengaturan"
+      "settings": "Pengaturan",
+      "report": "Laporan"
     },
     "payload": "Payload",
     "noPayload": "Tidak ada payload",
@@ -285,5 +286,78 @@
       "amountAsc": "Jumlah Terendah"
     },
     "noDataForFilter": "Tidak ada transaksi untuk filter ini"
+  },
+  "reports": {
+    "period": {
+      "today": "Hari Ini",
+      "week": "Minggu Ini",
+      "month": "Bulan Ini",
+      "year": "Tahun Ini",
+      "custom": "Custom Range"
+    },
+    "summary": {
+      "totalIncome": "Total Pemasukan",
+      "totalExpense": "Total Pengeluaran",
+      "netCashFlow": "Saldo Bersih",
+      "transactionCount": "Jumlah Transaksi",
+      "previousPeriod": "dari periode sebelumnya"
+    },
+    "cashFlow": {
+      "title": "Cash Flow",
+      "income": "Pemasukan",
+      "expense": "Pengeluaran",
+      "empty": "Belum ada data cash flow untuk periode ini"
+    },
+    "expenseByCategory": {
+      "title": "Pengeluaran Berdasarkan Kategori"
+    },
+    "monthlyTrend": {
+      "title": "Tren Bulanan",
+      "monthsLabel": "{{count}} Bulan",
+      "metrics": {
+        "expense": "Pengeluaran",
+        "income": "Pemasukan"
+      }
+    },
+    "walletUsage": {
+      "title": "Dompet Paling Aktif",
+      "empty": "Belum ada aktivitas dompet untuk periode ini"
+    },
+    "topSpending": {
+      "title": "Top Pengeluaran",
+      "empty": "Belum ada pengeluaran untuk periode ini"
+    },
+    "transactionList": {
+      "title": "Daftar Transaksi"
+    },
+    "export": {
+      "title": "Export",
+      "action": "Export",
+      "pdf": "Export PDF",
+      "pdfDescription": "Dokumen PDF",
+      "excel": "Export Excel",
+      "excelDescription": "File .xlsx",
+      "csv": "Export CSV",
+      "csvDescription": "File .csv",
+      "success": "Laporan {{fileName}} berhasil diekspor",
+      "sections": {
+        "summary": "Ringkasan"
+      },
+      "columns": {
+        "metric": "Metrik",
+        "value": "Nilai",
+        "change": "Perubahan",
+        "category": "Kategori",
+        "total": "Total",
+        "percentage": "Persentase",
+        "transactions": "Transaksi",
+        "wallet": "Dompet",
+        "rank": "Peringkat",
+        "title": "Judul",
+        "amount": "Jumlah",
+        "date": "Tanggal",
+        "type": "Tipe"
+      }
+    }
   }
 }

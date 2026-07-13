@@ -75,11 +75,11 @@ export function DashboardPage() {
           onCorrectBalance={(wallet) => setCorrectionState({ wallet, transaction: null })}
         />
 
-        <div className="lg:flex lg:items-start space-x-8 space-y-8">
-          <div className="flex-1">
+        <div className="xl:flex-row flex-col flex w-full lg:items-start gap-8">
+          <div className="flex-1 w-full">
             <ExpenseByCategoryChart transactions={transactions} categories={categories} />
           </div>
-          <div className="flex-1">
+          <div className="flex-1 w-full">
             <TransactionList
               transactions={currentMonthTransactions}
               categories={categories}

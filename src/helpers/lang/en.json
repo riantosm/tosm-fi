@@ -92,7 +92,8 @@
       "wallet": "Wallet",
       "category": "Category",
       "transaction": "Transaction",
-      "settings": "Settings"
+      "settings": "Settings",
+      "report": "Report"
     },
     "payload": "Payload",
     "noPayload": "No payload required",
@@ -285,5 +286,78 @@
       "amountAsc": "Lowest Amount"
     },
     "noDataForFilter": "No transactions match these filters"
+  },
+  "reports": {
+    "period": {
+      "today": "Today",
+      "week": "This Week",
+      "month": "This Month",
+      "year": "This Year",
+      "custom": "Custom Range"
+    },
+    "summary": {
+      "totalIncome": "Total Income",
+      "totalExpense": "Total Expense",
+      "netCashFlow": "Net Cash Flow",
+      "transactionCount": "Transaction Count",
+      "previousPeriod": "vs previous period"
+    },
+    "cashFlow": {
+      "title": "Cash Flow",
+      "income": "Income",
+      "expense": "Expense",
+      "empty": "No cash flow data for this period yet"
+    },
+    "expenseByCategory": {
+      "title": "Expenses by Category"
+    },
+    "monthlyTrend": {
+      "title": "Monthly Trend",
+      "monthsLabel": "{{count}} Months",
+      "metrics": {
+        "expense": "Expense",
+        "income": "Income"
+      }
+    },
+    "walletUsage": {
+      "title": "Most Active Wallets",
+      "empty": "No wallet activity for this period yet"
+    },
+    "topSpending": {
+      "title": "Top Spending",
+      "empty": "No expenses for this period yet"
+    },
+    "transactionList": {
+      "title": "Transaction List"
+    },
+    "export": {
+      "title": "Export",
+      "action": "Export",
+      "pdf": "Export PDF",
+      "pdfDescription": "PDF document",
+      "excel": "Export Excel",
+      "excelDescription": ".xlsx file",
+      "csv": "Export CSV",
+      "csvDescription": ".csv file",
+      "success": "Report {{fileName}} exported successfully",
+      "sections": {
+        "summary": "Summary"
+      },
+      "columns": {
+        "metric": "Metric",
+        "value": "Value",
+        "change": "Change",
+        "category": "Category",
+        "total": "Total",
+        "percentage": "Percentage",
+        "transactions": "Transactions",
+        "wallet": "Wallet",
+        "rank": "Rank",
+        "title": "Title",
+        "amount": "Amount",
+        "date": "Date",
+        "type": "Type"
+      }
+    }
   }
 }

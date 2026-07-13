@@ -773,6 +773,238 @@ export const API_DOC_GROUPS: ApiDocGroup[] = [
     ],
   },
   {
+    key: "report",
+    titleKey: "apiDoc.groups.report",
+    endpoints: [
+      {
+        id: "report-summary",
+        title: "Report Summary",
+        method: "GET",
+        endpoint: "/reports/summary?dateFrom=2026-07-01&dateTo=2026-07-31",
+        payload: [
+          { name: "dateFrom", type: "string (YYYY-MM-DD)", required: true },
+          { name: "dateTo", type: "string (YYYY-MM-DD)", required: true },
+        ],
+        successExample: JSON.stringify(
+          {
+            success: true,
+            data: {
+              totalIncome: { value: 12_450_000, changePercent: 18 },
+              totalExpense: { value: 7_850_000, changePercent: -8 },
+              netCashFlow: { value: 4_600_000, changePercent: 32 },
+              transactionCount: { value: 84, changePercent: 16 },
+            },
+          },
+          null,
+          2,
+        ),
+        errorExample: JSON.stringify(
+          {
+            success: false,
+            message: "Token tidak valid atau sudah kedaluwarsa",
+          },
+          null,
+          2,
+        ),
+      },
+      {
+        id: "report-cash-flow",
+        title: "Cash Flow",
+        method: "GET",
+        endpoint: "/reports/cash-flow?dateFrom=2026-01-01&dateTo=2026-07-31",
+        payload: [
+          { name: "dateFrom", type: "string (YYYY-MM-DD)", required: true },
+          { name: "dateTo", type: "string (YYYY-MM-DD)", required: true },
+        ],
+        successExample: JSON.stringify(
+          {
+            success: true,
+            data: [
+              { label: "Jan", income: 8_000_000, expense: 5_200_000 },
+              { label: "Feb", income: 8_000_000, expense: 6_100_000 },
+              { label: "Jul", income: 12_450_000, expense: 7_850_000 },
+            ],
+          },
+          null,
+          2,
+        ),
+        errorExample: JSON.stringify(
+          {
+            success: false,
+            message: "Token tidak valid atau sudah kedaluwarsa",
+          },
+          null,
+          2,
+        ),
+      },
+      {
+        id: "report-category-breakdown",
+        title: "Category Breakdown",
+        method: "GET",
+        endpoint: "/reports/category-breakdown?dateFrom=2026-07-01&dateTo=2026-07-31",
+        payload: [
+          { name: "dateFrom", type: "string (YYYY-MM-DD)", required: true },
+          { name: "dateTo", type: "string (YYYY-MM-DD)", required: true },
+        ],
+        successExample: JSON.stringify(
+          {
+            success: true,
+            data: [
+              {
+                idCategory: "category-1",
+                nameCategory: "Makanan",
+                color: "#E2574C",
+                icon: "HiOutlineCake",
+                total: 2_986_000,
+                percentage: 38,
+                transactionCount: 24,
+                subCategories: [
+                  { idSubCategory: "subcategory-1", nameSubCategory: "Warteg", total: 820_000, percentage: 27 },
+                ],
+              },
+            ],
+          },
+          null,
+          2,
+        ),
+        errorExample: JSON.stringify(
+          {
+            success: false,
+            message: "Token tidak valid atau sudah kedaluwarsa",
+          },
+          null,
+          2,
+        ),
+      },
+      {
+        id: "report-monthly-trend",
+        title: "Monthly Trend",
+        method: "GET",
+        endpoint: "/reports/monthly-trend?metric=expense&months=12",
+        payload: [
+          { name: "metric", type: '"expense" | "income"', required: true },
+          { name: "months", type: "number", required: false },
+        ],
+        successExample: JSON.stringify(
+          {
+            success: true,
+            data: [
+              { label: "Agu", value: 6_400_000 },
+              { label: "Sep", value: 5_900_000 },
+              { label: "Jul", value: 7_850_000 },
+            ],
+          },
+          null,
+          2,
+        ),
+        errorExample: JSON.stringify(
+          {
+            success: false,
+            message: "Token tidak valid atau sudah kedaluwarsa",
+          },
+          null,
+          2,
+        ),
+      },
+      {
+        id: "report-wallet-usage",
+        title: "Wallet Usage",
+        method: "GET",
+        endpoint: "/reports/wallet-usage?dateFrom=2026-07-01&dateTo=2026-07-31",
+        payload: [
+          { name: "dateFrom", type: "string (YYYY-MM-DD)", required: true },
+          { name: "dateTo", type: "string (YYYY-MM-DD)", required: true },
+        ],
+        successExample: JSON.stringify(
+          {
+            success: true,
+            data: [
+              { idWallet: "wallet-1", nameWallet: "Jago", color: "#7CB87C", transactionCount: 40, percentage: 48 },
+              { idWallet: "wallet-2", nameWallet: "Cash", color: "#4C6FFF", transactionCount: 18, percentage: 22 },
+            ],
+          },
+          null,
+          2,
+        ),
+        errorExample: JSON.stringify(
+          {
+            success: false,
+            message: "Token tidak valid atau sudah kedaluwarsa",
+          },
+          null,
+          2,
+        ),
+      },
+      {
+        id: "report-top-spending",
+        title: "Top Spending",
+        method: "GET",
+        endpoint: "/reports/top-spending?dateFrom=2026-07-01&dateTo=2026-07-31&limit=10",
+        payload: [
+          { name: "dateFrom", type: "string (YYYY-MM-DD)", required: true },
+          { name: "dateTo", type: "string (YYYY-MM-DD)", required: true },
+          { name: "limit", type: "number", required: false },
+        ],
+        successExample: JSON.stringify(
+          {
+            success: true,
+            data: [
+              {
+                idTransaction: "transaction-1",
+                rank: 1,
+                title: "Warteg",
+                categoryName: "Makanan",
+                subCategoryName: "Warteg",
+                amount: 850_000,
+                date: "2026-07-12T09:00:00.000Z",
+              },
+            ],
+          },
+          null,
+          2,
+        ),
+        errorExample: JSON.stringify(
+          {
+            success: false,
+            message: "Token tidak valid atau sudah kedaluwarsa",
+          },
+          null,
+          2,
+        ),
+      },
+      {
+        id: "export-report",
+        title: "Export Report",
+        method: "POST",
+        endpoint: "/reports/export",
+        payload: [
+          { name: "format", type: '"pdf" | "excel" | "csv"', required: true },
+          { name: "dateFrom", type: "string (YYYY-MM-DD)", required: true },
+          { name: "dateTo", type: "string (YYYY-MM-DD)", required: true },
+        ],
+        successExample: JSON.stringify(
+          {
+            success: true,
+            message: "Laporan berhasil diekspor",
+            data: {
+              fileName: "laporan_2026-07-01_2026-07-31.pdf",
+            },
+          },
+          null,
+          2,
+        ),
+        errorExample: JSON.stringify(
+          {
+            success: false,
+            message: "Format export tidak valid",
+          },
+          null,
+          2,
+        ),
+      },
+    ],
+  },
+  {
     key: "settings",
     titleKey: "apiDoc.groups.settings",
     endpoints: [

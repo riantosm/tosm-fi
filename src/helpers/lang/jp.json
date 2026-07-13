@@ -92,7 +92,8 @@
       "wallet": "ウォレット",
       "category": "カテゴリ",
       "transaction": "取引",
-      "settings": "設定"
+      "settings": "設定",
+      "report": "レポート"
     },
     "payload": "Payload",
     "noPayload": "Payloadは不要です",
@@ -285,5 +286,78 @@
       "amountAsc": "金額が低い順"
     },
     "noDataForFilter": "このフィルターに一致する取引はありません"
+  },
+  "reports": {
+    "period": {
+      "today": "今日",
+      "week": "今週",
+      "month": "今月",
+      "year": "今年",
+      "custom": "カスタム範囲"
+    },
+    "summary": {
+      "totalIncome": "総収入",
+      "totalExpense": "総支出",
+      "netCashFlow": "純キャッシュフロー",
+      "transactionCount": "取引件数",
+      "previousPeriod": "前期間比"
+    },
+    "cashFlow": {
+      "title": "キャッシュフロー",
+      "income": "収入",
+      "expense": "支出",
+      "empty": "この期間のキャッシュフローデータはまだありません"
+    },
+    "expenseByCategory": {
+      "title": "カテゴリ別支出"
+    },
+    "monthlyTrend": {
+      "title": "月次推移",
+      "monthsLabel": "過去{{count}}か月",
+      "metrics": {
+        "expense": "支出",
+        "income": "収入"
+      }
+    },
+    "walletUsage": {
+      "title": "よく使うウォレット",
+      "empty": "この期間のウォレット利用はまだありません"
+    },
+    "topSpending": {
+      "title": "支出トップ",
+      "empty": "この期間の支出はまだありません"
+    },
+    "transactionList": {
+      "title": "取引一覧"
+    },
+    "export": {
+      "title": "エクスポート",
+      "action": "エクスポート",
+      "pdf": "PDFをエクスポート",
+      "pdfDescription": "PDF文書",
+      "excel": "Excelをエクスポート",
+      "excelDescription": ".xlsxファイル",
+      "csv": "CSVをエクスポート",
+      "csvDescription": ".csvファイル",
+      "success": "レポート{{fileName}}をエクスポートしました",
+      "sections": {
+        "summary": "概要"
+      },
+      "columns": {
+        "metric": "指標",
+        "value": "値",
+        "change": "変化率",
+        "category": "カテゴリ",
+        "total": "合計",
+        "percentage": "割合",
+        "transactions": "取引数",
+        "wallet": "ウォレット",
+        "rank": "順位",
+        "title": "タイトル",
+        "amount": "金額",
+        "date": "日付",
+        "type": "種類"
+      }
+    }
   }
 }
