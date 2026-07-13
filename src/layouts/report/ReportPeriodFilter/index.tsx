@@ -72,8 +72,8 @@ export function ReportPeriodFilter({ value, onChange }: ReportPeriodFilterProps)
   }
 
   return (
-    <div className="flex flex-wrap items-center gap-2">
-      <div className="flex flex-wrap items-center gap-1 rounded-full bg-ink-100 p-1 dark:bg-ink-800">
+    <div className="flex min-w-0 max-w-full flex-wrap items-center gap-2">
+      <div className="flex min-w-0 max-w-full items-center gap-1 overflow-x-auto scrollbar-hide rounded-full bg-ink-100 p-1 dark:bg-ink-800">
         {FIXED_PRESETS.map((preset) => {
           const isActive = value.preset === preset;
           return (
@@ -82,7 +82,7 @@ export function ReportPeriodFilter({ value, onChange }: ReportPeriodFilterProps)
               type="button"
               onClick={() => onChange({ preset, dateFrom: "", dateTo: "" })}
               className={cn(
-                "rounded-full px-3.5 py-1.5 transition-colors",
+                "shrink-0 whitespace-nowrap rounded-full px-3.5 py-1.5 transition-colors",
                 isActive
                   ? "bg-white text-ink-900 shadow-sm dark:bg-ink-950 dark:text-ink-50"
                   : "text-ink-500 hover:text-ink-700 dark:text-ink-400 dark:hover:text-ink-200",

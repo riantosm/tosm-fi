@@ -229,7 +229,7 @@ export function ReportsPage() {
           <Words as="h1" type="2xl/bold" className="text-ink-900 dark:text-ink-50">
             {t("nav.reports")}
           </Words>
-          <div className="flex flex-wrap items-center gap-2">
+          <div className="flex min-w-0 max-w-full flex-wrap items-center gap-2">
             <ReportPeriodFilter value={period} onChange={setPeriod} />
             <ReportExportMenu onExport={handleExport} exportingFormat={exportingFormat} />
           </div>
