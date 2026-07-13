@@ -5,6 +5,7 @@ import { Modal } from "@/components/molecules/Modal";
 import { Button } from "@/components/atoms/Button";
 import { Input } from "@/components/atoms/Input";
 import { Words } from "@/components/atoms/Words";
+import { IconLoader } from "@/components/atoms/IconLoader";
 import { ColorPicker } from "@/components/molecules/ColorPicker";
 import { CategoryIconPicker } from "@/layouts/category/CategoryIconPicker";
 import { CATEGORY_ICONS, resolveCategoryIcon } from "@/constants/category-icons";
@@ -18,6 +19,7 @@ interface CategoryFormModalProps {
   category?: Category | null;
   defaultType: CategoryType;
   isSubmitting?: boolean;
+  isReorderingSubCategories?: boolean;
   onClose: () => void;
   onSubmit: (input: CategoryInput) => void;
   onAddSubCategory: () => void;
@@ -31,6 +33,7 @@ export function CategoryFormModal({
   category,
   defaultType,
   isSubmitting,
+  isReorderingSubCategories,
   onClose,
   onSubmit,
   onAddSubCategory,
@@ -45,6 +48,7 @@ export function CategoryFormModal({
           category={category}
           defaultType={defaultType}
           isSubmitting={isSubmitting}
+          isReorderingSubCategories={isReorderingSubCategories}
           onClose={onClose}
           onSubmit={onSubmit}
           onAddSubCategory={onAddSubCategory}
@@ -68,6 +72,7 @@ function CategoryFormFields({
   category,
   defaultType,
   isSubmitting,
+  isReorderingSubCategories,
   onClose,
   onSubmit,
   onAddSubCategory,
@@ -171,9 +176,14 @@ function CategoryFormFields({
       {category && (
         <div className="flex flex-col gap-3 border-t border-ink-100 pt-4 dark:border-ink-800">
           <div className="flex items-center justify-between">
-            <Words type="sm/bold" className="text-ink-700 dark:text-ink-300">
-              {t("category.subCategoriesLabel")}
-            </Words>
+            <div className="flex items-center gap-2">
+              <Words type="sm/bold" className="text-ink-700 dark:text-ink-300">
+                {t("category.subCategoriesLabel")}
+              </Words>
+              {isReorderingSubCategories && (
+                <IconLoader className="h-3.5 w-3.5 animate-spin text-ink-400 dark:text-ink-500" />
+              )}
+            </div>
             <button
               type="button"
               onClick={onAddSubCategory}
@@ -195,6 +205,7 @@ function CategoryFormFields({
                 key={sub.idSubCategory}
                 subCategory={sub}
                 categoryColor={category.color}
+                disabled={isReorderingSubCategories}
                 onEdit={() => onEditSubCategory(sub)}
                 onDelete={() => onDeleteSubCategory(sub)}
                 onDragStart={() =>
@@ -228,6 +239,7 @@ function CategoryFormFields({
 interface SubCategoryListRowProps {
   subCategory: SubCategory;
   categoryColor: string;
+  disabled?: boolean;
   onEdit: () => void;
   onDelete: () => void;
   onDragStart: () => void;
@@ -239,6 +251,7 @@ interface SubCategoryListRowProps {
 function SubCategoryListRow({
   subCategory,
   categoryColor,
+  disabled,
   onEdit,
   onDelete,
   onDragStart,
@@ -251,9 +264,12 @@ function SubCategoryListRow({
 
   return (
     <div
-      onDragOver={onDragOver}
-      onDrop={onDrop}
-      className="flex items-center gap-3 rounded-xl border border-ink-200 bg-white p-3 dark:border-ink-800 dark:bg-ink-900"
+      onDragOver={disabled ? undefined : onDragOver}
+      onDrop={disabled ? undefined : onDrop}
+      className={cn(
+        "flex items-center gap-3 rounded-xl border border-ink-200 bg-white p-3 dark:border-ink-800 dark:bg-ink-900",
+        disabled && "pointer-events-none opacity-60",
+      )}
     >
       <button type="button" onClick={onEdit} className="flex flex-1 items-center gap-3 text-left">
         <div
@@ -280,7 +296,7 @@ function SubCategoryListRow({
         <HiOutlineTrash className="h-4 w-4" />
       </button>
       <div
-        draggable
+        draggable={!disabled}
         onDragStart={onDragStart}
         onDragEnd={onDragEnd}
         role="button"

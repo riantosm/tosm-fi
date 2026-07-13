@@ -51,6 +51,7 @@ export function CategoriesPage() {
   const [deletingCategoryId, setDeletingCategoryId] = useState<string | null>(null);
   const [isSubmittingSubCategory, setIsSubmittingSubCategory] = useState(false);
   const [isDeletingSubCategory, setIsDeletingSubCategory] = useState(false);
+  const [isReorderingSubCategories, setIsReorderingSubCategories] = useState(false);
 
   const [isReordering, setIsReordering] = useState(false);
   const [localOrder, setLocalOrder] = useState<Category[]>([]);
@@ -191,10 +192,13 @@ export function CategoriesPage() {
   }
 
   async function handleReorderSubCategories(categoryId: string, orderedIds: string[]) {
+    setIsReorderingSubCategories(true);
     try {
       await reorderSubCategories(categoryId, orderedIds);
     } catch (error) {
       showToast(error instanceof Error ? error.message : t("category.genericError"), "error");
+    } finally {
+      setIsReorderingSubCategories(false);
     }
   }
 
@@ -318,6 +322,7 @@ export function CategoriesPage() {
           }
         }}
         onDeleteSubCategory={(sub) => void handleDeleteSubCategory(sub)}
+        isReorderingSubCategories={isReorderingSubCategories}
         onReorderSubCategories={(orderedIds) => {
           if (editingCategory) void handleReorderSubCategories(editingCategory.idCategory, orderedIds);
         }}
