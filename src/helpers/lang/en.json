@@ -164,6 +164,7 @@
     "newBalanceHint": "Enter the actual balance"
   },
   "category": {
+    "genericError": "Something went wrong, please try again.",
     "income": "Income",
     "expense": "Expense",
     "addCategory": "Add Category",
@@ -264,6 +265,7 @@
     "deleteSubCategoryConfirmTitle": "Delete this subcategory?"
   },
   "transaction": {
+    "genericError": "Something went wrong, please try again.",
     "addTransaction": "Add Transaction",
     "editTransaction": "Edit Transaction",
     "expense": "Expense",
@@ -314,6 +316,7 @@
     "noDataForFilter": "No transactions match these filters"
   },
   "reports": {
+    "genericError": "Something went wrong, please try again.",
     "period": {
       "today": "Today",
       "week": "This Week",

@@ -10,6 +10,7 @@ import { CategoryFormModal } from "@/layouts/category/CategoryFormModal";
 import { SubCategoryFormModal } from "@/layouts/category/SubCategoryFormModal";
 import { useCategories } from "@/hooks/use-categories";
 import { useConfirmDialog } from "@/hooks/use-confirm-dialog";
+import { useToast } from "@/hooks/use-toast";
 import { moveItem } from "@/utils/reorder";
 import type { Category, CategoryInput, CategoryType, SubCategory, SubCategoryInput } from "@/types/category.types";
 
@@ -39,6 +40,7 @@ export function CategoriesPage() {
     reorderSubCategories,
   } = useCategories();
   const { confirm } = useConfirmDialog();
+  const { showToast } = useToast();
 
   const [categoryModalState, setCategoryModalState] = useState<CategoryModalState | null>(null);
   const [subCategoryModalState, setSubCategoryModalState] = useState<SubCategoryModalState | null>(
@@ -109,6 +111,8 @@ export function CategoriesPage() {
         await createCategory(input);
       }
       closeCategoryModal();
+    } catch (error) {
+      showToast(error instanceof Error ? error.message : t("category.genericError"), "error");
     } finally {
       setIsSubmittingCategory(false);
     }
@@ -128,6 +132,8 @@ export function CategoriesPage() {
     try {
       await deleteCategory(id);
       closeCategoryModal();
+    } catch (error) {
+      showToast(error instanceof Error ? error.message : t("category.genericError"), "error");
     } finally {
       setDeletingCategoryId(null);
     }
@@ -147,6 +153,8 @@ export function CategoriesPage() {
         await createSubCategory(subCategoryModalState.categoryId, input);
       }
       closeSubCategoryModal();
+    } catch (error) {
+      showToast(error instanceof Error ? error.message : t("category.genericError"), "error");
     } finally {
       setIsSubmittingSubCategory(false);
     }
@@ -166,6 +174,8 @@ export function CategoriesPage() {
     try {
       await deleteSubCategory(subCategory.idCategory, subCategory.idSubCategory);
       closeSubCategoryModal();
+    } catch (error) {
+      showToast(error instanceof Error ? error.message : t("category.genericError"), "error");
     } finally {
       setIsDeletingSubCategory(false);
     }
@@ -180,11 +190,21 @@ export function CategoriesPage() {
     setIsReordering(false);
   }
 
+  async function handleReorderSubCategories(categoryId: string, orderedIds: string[]) {
+    try {
+      await reorderSubCategories(categoryId, orderedIds);
+    } catch (error) {
+      showToast(error instanceof Error ? error.message : t("category.genericError"), "error");
+    }
+  }
+
   async function handleSaveOrder() {
     setIsSavingOrder(true);
     try {
       await reorderCategories(localOrder.map((category) => category.idCategory));
       setIsReordering(false);
+    } catch (error) {
+      showToast(error instanceof Error ? error.message : t("category.genericError"), "error");
     } finally {
       setIsSavingOrder(false);
     }
@@ -299,7 +319,7 @@ export function CategoriesPage() {
         }}
         onDeleteSubCategory={(sub) => void handleDeleteSubCategory(sub)}
         onReorderSubCategories={(orderedIds) => {
-          if (editingCategory) void reorderSubCategories(editingCategory.idCategory, orderedIds);
+          if (editingCategory) void handleReorderSubCategories(editingCategory.idCategory, orderedIds);
         }}
       />
 

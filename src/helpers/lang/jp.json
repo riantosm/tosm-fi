@@ -164,6 +164,7 @@
     "newBalanceHint": "実際の残高を入力してください"
   },
   "category": {
+    "genericError": "エラーが発生しました。もう一度お試しください。",
     "income": "収入",
     "expense": "支出",
     "addCategory": "カテゴリを追加",
@@ -264,6 +265,7 @@
     "deleteSubCategoryConfirmTitle": "このサブカテゴリを削除しますか?"
   },
   "transaction": {
+    "genericError": "エラーが発生しました。もう一度お試しください。",
     "addTransaction": "取引を追加",
     "editTransaction": "取引を編集",
     "expense": "支出",
@@ -314,6 +316,7 @@
     "noDataForFilter": "このフィルターに一致する取引はありません"
   },
   "reports": {
+    "genericError": "エラーが発生しました。もう一度お試しください。",
     "period": {
       "today": "今日",
       "week": "今週",

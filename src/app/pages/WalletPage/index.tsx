@@ -12,6 +12,7 @@ import { ViewModeToggle } from "@/layouts/wallet/ViewModeToggle";
 import { useWallets } from "@/hooks/use-wallets";
 import { useConfirmDialog } from "@/hooks/use-confirm-dialog";
 import { useWalletViewMode } from "@/hooks/use-wallet-view-mode";
+import { useToast } from "@/hooks/use-toast";
 import type { WalletAccount, WalletInput } from "@/types/wallet.types";
 
 function moveItem(list: WalletAccount[], draggedId: string, targetId: string): WalletAccount[] {
@@ -39,6 +40,7 @@ export function WalletPage() {
   } = useWallets();
   const { confirm } = useConfirmDialog();
   const { viewMode, setViewMode } = useWalletViewMode();
+  const { showToast } = useToast();
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingWallet, setEditingWallet] = useState<WalletAccount | null>(null);
@@ -74,6 +76,8 @@ export function WalletPage() {
         await createWallet(input);
       }
       setIsModalOpen(false);
+    } catch (error) {
+      showToast(error instanceof Error ? error.message : t("wallet.genericError"), "error");
     } finally {
       setIsSubmitting(false);
     }
@@ -93,6 +97,8 @@ export function WalletPage() {
     try {
       await deleteWallet(id);
       setIsModalOpen(false);
+    } catch (error) {
+      showToast(error instanceof Error ? error.message : t("wallet.genericError"), "error");
     } finally {
       setIsDeleting(false);
     }
@@ -103,6 +109,8 @@ export function WalletPage() {
     try {
       await setPrimaryWallet(id);
       setIsModalOpen(false);
+    } catch (error) {
+      showToast(error instanceof Error ? error.message : t("wallet.genericError"), "error");
     } finally {
       setIsSettingPrimary(false);
     }
@@ -122,6 +130,8 @@ export function WalletPage() {
     try {
       await reorderWallets(localOrder.map((wallet) => wallet.idWallet));
       setIsReordering(false);
+    } catch (error) {
+      showToast(error instanceof Error ? error.message : t("wallet.genericError"), "error");
     } finally {
       setIsSavingOrder(false);
     }

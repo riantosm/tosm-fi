@@ -1,7 +1,7 @@
 import { useCallback } from "react";
 import { authService } from "@/services/auth.service";
 import type { LoginCredentials, RegisterInput } from "@/types/auth.types";
-import { onLogin, onLogout, useAppDispatch, useAppSelector } from "@/redux";
+import { onLogin, onLogout, resetAccountData, useAppDispatch, useAppSelector } from "@/redux";
 
 export function useAuth() {
   const dispatch = useAppDispatch();
@@ -35,6 +35,10 @@ export function useAuth() {
       // shouldn't block the user from clearing their local session.
     } finally {
       dispatch(onLogout());
+      // Wallet/category/transaction are per-account — without this, a
+      // different account logging in on the same browser would see this
+      // account's cached data until the next full reload rehydrates fresh.
+      resetAccountData(dispatch);
     }
   }, [dispatch]);
 

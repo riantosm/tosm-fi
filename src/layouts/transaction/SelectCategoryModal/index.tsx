@@ -5,6 +5,7 @@ import { Modal } from "@/components/molecules/Modal";
 import { Words } from "@/components/atoms/Words";
 import { CategoryFormModal } from "@/layouts/category/CategoryFormModal";
 import { useCategories } from "@/hooks/use-categories";
+import { useToast } from "@/hooks/use-toast";
 import { resolveCategoryIcon } from "@/constants/category-icons";
 import type { Category, CategoryType } from "@/types/category.types";
 
@@ -18,6 +19,7 @@ interface SelectCategoryModalProps {
 export function SelectCategoryModal({ isOpen, type, onClose, onSelect }: SelectCategoryModalProps) {
   const { t } = useTranslation();
   const { categories, createCategory } = useCategories();
+  const { showToast } = useToast();
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -28,6 +30,8 @@ export function SelectCategoryModal({ isOpen, type, onClose, onSelect }: SelectC
     try {
       await createCategory(input);
       setIsCreateOpen(false);
+    } catch (error) {
+      showToast(error instanceof Error ? error.message : t("category.genericError"), "error");
     } finally {
       setIsSubmitting(false);
     }

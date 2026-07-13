@@ -164,6 +164,7 @@
     "newBalanceHint": "Masukkan saldo yang sebenarnya"
   },
   "category": {
+    "genericError": "Terjadi kesalahan, coba lagi.",
     "income": "Pemasukan",
     "expense": "Pengeluaran",
     "addCategory": "Tambah Kategori",
@@ -264,6 +265,7 @@
     "deleteSubCategoryConfirmTitle": "Hapus subkategori ini?"
   },
   "transaction": {
+    "genericError": "Terjadi kesalahan, coba lagi.",
     "addTransaction": "Tambah Transaksi",
     "editTransaction": "Edit Transaksi",
     "expense": "Pengeluaran",
@@ -314,6 +316,7 @@
     "noDataForFilter": "Tidak ada transaksi untuk filter ini"
   },
   "reports": {
+    "genericError": "Terjadi kesalahan, coba lagi.",
     "period": {
       "today": "Hari Ini",
       "week": "Minggu Ini",

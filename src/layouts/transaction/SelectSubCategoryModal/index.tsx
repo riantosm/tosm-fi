@@ -5,6 +5,7 @@ import { Modal } from "@/components/molecules/Modal";
 import { Words } from "@/components/atoms/Words";
 import { SubCategoryFormModal } from "@/layouts/category/SubCategoryFormModal";
 import { useCategories } from "@/hooks/use-categories";
+import { useToast } from "@/hooks/use-toast";
 import { resolveCategoryIcon } from "@/constants/category-icons";
 import type { Category, SubCategory, SubCategoryInput } from "@/types/category.types";
 
@@ -23,6 +24,7 @@ export function SelectSubCategoryModal({
 }: SelectSubCategoryModalProps) {
   const { t } = useTranslation();
   const { createSubCategory } = useCategories();
+  const { showToast } = useToast();
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -32,6 +34,8 @@ export function SelectSubCategoryModal({
     try {
       await createSubCategory(category.idCategory, input);
       setIsCreateOpen(false);
+    } catch (error) {
+      showToast(error instanceof Error ? error.message : t("category.genericError"), "error");
     } finally {
       setIsSubmitting(false);
     }

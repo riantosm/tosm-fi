@@ -231,6 +231,8 @@ function AddTransactionFields({
         showToast(t("transaction.createSuccess"), "success");
       }
       onClose();
+    } catch (error) {
+      showToast(error instanceof Error ? error.message : t("transaction.genericError"), "error");
     } finally {
       setIsSaving(false);
     }
@@ -252,6 +254,8 @@ function AddTransactionFields({
       await deleteTransaction(transaction.idTransaction);
       showToast(t("transaction.deleteSuccess"), "success");
       onClose();
+    } catch (error) {
+      showToast(error instanceof Error ? error.message : t("transaction.genericError"), "error");
     } finally {
       setIsDeleting(false);
     }

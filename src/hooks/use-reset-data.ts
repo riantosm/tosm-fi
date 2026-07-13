@@ -1,13 +1,11 @@
 import { useCallback } from "react";
-import { resetCategories, resetTransactions, resetWallets, useAppDispatch } from "@/redux";
+import { resetAccountData, useAppDispatch } from "@/redux";
 
 export function useResetData() {
   const dispatch = useAppDispatch();
 
   const resetData = useCallback(() => {
-    dispatch(resetWallets());
-    dispatch(resetCategories());
-    dispatch(resetTransactions());
+    resetAccountData(dispatch);
   }, [dispatch]);
 
   return { resetData };

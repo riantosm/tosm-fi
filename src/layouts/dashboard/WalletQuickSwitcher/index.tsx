@@ -6,6 +6,7 @@ import { IconLoader } from "@/components/atoms/IconLoader";
 import { Words } from "@/components/atoms/Words";
 import { useCurrency } from "@/hooks/use-currency";
 import { useWallets } from "@/hooks/use-wallets";
+import { useToast } from "@/hooks/use-toast";
 import { ROUTES } from "@/constants/routes";
 import type { WalletAccount } from "@/types/wallet.types";
 import { cn } from "@/utils/cn";
@@ -19,6 +20,7 @@ export function WalletQuickSwitcher({ onCorrectBalance }: WalletQuickSwitcherPro
   const navigate = useNavigate();
   const { wallets, status, loadWallets, setPrimaryWallet } = useWallets();
   const { format } = useCurrency();
+  const { showToast } = useToast();
   const [pendingId, setPendingId] = useState<string | null>(null);
 
   useEffect(() => {
@@ -30,6 +32,8 @@ export function WalletQuickSwitcher({ onCorrectBalance }: WalletQuickSwitcherPro
     setPendingId(id);
     try {
       await setPrimaryWallet(id);
+    } catch (error) {
+      showToast(error instanceof Error ? error.message : t("wallet.genericError"), "error");
     } finally {
       setPendingId(null);
     }

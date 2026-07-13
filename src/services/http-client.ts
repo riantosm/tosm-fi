@@ -1,6 +1,7 @@
 import axios from "axios";
 import { store } from "@/redux/store";
 import { onSessionExpired } from "@/redux/slices/authenticationSlice";
+import { resetAccountData } from "@/redux/reset-account-data";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:3000/api";
 
@@ -26,6 +27,7 @@ httpClient.interceptors.response.use(
     const isUnauthorized = axios.isAxiosError(error) && error.response?.status === 401;
     if (isUnauthorized && store.getState().authentication.isLogin) {
       store.dispatch(onSessionExpired());
+      resetAccountData(store.dispatch);
     }
     return Promise.reject(error);
   },

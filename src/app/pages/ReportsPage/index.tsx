@@ -217,6 +217,8 @@ export function ReportsPage() {
         exportDocumentToPdf(result.fileName, exportDoc);
       }
       showToast(t("reports.export.success", { fileName: result.fileName }), "success");
+    } catch (error) {
+      showToast(error instanceof Error ? error.message : t("reports.genericError"), "error");
     } finally {
       setExportingFormat(null);
     }
