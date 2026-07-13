@@ -15,7 +15,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/hooks/use-language";
 import { useCurrency } from "@/hooks/use-currency";
 import { parseIsoDateLocal } from "@/utils/report-period";
-import type { ExportDocument } from "@/utils/report-export";
+import type { ExportDocument } from "@/utils/report-export-types";
 import type {
   MonthlyTrendMetric,
   ReportExportFormat,
@@ -203,11 +203,19 @@ export function ReportsPage() {
     try {
       const result = await exportReport(format);
       const exportDoc = buildExportDocument();
-      const { exportDocumentToCsv, exportDocumentToExcel, exportDocumentToPdf } =
-        await import("@/utils/report-export");
-      if (format === "csv") exportDocumentToCsv(result.fileName, exportDoc);
-      else if (format === "excel") exportDocumentToExcel(result.fileName, exportDoc);
-      else exportDocumentToPdf(result.fileName, exportDoc);
+      // Each format's heavy library (xlsx / jspdf+autotable) only loads
+      // when that specific format is used, instead of one shared chunk
+      // pulling in all three regardless of what was picked.
+      if (format === "csv") {
+        const { exportDocumentToCsv } = await import("@/utils/report-export-csv");
+        exportDocumentToCsv(result.fileName, exportDoc);
+      } else if (format === "excel") {
+        const { exportDocumentToExcel } = await import("@/utils/report-export-excel");
+        exportDocumentToExcel(result.fileName, exportDoc);
+      } else {
+        const { exportDocumentToPdf } = await import("@/utils/report-export-pdf");
+        exportDocumentToPdf(result.fileName, exportDoc);
+      }
       showToast(t("reports.export.success", { fileName: result.fileName }), "success");
     } finally {
       setExportingFormat(null);

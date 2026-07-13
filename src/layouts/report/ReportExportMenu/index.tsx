@@ -48,7 +48,7 @@ export function ReportExportMenu({ onExport, exportingFormat }: ReportExportMenu
       </button>
 
       {isOpen && (
-        <div className="absolute right-0 top-full z-20 mt-2 w-48 overflow-hidden rounded-2xl border border-ink-200 bg-white py-1 shadow-lg dark:border-ink-800 dark:bg-ink-900">
+        <div className="absolute left-0 top-full z-20 mt-2 w-48 max-w-[calc(100vw-2rem)] overflow-hidden rounded-2xl border border-ink-200 bg-white py-1 shadow-lg sm:left-auto sm:right-0 dark:border-ink-800 dark:bg-ink-900">
           {FORMAT_OPTIONS.map(({ format, icon: Icon }) => (
             <button
               key={format}

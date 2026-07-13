@@ -116,7 +116,7 @@ export function ReportPeriodFilter({ value, onChange }: ReportPeriodFilterProps)
         </button>
 
         {isOpen && (
-          <div className="absolute right-0 top-full z-20 mt-2 w-72 rounded-2xl border border-ink-200 bg-white p-4 shadow-lg dark:border-ink-800 dark:bg-ink-900">
+          <div className="absolute left-0 top-full z-20 mt-2 w-72 max-w-[calc(100vw-2rem)] rounded-2xl border border-ink-200 bg-white p-4 shadow-lg sm:left-auto sm:right-0 dark:border-ink-800 dark:bg-ink-900">
             {activeField ? (
               <div className="flex flex-col gap-3">
                 <button
