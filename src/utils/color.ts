@@ -53,3 +53,18 @@ export function hexToHsv(hex: string): Hsv {
 
   return { h, s: s * 100, v: v * 100 };
 }
+
+/** Generates `count` shades of `baseHex` (same hue, varying brightness), from dark to light. */
+export function generateShades(baseHex: string, count: number): string[] {
+  if (count <= 0) return [];
+  if (count === 1) return [baseHex];
+
+  const { h, s } = hexToHsv(baseHex);
+  const saturation = Math.max(s, 45);
+  const minValue = 55;
+  const maxValue = 100;
+
+  return Array.from({ length: count }, (_, index) =>
+    hsvToHex(h, saturation, minValue + (index * (maxValue - minValue)) / (count - 1)),
+  );
+}

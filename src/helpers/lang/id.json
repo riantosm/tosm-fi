@@ -44,6 +44,12 @@
   "dashboard": {
     "greeting": "Halo, {{name}}",
     "subtitle": "Berikut ringkasan keuanganmu hari ini.",
+    "expenseByCategory": "Pengeluaran Berdasarkan Kategori",
+    "thisMonth": "Bulan Ini",
+    "totalExpense": "Total Pengeluaran",
+    "noExpenseData": "Belum ada data pengeluaran bulan ini",
+    "totalOfCategory": "Total {{category}}",
+    "otherSubCategory": "Lainnya",
     "recentTransactions": "Transaksi Bulan Ini",
     "noTransactions": "Belum ada transaksi"
   },

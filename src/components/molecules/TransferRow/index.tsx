@@ -17,7 +17,7 @@ export function TransferRow({ transaction, walletFrom, walletTo, onClick }: Tran
     <button
       type="button"
       onClick={onClick}
-      className="flex w-full items-start gap-3 rounded-xl px-2 py-3 -mx-2 text-left transition-colors hover:bg-ink-50 dark:hover:bg-ink-800"
+      className="flex w-full items-start gap-3 rounded-xl px-2 py-3 text-left transition-colors hover:bg-ink-50 dark:hover:bg-ink-800"
     >
       <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-ink-100 dark:bg-ink-800">
         <HiOutlineArrowsRightLeft className="h-5 w-5 text-ink-500 dark:text-ink-400" />

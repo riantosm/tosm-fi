@@ -44,6 +44,12 @@
   "dashboard": {
     "greeting": "こんにちは、{{name}}さん",
     "subtitle": "今日の資産状況のまとめです。",
+    "expenseByCategory": "カテゴリ別支出",
+    "thisMonth": "今月",
+    "totalExpense": "総支出",
+    "noExpenseData": "今月の支出データはまだありません",
+    "totalOfCategory": "{{category}}の合計",
+    "otherSubCategory": "その他",
     "recentTransactions": "今月の取引",
     "noTransactions": "まだ取引がありません"
   },

@@ -44,6 +44,12 @@
   "dashboard": {
     "greeting": "Hi, {{name}}",
     "subtitle": "Here's a summary of your finances today.",
+    "expenseByCategory": "Expenses by Category",
+    "thisMonth": "This Month",
+    "totalExpense": "Total Expense",
+    "noExpenseData": "No expense data for this month yet",
+    "totalOfCategory": "Total {{category}}",
+    "otherSubCategory": "Other",
     "recentTransactions": "This Month's Transactions",
     "noTransactions": "No transactions yet"
   },

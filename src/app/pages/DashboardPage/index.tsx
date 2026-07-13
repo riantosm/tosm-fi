@@ -5,6 +5,7 @@ import { Words } from "@/components/atoms/Words";
 import { WalletQuickSwitcher } from "@/layouts/dashboard/WalletQuickSwitcher";
 import { AddTransactionFab } from "@/layouts/dashboard/AddTransactionFab";
 import { TransactionList } from "@/layouts/dashboard/TransactionList";
+import { ExpenseByCategoryChart } from "@/layouts/dashboard/ExpenseByCategoryChart";
 import { AddTransactionModal } from "@/layouts/transaction/AddTransactionModal";
 import { BalanceCorrectionModal } from "@/layouts/wallet/BalanceCorrectionModal";
 import { useAuth } from "@/hooks/use-auth";
@@ -74,12 +75,19 @@ export function DashboardPage() {
           onCorrectBalance={(wallet) => setCorrectionState({ wallet, transaction: null })}
         />
 
-        <TransactionList
-          transactions={currentMonthTransactions}
-          categories={categories}
-          wallets={wallets}
-          onEditTransaction={handleEditTransaction}
-        />
+        <div className="lg:flex lg:items-start space-x-8 space-y-8">
+          <div className="flex-1">
+            <ExpenseByCategoryChart transactions={transactions} categories={categories} />
+          </div>
+          <div className="flex-1">
+            <TransactionList
+              transactions={currentMonthTransactions}
+              categories={categories}
+              wallets={wallets}
+              onEditTransaction={handleEditTransaction}
+            />
+          </div>
+        </div>
       </div>
 
       <AddTransactionFab />

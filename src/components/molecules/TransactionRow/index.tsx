@@ -39,7 +39,7 @@ export function TransactionRow({
     <button
       type="button"
       onClick={onClick}
-      className="flex w-full items-center justify-between gap-3 rounded-xl px-2 py-3 -mx-2 text-left transition-colors hover:bg-ink-50 dark:hover:bg-ink-800"
+      className="flex w-full items-center justify-between gap-3 rounded-xl px-2 py-3 text-left transition-colors hover:bg-ink-50 dark:hover:bg-ink-800"
     >
       <div className="flex min-w-0 items-center gap-3">
         <div
