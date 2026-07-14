@@ -21,8 +21,6 @@ import type {
 const TOP_SPENDING_LIMIT = 10;
 const MONTHLY_TREND_MONTHS = 12;
 
-type ReportStatus = "idle" | "loading" | "loaded";
-
 export function useReports(period: ReportPeriodFilter, monthlyTrendMetric: MonthlyTrendMetric) {
   const { queryTransactions } = useTransactions();
   const { wallets, status: walletsStatus, loadWallets } = useWallets();
@@ -31,12 +29,21 @@ export function useReports(period: ReportPeriodFilter, monthlyTrendMetric: Month
 
   const [summary, setSummary] = useState<ReportSummary | null>(null);
   const [categoryBreakdown, setCategoryBreakdown] = useState<TransactionCategoryBreakdown[]>([]);
+  const [summaryCompletedKey, setSummaryCompletedKey] = useState<string | null>(null);
+
   const [cashFlow, setCashFlow] = useState<CashFlowPoint[]>([]);
+  const [cashFlowCompletedKey, setCashFlowCompletedKey] = useState<string | null>(null);
+
   const [monthlyTrendRaw, setMonthlyTrendRaw] = useState<MonthlyTrendRawPoint[]>([]);
+  const [monthlyTrendCompletedKey, setMonthlyTrendCompletedKey] = useState<string | null>(null);
+
   const [walletUsage, setWalletUsage] = useState<WalletUsageItem[]>([]);
+  const [walletUsageCompletedKey, setWalletUsageCompletedKey] = useState<string | null>(null);
+
   const [topSpending, setTopSpending] = useState<TopSpendingItem[]>([]);
+  const [topSpendingCompletedKey, setTopSpendingCompletedKey] = useState<string | null>(null);
+
   const [periodTransactions, setPeriodTransactions] = useState<Transaction[]>([]);
-  const [completedKey, setCompletedKey] = useState<string | null>(null);
 
   const resolvedPeriod = useMemo(
     () =>
@@ -48,7 +55,7 @@ export function useReports(period: ReportPeriodFilter, monthlyTrendMetric: Month
   );
 
   // Only raw transaction fetch left on this page — scoped tightly to the resolved period.
-  // Feeds only the export's transaction-list section now (cash flow moved to its own endpoint).
+  // Feeds only the export's transaction-list section (not rendered directly, no loading UI).
   useEffect(() => {
     let cancelled = false;
 
@@ -89,32 +96,48 @@ export function useReports(period: ReportPeriodFilter, monthlyTrendMetric: Month
     if (categoriesStatus === "idle") void loadCategories();
   }, [categoriesStatus, loadCategories]);
 
-  const requestKey = JSON.stringify({ resolvedPeriod, language });
-  const status: ReportStatus = completedKey === requestKey ? "loaded" : "loading";
+  // Every widget below fetches from its own dedicated endpoint independently. Each "is loading"
+  // flag is derived by comparing a request key (the args this render wants) against a completed
+  // key (the args last successfully fetched) instead of a separate boolean toggled inside the
+  // effect — so a fast card can render before a slower one finishes, without setState firing
+  // synchronously in the effect body.
+
+  const summaryRequestKey = JSON.stringify(resolvedPeriod);
+  const isSummaryLoading = summaryCompletedKey !== summaryRequestKey;
 
   useEffect(() => {
     let cancelled = false;
 
-    void Promise.all([
-      reportService.fetchSummary(
+    void reportService
+      .fetchSummary(
         resolvedPeriod.dateFrom,
         resolvedPeriod.dateTo,
         resolvedPeriod.previousDateFrom,
         resolvedPeriod.previousDateTo,
-      ),
-      reportService.fetchCashFlow(resolvedPeriod.dateFrom, resolvedPeriod.dateTo, language),
-      reportService.fetchMonthlyTrend(MONTHLY_TREND_MONTHS, language),
-      reportService.fetchWalletUsage(resolvedPeriod.dateFrom, resolvedPeriod.dateTo),
-      reportService.fetchTopSpending(resolvedPeriod.dateFrom, resolvedPeriod.dateTo, TOP_SPENDING_LIMIT),
-    ]).then(([summaryResult, cashFlowResult, monthlyTrendResult, walletUsageResult, topSpendingResult]) => {
+      )
+      .then((result) => {
+        if (cancelled) return;
+        setSummary(result.summary);
+        setCategoryBreakdown(result.categoryBreakdown);
+        setSummaryCompletedKey(summaryRequestKey);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [resolvedPeriod]);
+
+  const cashFlowRequestKey = JSON.stringify({ resolvedPeriod, language });
+  const isCashFlowLoading = cashFlowCompletedKey !== cashFlowRequestKey;
+
+  useEffect(() => {
+    let cancelled = false;
+
+    void reportService.fetchCashFlow(resolvedPeriod.dateFrom, resolvedPeriod.dateTo, language).then((result) => {
       if (cancelled) return;
-      setSummary(summaryResult.summary);
-      setCategoryBreakdown(summaryResult.categoryBreakdown);
-      setCashFlow(cashFlowResult);
-      setMonthlyTrendRaw(monthlyTrendResult);
-      setWalletUsage(walletUsageResult);
-      setTopSpending(topSpendingResult);
-      setCompletedKey(requestKey);
+      setCashFlow(result);
+      setCashFlowCompletedKey(cashFlowRequestKey);
     });
 
     return () => {
@@ -122,6 +145,64 @@ export function useReports(period: ReportPeriodFilter, monthlyTrendMetric: Month
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [resolvedPeriod, language]);
+
+  // Doesn't depend on resolvedPeriod — it's always the trailing MONTHLY_TREND_MONTHS from now,
+  // independent of the selected report period, so switching periods never refetches this.
+  const monthlyTrendRequestKey = language;
+  const isMonthlyTrendLoading = monthlyTrendCompletedKey !== monthlyTrendRequestKey;
+
+  useEffect(() => {
+    let cancelled = false;
+
+    void reportService.fetchMonthlyTrend(MONTHLY_TREND_MONTHS, language).then((result) => {
+      if (cancelled) return;
+      setMonthlyTrendRaw(result);
+      setMonthlyTrendCompletedKey(monthlyTrendRequestKey);
+    });
+
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [language]);
+
+  const walletUsageRequestKey = JSON.stringify(resolvedPeriod);
+  const isWalletUsageLoading = walletUsageCompletedKey !== walletUsageRequestKey;
+
+  useEffect(() => {
+    let cancelled = false;
+
+    void reportService.fetchWalletUsage(resolvedPeriod.dateFrom, resolvedPeriod.dateTo).then((result) => {
+      if (cancelled) return;
+      setWalletUsage(result);
+      setWalletUsageCompletedKey(walletUsageRequestKey);
+    });
+
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [resolvedPeriod]);
+
+  const topSpendingRequestKey = JSON.stringify(resolvedPeriod);
+  const isTopSpendingLoading = topSpendingCompletedKey !== topSpendingRequestKey;
+
+  useEffect(() => {
+    let cancelled = false;
+
+    void reportService
+      .fetchTopSpending(resolvedPeriod.dateFrom, resolvedPeriod.dateTo, TOP_SPENDING_LIMIT)
+      .then((result) => {
+        if (cancelled) return;
+        setTopSpending(result);
+        setTopSpendingCompletedKey(topSpendingRequestKey);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [resolvedPeriod]);
 
   const exportReport = useCallback(
     (format: Exclude<ReportExportFormat, "print">) => reportService.exportReport(format, resolvedPeriod),
@@ -131,15 +212,19 @@ export function useReports(period: ReportPeriodFilter, monthlyTrendMetric: Month
   return {
     resolvedPeriod,
     summary,
+    isSummaryLoading,
     cashFlow,
+    isCashFlowLoading,
     categoryBreakdown,
     monthlyTrend,
+    isMonthlyTrendLoading,
     walletUsage,
+    isWalletUsageLoading,
     topSpending,
+    isTopSpendingLoading,
     categories,
     wallets,
     incomeExpenseTransactions,
-    status,
     exportReport,
   };
 }

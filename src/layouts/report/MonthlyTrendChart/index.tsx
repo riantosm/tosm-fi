@@ -1,5 +1,6 @@
 import { useTranslation } from "react-i18next";
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import { IconLoader } from "@/components/atoms/IconLoader";
 import { Words } from "@/components/atoms/Words";
 import { useCurrency } from "@/hooks/use-currency";
 import { useLanguage } from "@/hooks/use-language";
@@ -19,9 +20,16 @@ interface MonthlyTrendChartProps {
   metric: MonthlyTrendMetric;
   onMetricChange: (metric: MonthlyTrendMetric) => void;
   monthsLabel: string;
+  isLoading?: boolean;
 }
 
-export function MonthlyTrendChart({ data, metric, onMetricChange, monthsLabel }: MonthlyTrendChartProps) {
+export function MonthlyTrendChart({
+  data,
+  metric,
+  onMetricChange,
+  monthsLabel,
+  isLoading = false,
+}: MonthlyTrendChartProps) {
   const { t } = useTranslation();
   const { format } = useCurrency();
   const { language } = useLanguage();
@@ -32,7 +40,10 @@ export function MonthlyTrendChart({ data, metric, onMetricChange, monthsLabel }:
   const tickColor = isDark ? "#71717a" : "#a1a1aa";
 
   function compactFormat(value: number) {
-    return new Intl.NumberFormat(language, { notation: "compact", maximumFractionDigits: 1 }).format(value);
+    return new Intl.NumberFormat(language, {
+      notation: "compact",
+      maximumFractionDigits: 1,
+    }).format(value);
   }
 
   return (
@@ -42,7 +53,11 @@ export function MonthlyTrendChart({ data, metric, onMetricChange, monthsLabel }:
           {t("reports.monthlyTrend.title")}
         </Words>
         <span className="shrink-0 rounded-full bg-ink-100 px-3 py-1.5 dark:bg-ink-800">
-          <Words type="xs/bold" as="span" className="flex items-center justify-center text-ink-600 dark:text-ink-300">
+          <Words
+            type="xs/bold"
+            as="span"
+            className="flex items-center justify-center text-ink-600 dark:text-ink-300"
+          >
             {monthsLabel}
           </Words>
         </span>
@@ -71,11 +86,16 @@ export function MonthlyTrendChart({ data, metric, onMetricChange, monthsLabel }:
         })}
       </div>
 
-      <div className="h-64 w-full">
+      <div className="relative h-64 w-full">
         <ResponsiveContainer width="100%" height="100%">
           <BarChart data={data} margin={{ top: 4, right: 8, left: 0, bottom: 0 }}>
             <CartesianGrid stroke={gridColor} vertical={false} />
-            <XAxis dataKey="label" axisLine={false} tickLine={false} tick={{ fill: tickColor, fontSize: 12 }} />
+            <XAxis
+              dataKey="label"
+              axisLine={false}
+              tickLine={false}
+              tick={{ fill: tickColor, fontSize: 12 }}
+            />
             <YAxis
               axisLine={false}
               tickLine={false}
@@ -92,7 +112,10 @@ export function MonthlyTrendChart({ data, metric, onMetricChange, monthsLabel }:
                 fontSize: 12,
               }}
               labelStyle={{ color: isDark ? "#fafafa" : "#18181b", fontWeight: 600 }}
-              formatter={(value) => [format(Number(value)), t(`reports.monthlyTrend.metrics.${metric}`)]}
+              formatter={(value) => [
+                format(Number(value)),
+                t(`reports.monthlyTrend.metrics.${metric}`),
+              ]}
             />
             <Bar
               dataKey="value"
@@ -103,6 +126,12 @@ export function MonthlyTrendChart({ data, metric, onMetricChange, monthsLabel }:
             />
           </BarChart>
         </ResponsiveContainer>
+
+        {isLoading && (
+          <div className="absolute inset-0 flex items-start justify-center rounded-2xl bg-white/60 pt-12 backdrop-blur-[2px] dark:bg-ink-950/60">
+            <IconLoader className="h-6 w-6 animate-spin text-primary-500" />
+          </div>
+        )}
       </div>
     </div>
   );

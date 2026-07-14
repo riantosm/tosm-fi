@@ -11,6 +11,7 @@ import {
   YAxis,
   type DotItemDotProps,
 } from "recharts";
+import { IconLoader } from "@/components/atoms/IconLoader";
 import { Words } from "@/components/atoms/Words";
 import { useCurrency } from "@/hooks/use-currency";
 import { useLanguage } from "@/hooks/use-language";
@@ -28,6 +29,7 @@ type CashFlowSeries = "income" | "expense";
 interface CashFlowChartProps {
   data: CashFlowPoint[];
   periodLabel: string;
+  isLoading?: boolean;
 }
 
 function toCumulative(data: CashFlowPoint[]): CashFlowPoint[] {
@@ -57,7 +59,7 @@ function renderTodayDot(color: string) {
   };
 }
 
-export function CashFlowChart({ data, periodLabel }: CashFlowChartProps) {
+export function CashFlowChart({ data, periodLabel, isLoading = false }: CashFlowChartProps) {
   const { t } = useTranslation();
   const { format } = useCurrency();
   const { language } = useLanguage();
@@ -69,7 +71,10 @@ export function CashFlowChart({ data, periodLabel }: CashFlowChartProps) {
   const gridColor = isDark ? "#27272a" : "#e4e4e7";
   const tickColor = isDark ? "#71717a" : "#a1a1aa";
   const isEmpty = data.every((point) => point.income === 0 && point.expense === 0);
-  const chartData = useMemo(() => (mode === "cumulative" ? toCumulative(data) : data), [data, mode]);
+  const chartData = useMemo(
+    () => (mode === "cumulative" ? toCumulative(data) : data),
+    [data, mode],
+  );
 
   function toggleSeries(series: CashFlowSeries) {
     setHiddenSeries((prev) => {
@@ -81,7 +86,10 @@ export function CashFlowChart({ data, periodLabel }: CashFlowChartProps) {
   }
 
   function compactFormat(value: number) {
-    return new Intl.NumberFormat(language, { notation: "compact", maximumFractionDigits: 1 }).format(value);
+    return new Intl.NumberFormat(language, {
+      notation: "compact",
+      maximumFractionDigits: 1,
+    }).format(value);
   }
 
   return (
@@ -91,7 +99,11 @@ export function CashFlowChart({ data, periodLabel }: CashFlowChartProps) {
           {t("reports.cashFlow.title")}
         </Words>
         <span className="shrink-0 rounded-full bg-ink-100 px-3 py-1.5 dark:bg-ink-800">
-          <Words type="xs/bold" as="span" className="flex items-center justify-center text-ink-600 dark:text-ink-300">
+          <Words
+            type="xs/bold"
+            as="span"
+            className="flex items-center justify-center text-ink-600 dark:text-ink-300"
+          >
             {periodLabel}
           </Words>
         </span>
@@ -120,82 +132,101 @@ export function CashFlowChart({ data, periodLabel }: CashFlowChartProps) {
         })}
       </div>
 
-      {isEmpty ? (
-        <div className="flex flex-1 flex-col items-center justify-center gap-1 rounded-2xl border border-dashed border-ink-200 py-16 dark:border-ink-800">
-          <Words type="sm/bold" className="text-ink-500 dark:text-ink-400">
-            {t("reports.cashFlow.empty")}
-          </Words>
-        </div>
-      ) : (
-        <div className="h-72 w-full">
-          <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={chartData} margin={{ top: 4, right: 8, left: 0, bottom: 0 }}>
-              <CartesianGrid stroke={gridColor} vertical={false} />
-              <XAxis dataKey="label" axisLine={false} tickLine={false} tick={{ fill: tickColor, fontSize: 12 }} />
-              <YAxis
-                axisLine={false}
-                tickLine={false}
-                width={40}
-                tick={{ fill: tickColor, fontSize: 12 }}
-                tickFormatter={compactFormat}
-              />
-              <Tooltip
-                cursor={{ stroke: gridColor }}
-                contentStyle={{
-                  borderRadius: 12,
-                  border: `1px solid ${gridColor}`,
-                  backgroundColor: isDark ? "#18181b" : "#ffffff",
-                  fontSize: 12,
-                }}
-                labelStyle={{ color: isDark ? "#fafafa" : "#18181b", fontWeight: 600 }}
-                formatter={(value, name) => [
-                  format(Number(value)),
-                  name === "income" ? t("reports.cashFlow.income") : t("reports.cashFlow.expense"),
-                ]}
-              />
-              <Legend
-                iconType="circle"
-                onClick={(entry) => toggleSeries(entry.dataKey as CashFlowSeries)}
-                formatter={(value) => {
-                  const isHidden = hiddenSeries.has(value as CashFlowSeries);
-                  return (
-                    <span
-                      className={cn(
-                        "cursor-pointer select-none text-xs",
-                        isHidden ? "text-ink-400 line-through dark:text-ink-600" : "text-ink-600 dark:text-ink-300",
-                      )}
-                    >
-                      {value === "income" ? t("reports.cashFlow.income") : t("reports.cashFlow.expense")}
-                    </span>
-                  );
-                }}
-              />
-              <Line
-                type="monotone"
-                dataKey="income"
-                name="income"
-                stroke={INCOME_COLOR}
-                strokeWidth={2.5}
-                dot={renderTodayDot(INCOME_COLOR)}
-                activeDot={{ r: 5 }}
-                animationDuration={600}
-                hide={hiddenSeries.has("income")}
-              />
-              <Line
-                type="monotone"
-                dataKey="expense"
-                name="expense"
-                stroke={EXPENSE_COLOR}
-                strokeWidth={2.5}
-                dot={renderTodayDot(EXPENSE_COLOR)}
-                activeDot={{ r: 5 }}
-                animationDuration={600}
-                hide={hiddenSeries.has("expense")}
-              />
-            </LineChart>
-          </ResponsiveContainer>
-        </div>
-      )}
+      <div className="relative flex-1">
+        {isEmpty ? (
+          <div className="flex flex-1 flex-col items-center justify-center gap-1 rounded-2xl border border-dashed border-ink-200 py-16 dark:border-ink-800">
+            <Words type="sm/bold" className="text-ink-500 dark:text-ink-400">
+              {t("reports.cashFlow.empty")}
+            </Words>
+          </div>
+        ) : (
+          <div className="h-72 w-full">
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart data={chartData} margin={{ top: 4, right: 8, left: 0, bottom: 0 }}>
+                <CartesianGrid stroke={gridColor} vertical={false} />
+                <XAxis
+                  dataKey="label"
+                  axisLine={false}
+                  tickLine={false}
+                  tick={{ fill: tickColor, fontSize: 12 }}
+                />
+                <YAxis
+                  axisLine={false}
+                  tickLine={false}
+                  width={40}
+                  tick={{ fill: tickColor, fontSize: 12 }}
+                  tickFormatter={compactFormat}
+                />
+                <Tooltip
+                  cursor={{ stroke: gridColor }}
+                  contentStyle={{
+                    borderRadius: 12,
+                    border: `1px solid ${gridColor}`,
+                    backgroundColor: isDark ? "#18181b" : "#ffffff",
+                    fontSize: 12,
+                  }}
+                  labelStyle={{ color: isDark ? "#fafafa" : "#18181b", fontWeight: 600 }}
+                  formatter={(value, name) => [
+                    format(Number(value)),
+                    name === "income"
+                      ? t("reports.cashFlow.income")
+                      : t("reports.cashFlow.expense"),
+                  ]}
+                />
+                <Legend
+                  iconType="circle"
+                  onClick={(entry) => toggleSeries(entry.dataKey as CashFlowSeries)}
+                  formatter={(value) => {
+                    const isHidden = hiddenSeries.has(value as CashFlowSeries);
+                    return (
+                      <span
+                        className={cn(
+                          "cursor-pointer select-none text-xs",
+                          isHidden
+                            ? "text-ink-400 line-through dark:text-ink-600"
+                            : "text-ink-600 dark:text-ink-300",
+                        )}
+                      >
+                        {value === "income"
+                          ? t("reports.cashFlow.income")
+                          : t("reports.cashFlow.expense")}
+                      </span>
+                    );
+                  }}
+                />
+                <Line
+                  type="monotone"
+                  dataKey="income"
+                  name="income"
+                  stroke={INCOME_COLOR}
+                  strokeWidth={2.5}
+                  dot={renderTodayDot(INCOME_COLOR)}
+                  activeDot={{ r: 5 }}
+                  animationDuration={600}
+                  hide={hiddenSeries.has("income")}
+                />
+                <Line
+                  type="monotone"
+                  dataKey="expense"
+                  name="expense"
+                  stroke={EXPENSE_COLOR}
+                  strokeWidth={2.5}
+                  dot={renderTodayDot(EXPENSE_COLOR)}
+                  activeDot={{ r: 5 }}
+                  animationDuration={600}
+                  hide={hiddenSeries.has("expense")}
+                />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+        )}
+
+        {isLoading && (
+          <div className="absolute inset-0 flex items-start justify-center rounded-2xl bg-white/60 pt-12 backdrop-blur-[2px] dark:bg-ink-950/60">
+            <IconLoader className="h-6 w-6 animate-spin text-primary-500" />
+          </div>
+        )}
+      </div>
     </div>
   );
 }

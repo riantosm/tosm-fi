@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { IconLoader } from "@/components/atoms/IconLoader";
 import { Words } from "@/components/atoms/Words";
 import type { WalletUsageItem } from "@/types/report.types";
 
@@ -37,9 +38,10 @@ function WalletUsageRow({ item }: WalletUsageRowProps) {
 
 interface WalletUsageCardProps {
   items: WalletUsageItem[];
+  isLoading?: boolean;
 }
 
-export function WalletUsageCard({ items }: WalletUsageCardProps) {
+export function WalletUsageCard({ items, isLoading = false }: WalletUsageCardProps) {
   const { t } = useTranslation();
 
   return (
@@ -48,19 +50,27 @@ export function WalletUsageCard({ items }: WalletUsageCardProps) {
         {t("reports.walletUsage.title")}
       </Words>
 
-      {items.length === 0 ? (
-        <div className="flex flex-1 flex-col items-center justify-center gap-1 rounded-2xl border border-dashed border-ink-200 py-10 dark:border-ink-800">
-          <Words type="sm/bold" className="text-ink-500 dark:text-ink-400">
-            {t("reports.walletUsage.empty")}
-          </Words>
-        </div>
-      ) : (
-        <div className="flex flex-col gap-4">
-          {items.map((item) => (
-            <WalletUsageRow key={item.idWallet} item={item} />
-          ))}
-        </div>
-      )}
+      <div className="relative flex-1">
+        {items.length === 0 ? (
+          <div className="flex flex-1 flex-col items-center justify-center gap-1 rounded-2xl border border-dashed border-ink-200 py-10 dark:border-ink-800">
+            <Words type="sm/bold" className="text-ink-500 dark:text-ink-400">
+              {t("reports.walletUsage.empty")}
+            </Words>
+          </div>
+        ) : (
+          <div className="flex flex-col gap-4">
+            {items.map((item) => (
+              <WalletUsageRow key={item.idWallet} item={item} />
+            ))}
+          </div>
+        )}
+
+        {isLoading && (
+          <div className="absolute inset-0 flex items-start justify-center rounded-2xl bg-white/60 pt-8 backdrop-blur-[2px] dark:bg-ink-950/60">
+            <IconLoader className="h-6 w-6 animate-spin text-primary-500" />
+          </div>
+        )}
+      </div>
     </div>
   );
 }

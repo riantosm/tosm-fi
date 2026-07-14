@@ -44,11 +44,16 @@ export function ReportsPage() {
   const {
     resolvedPeriod,
     summary,
+    isSummaryLoading,
     cashFlow,
+    isCashFlowLoading,
     categoryBreakdown,
     monthlyTrend,
+    isMonthlyTrendLoading,
     walletUsage,
+    isWalletUsageLoading,
     topSpending,
+    isTopSpendingLoading,
     categories,
     wallets,
     incomeExpenseTransactions,
@@ -250,7 +255,7 @@ export function ReportsPage() {
         <div className="flex flex-col xl:flex-row gap-4">
           <div className="flex flex-col gap-4 flex-1">
             <div>
-              <CashFlowChart data={cashFlow} periodLabel={periodLabel} />
+              <CashFlowChart data={cashFlow} periodLabel={periodLabel} isLoading={isCashFlowLoading} />
             </div>
             <div className="">
               <MonthlyTrendChart
@@ -260,6 +265,7 @@ export function ReportsPage() {
                 monthsLabel={t("reports.monthlyTrend.monthsLabel", {
                   count: MONTHLY_TREND_MONTHS_COUNT,
                 })}
+                isLoading={isMonthlyTrendLoading}
               />
             </div>
           </div>
@@ -269,14 +275,15 @@ export function ReportsPage() {
                 slices={categoryBreakdownSlices}
                 title={t("reports.expenseByCategory.title")}
                 periodLabel={periodLabel}
+                isLoading={isSummaryLoading}
               />
             </div>
             <div className="grid sm:grid-cols-2 grid-cols-1 gap-4">
               <div className="">
-                <TopSpendingList items={topSpending} />
+                <TopSpendingList items={topSpending} isLoading={isTopSpendingLoading} />
               </div>
               <div className="h-fit">
-                <WalletUsageCard items={walletUsage} />
+                <WalletUsageCard items={walletUsage} isLoading={isWalletUsageLoading} />
               </div>
             </div>
           </div>
