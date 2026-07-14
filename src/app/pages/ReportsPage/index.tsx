@@ -45,13 +45,12 @@ export function ReportsPage() {
     resolvedPeriod,
     summary,
     cashFlow,
-    expenseBreakdown,
+    categoryBreakdown,
     monthlyTrend,
     walletUsage,
     topSpending,
     categories,
     wallets,
-    expenseTransactions,
     incomeExpenseTransactions,
     exportReport,
   } = useReports(period, monthlyTrendMetric);
@@ -110,11 +109,11 @@ export function ReportsPage() {
         t("reports.export.columns.percentage"),
         t("reports.export.columns.transactions"),
       ],
-      rows: expenseBreakdown.map((item) => [
-        item.name,
-        formatCurrency(item.total),
+      rows: categoryBreakdown.map((item) => [
+        item.nameCategory,
+        formatCurrency(item.amount),
         `${item.percentage.toFixed(0)}%`,
-        item.count,
+        item.transactionCount,
       ]),
     };
 
@@ -229,8 +228,8 @@ export function ReportsPage() {
   }
 
   const categoryBreakdownSlices = useMemo(
-    () => buildCategoryBreakdown(expenseTransactions, categories),
-    [expenseTransactions, categories],
+    () => buildCategoryBreakdown(categoryBreakdown),
+    [categoryBreakdown],
   );
 
   return (

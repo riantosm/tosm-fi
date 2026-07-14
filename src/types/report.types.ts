@@ -30,21 +30,19 @@ export interface CashFlowPoint {
 
 export type CashFlowDisplayMode = "cumulative" | "period";
 
-export interface CategoryBreakdownItem {
-  id: string;
-  name: string;
-  icon: string;
-  color: string;
-  total: number;
-  count: number;
-  percentage: number;
-}
-
 export type MonthlyTrendMetric = "expense" | "income";
 
 export interface MonthlyTrendPoint {
   label: string;
   value: number;
+}
+
+/** Raw shape from `GET /reports/monthly-trend` — both metrics per month so the FE can
+ * toggle Pengeluaran/Pemasukan without refetching. */
+export interface MonthlyTrendRawPoint {
+  label: string;
+  income: number;
+  expense: number;
 }
 
 export interface WalletUsageItem {
@@ -66,11 +64,3 @@ export interface TopSpendingItem {
 }
 
 export type ReportExportFormat = "pdf" | "excel" | "csv" | "print";
-
-export interface ReportData {
-  summary: ReportSummary;
-  cashFlow: CashFlowPoint[];
-  expenseBreakdown: CategoryBreakdownItem[];
-  walletUsage: WalletUsageItem[];
-  topSpending: TopSpendingItem[];
-}

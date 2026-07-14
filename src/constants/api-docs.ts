@@ -831,9 +831,10 @@ export const API_DOC_GROUPS: ApiDocGroup[] = [
         id: "list-transactions",
         title: "List Transactions",
         method: "GET",
-        endpoint: "/transactions?month=2026-07&idWallet=wallet-1&idCategory=category-1&idSubCategory=subcategory-1&dateFrom=2026-07-01&dateTo=2026-07-15&search=makan&sort=dateDesc&page=1&limit=20",
+        endpoint: "/transactions?month=2026-07&type=expense&idWallet=wallet-1&idCategory=category-1&idSubCategory=subcategory-1&dateFrom=2026-07-01&dateTo=2026-07-15&search=makan&sort=dateDesc&page=1&limit=20",
         payload: [
           { name: "month", type: "string (YYYY-MM)", required: false },
+          { name: "type", type: '"income" | "expense" | "transfer" | "correction"', required: false },
           { name: "idWallet", type: "string", required: false },
           { name: "idCategory", type: "string", required: false },
           { name: "idSubCategory", type: "string", required: false },
@@ -1070,6 +1071,16 @@ export const API_DOC_GROUPS: ApiDocGroup[] = [
       },
     ],
   },
+  // Five of these 6 endpoints are real now — "report-summary", "report-wallet-usage",
+  // "report-top-spending", "report-cash-flow", and "report-monthly-trend" (each a dedicated
+  // aggregation, real `{isSuccess}` envelope below) — because composing them from
+  // GET /transactions required too many round trips (one call per wallet, one per month, a
+  // whole itemized transaction list just to bucket it client-side, etc). Only
+  // "report-category-breakdown" and "export-report" were never built: category breakdown comes
+  // bundled inside report-summary's response instead of its own endpoint, and export generation
+  // still happens entirely client-side (the "endpoint" is just a filename formatter, no real
+  // file is produced server-side). Those two keep the old mock `{success}` envelope on purpose —
+  // don't "fix" them to match the real one until they're actually built.
   {
     key: "report",
     titleKey: "apiDoc.groups.report",
@@ -1078,19 +1089,45 @@ export const API_DOC_GROUPS: ApiDocGroup[] = [
         id: "report-summary",
         title: "Report Summary",
         method: "GET",
-        endpoint: "/reports/summary?dateFrom=2026-07-01&dateTo=2026-07-31",
+        endpoint:
+          "/reports/summary?dateFrom=2026-07-01&dateTo=2026-07-31&previousDateFrom=2026-06-01&previousDateTo=2026-06-30",
         payload: [
           { name: "dateFrom", type: "string (YYYY-MM-DD)", required: true },
           { name: "dateTo", type: "string (YYYY-MM-DD)", required: true },
+          { name: "previousDateFrom", type: "string (YYYY-MM-DD)", required: true },
+          { name: "previousDateTo", type: "string (YYYY-MM-DD)", required: true },
         ],
         successExample: JSON.stringify(
           {
-            success: true,
+            message: "Berhasil mengambil ringkasan laporan",
+            isSuccess: true,
+            status: 200,
             data: {
               totalIncome: { value: 12_450_000, changePercent: 18 },
               totalExpense: { value: 7_850_000, changePercent: -8 },
               netCashFlow: { value: 4_600_000, changePercent: 32 },
               transactionCount: { value: 84, changePercent: 16 },
+              categoryBreakdown: [
+                {
+                  idCategory: "category-1",
+                  nameCategory: "Makanan",
+                  color: "#E2574C",
+                  icon: "HiOutlineCake",
+                  amount: 2_986_000,
+                  transactionCount: 24,
+                  percentage: 38,
+                  subCategoryBreakdown: [
+                    {
+                      idSubCategory: "subcategory-1",
+                      nameSubCategory: "Warteg",
+                      icon: "MdOutlineRestaurant",
+                      amount: 820_000,
+                      transactionCount: 9,
+                      percentage: 27,
+                    },
+                  ],
+                },
+              ],
             },
           },
           null,
@@ -1098,8 +1135,10 @@ export const API_DOC_GROUPS: ApiDocGroup[] = [
         ),
         errorExample: JSON.stringify(
           {
-            success: false,
             message: "Token tidak valid atau sudah kedaluwarsa",
+            isSuccess: false,
+            status: 401,
+            data: { error: "Token tidak valid atau sudah kedaluwarsa" },
           },
           null,
           2,
@@ -1109,18 +1148,22 @@ export const API_DOC_GROUPS: ApiDocGroup[] = [
         id: "report-cash-flow",
         title: "Cash Flow",
         method: "GET",
-        endpoint: "/reports/cash-flow?dateFrom=2026-01-01&dateTo=2026-07-31",
+        endpoint: "/reports/cash-flow?dateFrom=2026-07-01&dateTo=2026-07-31&locale=id",
         payload: [
           { name: "dateFrom", type: "string (YYYY-MM-DD)", required: true },
           { name: "dateTo", type: "string (YYYY-MM-DD)", required: true },
+          { name: "locale", type: "string (BCP 47, e.g. \"id\"/\"en\"/\"ja\")", required: false },
         ],
         successExample: JSON.stringify(
           {
-            success: true,
+            message: "Berhasil mengambil cash flow",
+            isSuccess: true,
+            status: 200,
             data: [
-              { label: "Jan", income: 8_000_000, expense: 5_200_000 },
-              { label: "Feb", income: 8_000_000, expense: 6_100_000 },
-              { label: "Jul", income: 12_450_000, expense: 7_850_000 },
+              { label: "W1", income: 12_450_000, expense: 3_200_000, isToday: false },
+              { label: "W2", income: 0, expense: 4_650_000, isToday: true },
+              { label: "W3", income: 0, expense: 0, isToday: false },
+              { label: "W4", income: 0, expense: 0, isToday: false },
             ],
           },
           null,
@@ -1128,8 +1171,10 @@ export const API_DOC_GROUPS: ApiDocGroup[] = [
         ),
         errorExample: JSON.stringify(
           {
-            success: false,
             message: "Token tidak valid atau sudah kedaluwarsa",
+            isSuccess: false,
+            status: 401,
+            data: { error: "Token tidak valid atau sudah kedaluwarsa" },
           },
           null,
           2,
@@ -1178,18 +1223,20 @@ export const API_DOC_GROUPS: ApiDocGroup[] = [
         id: "report-monthly-trend",
         title: "Monthly Trend",
         method: "GET",
-        endpoint: "/reports/monthly-trend?metric=expense&months=12",
+        endpoint: "/reports/monthly-trend?months=12&locale=id",
         payload: [
-          { name: "metric", type: '"expense" | "income"', required: true },
           { name: "months", type: "number", required: false },
+          { name: "locale", type: "string (BCP 47, e.g. \"id\"/\"en\"/\"ja\")", required: false },
         ],
         successExample: JSON.stringify(
           {
-            success: true,
+            message: "Berhasil mengambil tren bulanan",
+            isSuccess: true,
+            status: 200,
             data: [
-              { label: "Agu", value: 6_400_000 },
-              { label: "Sep", value: 5_900_000 },
-              { label: "Jul", value: 7_850_000 },
+              { label: "Agu '25", income: 9_500_000, expense: 6_400_000 },
+              { label: "Sep '25", income: 9_500_000, expense: 5_900_000 },
+              { label: "Jul", income: 12_450_000, expense: 7_850_000 },
             ],
           },
           null,
@@ -1197,8 +1244,10 @@ export const API_DOC_GROUPS: ApiDocGroup[] = [
         ),
         errorExample: JSON.stringify(
           {
-            success: false,
             message: "Token tidak valid atau sudah kedaluwarsa",
+            isSuccess: false,
+            status: 401,
+            data: { error: "Token tidak valid atau sudah kedaluwarsa" },
           },
           null,
           2,
@@ -1215,7 +1264,9 @@ export const API_DOC_GROUPS: ApiDocGroup[] = [
         ],
         successExample: JSON.stringify(
           {
-            success: true,
+            message: "Berhasil mengambil penggunaan dompet",
+            isSuccess: true,
+            status: 200,
             data: [
               { idWallet: "wallet-1", nameWallet: "Jago", color: "#7CB87C", transactionCount: 40, percentage: 48 },
               { idWallet: "wallet-2", nameWallet: "Cash", color: "#4C6FFF", transactionCount: 18, percentage: 22 },
@@ -1226,8 +1277,10 @@ export const API_DOC_GROUPS: ApiDocGroup[] = [
         ),
         errorExample: JSON.stringify(
           {
-            success: false,
             message: "Token tidak valid atau sudah kedaluwarsa",
+            isSuccess: false,
+            status: 401,
+            data: { error: "Token tidak valid atau sudah kedaluwarsa" },
           },
           null,
           2,
@@ -1245,7 +1298,9 @@ export const API_DOC_GROUPS: ApiDocGroup[] = [
         ],
         successExample: JSON.stringify(
           {
-            success: true,
+            message: "Berhasil mengambil pengeluaran terbesar",
+            isSuccess: true,
+            status: 200,
             data: [
               {
                 idTransaction: "transaction-1",
@@ -1263,8 +1318,10 @@ export const API_DOC_GROUPS: ApiDocGroup[] = [
         ),
         errorExample: JSON.stringify(
           {
-            success: false,
             message: "Token tidak valid atau sudah kedaluwarsa",
+            isSuccess: false,
+            status: 401,
+            data: { error: "Token tidak valid atau sudah kedaluwarsa" },
           },
           null,
           2,

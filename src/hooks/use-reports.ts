@@ -4,14 +4,13 @@ import { useTransactions } from "@/hooks/use-transactions";
 import { useWallets } from "@/hooks/use-wallets";
 import { useCategories } from "@/hooks/use-categories";
 import { useLanguage } from "@/hooks/use-language";
-import { addMonths, startOfMonth } from "@/utils/month";
-import { resolveReportPeriod, toIsoDateString } from "@/utils/report-period";
-import type { Transaction } from "@/types/transaction.types";
+import { resolveReportPeriod } from "@/utils/report-period";
+import type { Transaction, TransactionCategoryBreakdown } from "@/types/transaction.types";
 import type {
   CashFlowPoint,
-  CategoryBreakdownItem,
   MonthlyTrendMetric,
   MonthlyTrendPoint,
+  MonthlyTrendRawPoint,
   ReportExportFormat,
   ReportPeriodFilter,
   ReportSummary,
@@ -31,14 +30,13 @@ export function useReports(period: ReportPeriodFilter, monthlyTrendMetric: Month
   const { language } = useLanguage();
 
   const [summary, setSummary] = useState<ReportSummary | null>(null);
+  const [categoryBreakdown, setCategoryBreakdown] = useState<TransactionCategoryBreakdown[]>([]);
   const [cashFlow, setCashFlow] = useState<CashFlowPoint[]>([]);
-  const [expenseBreakdown, setExpenseBreakdown] = useState<CategoryBreakdownItem[]>([]);
-  const [monthlyTrend, setMonthlyTrend] = useState<MonthlyTrendPoint[]>([]);
+  const [monthlyTrendRaw, setMonthlyTrendRaw] = useState<MonthlyTrendRawPoint[]>([]);
   const [walletUsage, setWalletUsage] = useState<WalletUsageItem[]>([]);
   const [topSpending, setTopSpending] = useState<TopSpendingItem[]>([]);
+  const [periodTransactions, setPeriodTransactions] = useState<Transaction[]>([]);
   const [completedKey, setCompletedKey] = useState<string | null>(null);
-  const [transactions, setTransactions] = useState<Transaction[]>([]);
-  const [loadedFetchKey, setLoadedFetchKey] = useState<string | null>(null);
 
   const resolvedPeriod = useMemo(
     () =>
@@ -49,59 +47,39 @@ export function useReports(period: ReportPeriodFilter, monthlyTrendMetric: Month
     [period.preset, period.dateFrom, period.dateTo],
   );
 
-  // Reports still compute everything client-side (no report backend yet), but
-  // only fetch the date window they actually read: the resolved period, its
-  // previous-period comparison span (fetchSummary), and the 12-month trend
-  // range (fetchMonthlyTrend) — never the entire unpaginated history.
-  const fetchWindow = useMemo(() => {
-    const now = new Date();
-    const trendFrom = toIsoDateString(addMonths(startOfMonth(now), -(MONTHLY_TREND_MONTHS - 1)));
-    const trendTo = toIsoDateString(new Date(now.getFullYear(), now.getMonth() + 1, 0));
-    return {
-      dateFrom:
-        resolvedPeriod.previousDateFrom < trendFrom ? resolvedPeriod.previousDateFrom : trendFrom,
-      dateTo: resolvedPeriod.dateTo > trendTo ? resolvedPeriod.dateTo : trendTo,
-    };
-  }, [resolvedPeriod]);
-  const fetchKey = JSON.stringify(fetchWindow);
-
-  const areSourcesLoaded =
-    loadedFetchKey === fetchKey && walletsStatus === "loaded" && categoriesStatus === "loaded";
-
-  const expenseTransactions = useMemo(
-    () =>
-      transactions.filter((transaction) => {
-        if (transaction.type !== "expense") return false;
-        const day = transaction.date.slice(0, 10);
-        return day >= resolvedPeriod.dateFrom && day <= resolvedPeriod.dateTo;
-      }),
-    [transactions, resolvedPeriod],
-  );
-
-  const incomeExpenseTransactions = useMemo(
-    () =>
-      transactions.filter((transaction) => {
-        if (transaction.type !== "expense" && transaction.type !== "income") return false;
-        const day = transaction.date.slice(0, 10);
-        return day >= resolvedPeriod.dateFrom && day <= resolvedPeriod.dateTo;
-      }),
-    [transactions, resolvedPeriod],
-  );
-
+  // Only raw transaction fetch left on this page — scoped tightly to the resolved period.
+  // Feeds only the export's transaction-list section now (cash flow moved to its own endpoint).
   useEffect(() => {
     let cancelled = false;
 
-    void queryTransactions(fetchWindow).then((result) => {
+    void queryTransactions({ dateFrom: resolvedPeriod.dateFrom, dateTo: resolvedPeriod.dateTo }).then((result) => {
       if (cancelled) return;
-      setTransactions(result.transactions);
-      setLoadedFetchKey(fetchKey);
+      setPeriodTransactions(result.transactions);
     });
 
     return () => {
       cancelled = true;
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [fetchKey, queryTransactions]);
+  }, [resolvedPeriod.dateFrom, resolvedPeriod.dateTo, queryTransactions]);
+
+  const incomeExpenseTransactions = useMemo(
+    () =>
+      periodTransactions.filter(
+        (transaction) => transaction.type === "income" || transaction.type === "expense",
+      ),
+    [periodTransactions],
+  );
+
+  // monthlyTrendRaw carries both metrics, so switching the Pengeluaran/Pemasukan toggle never
+  // needs a refetch — just picks which field to plot.
+  const monthlyTrend: MonthlyTrendPoint[] = useMemo(
+    () =>
+      monthlyTrendRaw.map((point) => ({
+        label: point.label,
+        value: monthlyTrendMetric === "income" ? point.income : point.expense,
+      })),
+    [monthlyTrendRaw, monthlyTrendMetric],
+  );
 
   useEffect(() => {
     if (walletsStatus === "idle") void loadWallets();
@@ -111,56 +89,39 @@ export function useReports(period: ReportPeriodFilter, monthlyTrendMetric: Month
     if (categoriesStatus === "idle") void loadCategories();
   }, [categoriesStatus, loadCategories]);
 
-  const requestKey = JSON.stringify({ resolvedPeriod, monthlyTrendMetric, language });
-  const status: ReportStatus = !areSourcesLoaded
-    ? "idle"
-    : completedKey === requestKey
-      ? "loaded"
-      : "loading";
+  const requestKey = JSON.stringify({ resolvedPeriod, language });
+  const status: ReportStatus = completedKey === requestKey ? "loaded" : "loading";
 
   useEffect(() => {
-    if (!areSourcesLoaded) return;
-
     let cancelled = false;
 
     void Promise.all([
-      reportService.fetchSummary(transactions, resolvedPeriod),
-      reportService.fetchCashFlow(transactions, resolvedPeriod, language),
-      reportService.fetchCategoryBreakdown(transactions, categories, resolvedPeriod),
-      reportService.fetchMonthlyTrend(
-        transactions,
-        monthlyTrendMetric,
-        MONTHLY_TREND_MONTHS,
-        new Date(),
-        language,
+      reportService.fetchSummary(
+        resolvedPeriod.dateFrom,
+        resolvedPeriod.dateTo,
+        resolvedPeriod.previousDateFrom,
+        resolvedPeriod.previousDateTo,
       ),
-      reportService.fetchWalletUsage(transactions, wallets, resolvedPeriod),
-      reportService.fetchTopSpending(transactions, categories, resolvedPeriod, TOP_SPENDING_LIMIT),
-    ]).then(
-      ([
-        summaryResult,
-        cashFlowResult,
-        expenseBreakdownResult,
-        monthlyTrendResult,
-        walletUsageResult,
-        topSpendingResult,
-      ]) => {
-        if (cancelled) return;
-        setSummary(summaryResult);
-        setCashFlow(cashFlowResult);
-        setExpenseBreakdown(expenseBreakdownResult);
-        setMonthlyTrend(monthlyTrendResult);
-        setWalletUsage(walletUsageResult);
-        setTopSpending(topSpendingResult);
-        setCompletedKey(requestKey);
-      },
-    );
+      reportService.fetchCashFlow(resolvedPeriod.dateFrom, resolvedPeriod.dateTo, language),
+      reportService.fetchMonthlyTrend(MONTHLY_TREND_MONTHS, language),
+      reportService.fetchWalletUsage(resolvedPeriod.dateFrom, resolvedPeriod.dateTo),
+      reportService.fetchTopSpending(resolvedPeriod.dateFrom, resolvedPeriod.dateTo, TOP_SPENDING_LIMIT),
+    ]).then(([summaryResult, cashFlowResult, monthlyTrendResult, walletUsageResult, topSpendingResult]) => {
+      if (cancelled) return;
+      setSummary(summaryResult.summary);
+      setCategoryBreakdown(summaryResult.categoryBreakdown);
+      setCashFlow(cashFlowResult);
+      setMonthlyTrendRaw(monthlyTrendResult);
+      setWalletUsage(walletUsageResult);
+      setTopSpending(topSpendingResult);
+      setCompletedKey(requestKey);
+    });
 
     return () => {
       cancelled = true;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [areSourcesLoaded, transactions, wallets, categories, resolvedPeriod, monthlyTrendMetric, language]);
+  }, [resolvedPeriod, language]);
 
   const exportReport = useCallback(
     (format: Exclude<ReportExportFormat, "print">) => reportService.exportReport(format, resolvedPeriod),
@@ -171,13 +132,12 @@ export function useReports(period: ReportPeriodFilter, monthlyTrendMetric: Month
     resolvedPeriod,
     summary,
     cashFlow,
-    expenseBreakdown,
+    categoryBreakdown,
     monthlyTrend,
     walletUsage,
     topSpending,
     categories,
     wallets,
-    expenseTransactions,
     incomeExpenseTransactions,
     status,
     exportReport,
