@@ -8,15 +8,6 @@ import type {
 } from "@/types/transaction.types";
 
 export const transactionService = {
-  async fetchTransactions(): Promise<Transaction[]> {
-    try {
-      const { data } = await httpClient.get("/transactions");
-      return data.data.transactions as Transaction[];
-    } catch (error) {
-      throw new Error(getApiErrorMessage(error, i18n.t("transaction.genericError")));
-    }
-  },
-
   async queryTransactions(params: TransactionListParams): Promise<TransactionListResult> {
     try {
       const { data } = await httpClient.get("/transactions", { params });

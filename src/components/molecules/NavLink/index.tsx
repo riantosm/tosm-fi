@@ -23,7 +23,7 @@ export function NavLink({ item }: NavLinkProps) {
             ? "bg-gradient-to-bl from-primary-400 to-primary-900 text-white"
             : item.isComingSoon
               ? "text-ink-400 hover:bg-ink-50 dark:text-ink-600 dark:hover:bg-ink-800"
-              : "text-ink-600 hover:bg-ink-50 dark:text-ink-300 dark:hover:bg-ink-800",
+              : "text-ink-600 hover:bg-ink-50 dark:text-ink-300 dark:hover:bg-ink-900 dark:bg-ink-800",
         )
       }
     >

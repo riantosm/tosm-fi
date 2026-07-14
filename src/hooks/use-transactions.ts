@@ -4,8 +4,6 @@ import type { TransactionInput, TransactionListParams } from "@/types/transactio
 import {
   addTransaction,
   removeTransaction,
-  setTransactions,
-  setTransactionsLoading,
   updateTransaction,
   useAppDispatch,
   useAppSelector,
@@ -15,16 +13,12 @@ import { useWallets } from "@/hooks/use-wallets";
 
 export function useTransactions() {
   const dispatch = useAppDispatch();
+  // The slice's `transactions` array is only ever fed by the mutation
+  // reducers below — nothing loads the full history anymore. Consumers use it
+  // purely as an "a mutation happened somewhere" change signal.
   const transactions = useAppSelector((state) => state.transaction.transactions);
-  const status = useAppSelector((state) => state.transaction.status);
   const { loadWallets } = useWallets();
   const { loadCategories } = useCategories();
-
-  const loadTransactions = useCallback(async () => {
-    dispatch(setTransactionsLoading());
-    const data = await transactionService.fetchTransactions();
-    dispatch(setTransactions(data));
-  }, [dispatch]);
 
   const queryTransactions = useCallback(
     (params: TransactionListParams) => transactionService.queryTransactions(params),
@@ -69,8 +63,6 @@ export function useTransactions() {
 
   return {
     transactions,
-    status,
-    loadTransactions,
     queryTransactions,
     createTransaction,
     editTransaction,

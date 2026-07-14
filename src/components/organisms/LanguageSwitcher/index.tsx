@@ -17,7 +17,7 @@ export function LanguageSwitcher() {
         type="button"
         onClick={() => setIsOpen((prev) => !prev)}
         aria-expanded={isOpen}
-        className="flex w-full items-center gap-3 px-4 py-3 text-ink-600 transition-colors hover:bg-ink-50 dark:text-ink-300 dark:hover:bg-ink-800"
+        className="flex w-full items-center gap-3 px-4 py-3 text-ink-600 transition-colors hover:bg-ink-50 dark:text-ink-300 dark:hover:bg-ink-900 dark:bg-ink-800"
       >
         <HiOutlineGlobeAlt className="h-5 w-5 shrink-0 text-ink-400 dark:text-ink-500" />
         <Words type="sm/bold" as="span" className="flex-1 text-left">

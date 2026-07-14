@@ -65,7 +65,7 @@ export function Sidebar({ variant = "desktop", onClose }: SidebarProps) {
             key={index}
             className="flex shrink-0 flex-col overflow-hidden rounded-2xl border border-ink-200 dark:border-ink-800"
           >
-            <div className="divide-y divide-ink-100 dark:divide-ink-800">
+            <div className="divide-y divide-ink-100 dark:divide-ink-900">
               {group.map((item) => (
                 <NavLink key={item.labelKey} item={item} />
               ))}

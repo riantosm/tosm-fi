@@ -14,7 +14,6 @@ import {
   userApprovalSlice,
   walletSlice,
   type ICategoryReduxState,
-  type ITransactionReduxState,
   type IWalletReduxState,
 } from "./slices";
 
@@ -42,7 +41,7 @@ const reducer = combineReducers({
 // rehydrate makes every such guard refetch fresh data on the next mount.
 // One transform per slice backed by a real API.
 function createResetStatusOnRehydrateTransform<T extends { status: string }>(
-  sliceKey: "wallet" | "category" | "transaction",
+  sliceKey: "wallet" | "category",
 ) {
   return createTransform<T, T>(
     (inboundState) => inboundState,
@@ -55,11 +54,13 @@ const persistConfig: PersistConfig<ReturnType<typeof reducer>> = {
   key: "tosmfi-root-1",
   version: 1,
   storage,
-  whitelist: ["authentication", "wallet", "category", "transaction", "settings"],
+  // `transaction` is deliberately not persisted: the slice is only a
+  // mutation-change signal now (every page fetches its own scoped window via
+  // queryTransactions), so persisting its accumulated array would be dead weight.
+  whitelist: ["authentication", "wallet", "category", "settings"],
   transforms: [
     createResetStatusOnRehydrateTransform<IWalletReduxState>("wallet"),
     createResetStatusOnRehydrateTransform<ICategoryReduxState>("category"),
-    createResetStatusOnRehydrateTransform<ITransactionReduxState>("transaction"),
   ],
 };
 

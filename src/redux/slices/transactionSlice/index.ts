@@ -1,29 +1,22 @@
 import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
 import type { Transaction } from "@/types/transaction.types";
 
-export type TransactionLoadStatus = "idle" | "loading" | "loaded";
-
+// This slice is never seeded from the server anymore — every page fetches its
+// own scoped window via queryTransactions(). The array only accumulates
+// mutation results so its reference change can serve as an app-wide "a
+// transaction was created/edited/deleted" signal.
 export interface ITransactionReduxState {
   transactions: Transaction[];
-  status: TransactionLoadStatus;
 }
 
 const initialState: ITransactionReduxState = {
   transactions: [],
-  status: "idle",
 };
 
 export const transactionSlice = createSlice({
   name: "transaction",
   initialState,
   reducers: {
-    setTransactionsLoading: (state) => {
-      state.status = "loading";
-    },
-    setTransactions: (state, action: PayloadAction<Transaction[]>) => {
-      state.transactions = action.payload;
-      state.status = "loaded";
-    },
     addTransaction: (state, action: PayloadAction<Transaction>) => {
       state.transactions.push(action.payload);
     },
@@ -43,8 +36,6 @@ export const transactionSlice = createSlice({
 });
 
 export const {
-  setTransactionsLoading,
-  setTransactions,
   addTransaction,
   updateTransaction,
   removeTransaction,

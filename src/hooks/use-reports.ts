@@ -4,7 +4,9 @@ import { useTransactions } from "@/hooks/use-transactions";
 import { useWallets } from "@/hooks/use-wallets";
 import { useCategories } from "@/hooks/use-categories";
 import { useLanguage } from "@/hooks/use-language";
-import { resolveReportPeriod } from "@/utils/report-period";
+import { addMonths, startOfMonth } from "@/utils/month";
+import { resolveReportPeriod, toIsoDateString } from "@/utils/report-period";
+import type { Transaction } from "@/types/transaction.types";
 import type {
   CashFlowPoint,
   CategoryBreakdownItem,
@@ -23,7 +25,7 @@ const MONTHLY_TREND_MONTHS = 12;
 type ReportStatus = "idle" | "loading" | "loaded";
 
 export function useReports(period: ReportPeriodFilter, monthlyTrendMetric: MonthlyTrendMetric) {
-  const { transactions, status: transactionsStatus, loadTransactions } = useTransactions();
+  const { queryTransactions } = useTransactions();
   const { wallets, status: walletsStatus, loadWallets } = useWallets();
   const { categories, status: categoriesStatus, loadCategories } = useCategories();
   const { language } = useLanguage();
@@ -35,9 +37,8 @@ export function useReports(period: ReportPeriodFilter, monthlyTrendMetric: Month
   const [walletUsage, setWalletUsage] = useState<WalletUsageItem[]>([]);
   const [topSpending, setTopSpending] = useState<TopSpendingItem[]>([]);
   const [completedKey, setCompletedKey] = useState<string | null>(null);
-
-  const areSourcesLoaded =
-    transactionsStatus === "loaded" && walletsStatus === "loaded" && categoriesStatus === "loaded";
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [loadedFetchKey, setLoadedFetchKey] = useState<string | null>(null);
 
   const resolvedPeriod = useMemo(
     () =>
@@ -47,6 +48,25 @@ export function useReports(period: ReportPeriodFilter, monthlyTrendMetric: Month
       }),
     [period.preset, period.dateFrom, period.dateTo],
   );
+
+  // Reports still compute everything client-side (no report backend yet), but
+  // only fetch the date window they actually read: the resolved period, its
+  // previous-period comparison span (fetchSummary), and the 12-month trend
+  // range (fetchMonthlyTrend) — never the entire unpaginated history.
+  const fetchWindow = useMemo(() => {
+    const now = new Date();
+    const trendFrom = toIsoDateString(addMonths(startOfMonth(now), -(MONTHLY_TREND_MONTHS - 1)));
+    const trendTo = toIsoDateString(new Date(now.getFullYear(), now.getMonth() + 1, 0));
+    return {
+      dateFrom:
+        resolvedPeriod.previousDateFrom < trendFrom ? resolvedPeriod.previousDateFrom : trendFrom,
+      dateTo: resolvedPeriod.dateTo > trendTo ? resolvedPeriod.dateTo : trendTo,
+    };
+  }, [resolvedPeriod]);
+  const fetchKey = JSON.stringify(fetchWindow);
+
+  const areSourcesLoaded =
+    loadedFetchKey === fetchKey && walletsStatus === "loaded" && categoriesStatus === "loaded";
 
   const expenseTransactions = useMemo(
     () =>
@@ -69,8 +89,19 @@ export function useReports(period: ReportPeriodFilter, monthlyTrendMetric: Month
   );
 
   useEffect(() => {
-    if (transactionsStatus === "idle") void loadTransactions();
-  }, [transactionsStatus, loadTransactions]);
+    let cancelled = false;
+
+    void queryTransactions(fetchWindow).then((result) => {
+      if (cancelled) return;
+      setTransactions(result.transactions);
+      setLoadedFetchKey(fetchKey);
+    });
+
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [fetchKey, queryTransactions]);
 
   useEffect(() => {
     if (walletsStatus === "idle") void loadWallets();

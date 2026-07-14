@@ -48,12 +48,7 @@ export function TransactionsPage() {
   const location = useLocation();
   const { categories, status: categoriesStatus, loadCategories } = useCategories();
   const { wallets, status: walletsStatus, loadWallets } = useWallets();
-  const {
-    transactions,
-    status: transactionsStatus,
-    loadTransactions,
-    queryTransactions,
-  } = useTransactions();
+  const { transactions, queryTransactions } = useTransactions();
 
   const shouldFocusSearch = Boolean(
     (location.state as { focusSearch?: boolean } | null)?.focusSearch,
@@ -89,10 +84,6 @@ export function TransactionsPage() {
   }, [walletsStatus, loadWallets]);
 
   useEffect(() => {
-    if (transactionsStatus === "idle") void loadTransactions();
-  }, [transactionsStatus, loadTransactions]);
-
-  useEffect(() => {
     const timer = setTimeout(() => setDebouncedSearch(searchQuery.trim()), SEARCH_DEBOUNCE_MS);
     return () => clearTimeout(timer);
   }, [searchQuery]);
@@ -108,25 +99,32 @@ export function TransactionsPage() {
     sort: sortOption,
   };
   const filterKey = JSON.stringify(filterParams);
+
+  // Reset back to page 1 whenever the filters change, or whenever the global
+  // transactions array reference changes — i.e. after any create/edit/delete
+  // anywhere in the app (the slice is only used as that change signal here) —
+  // so the accumulated infinite-scroll list can't go stale or duplicated.
+  // refreshToken is baked into queryKey so a mutation refetches even when
+  // already on page 1. Done during render (React's adjust-state-on-change
+  // pattern) instead of in an effect so the query effect below only ever sees
+  // the final page/token — no wasted intermediate request.
+  const [refreshToken, setRefreshToken] = useState(0);
+  const [prevFilterKey, setPrevFilterKey] = useState(filterKey);
+  const [prevTransactions, setPrevTransactions] = useState(transactions);
+  if (prevFilterKey !== filterKey || prevTransactions !== transactions) {
+    setPrevFilterKey(filterKey);
+    setPrevTransactions(transactions);
+    setPage(1);
+    setRefreshToken((token) => token + 1);
+  }
+
   const queryParams: TransactionListParams = { ...filterParams, page, limit: PAGE_SIZE };
-  const queryKey = JSON.stringify(queryParams);
-  const isQueryLoading = transactionsStatus === "loaded" && page === 1 && completedQueryKey !== queryKey;
-  const isLoadingMore = transactionsStatus === "loaded" && page > 1 && completedQueryKey !== queryKey;
+  const queryKey = JSON.stringify({ ...queryParams, refreshToken });
+  const isQueryLoading = page === 1 && completedQueryKey !== queryKey;
+  const isLoadingMore = page > 1 && completedQueryKey !== queryKey;
   const hasMore = page < totalPages;
 
-  // Resets back to page 1 whenever the filters change, or whenever the
-  // (full-history) transaction set changes — i.e. after any create/edit/
-  // delete anywhere in the app — so the accumulated "load more" list can't
-  // go stale or duplicated. Same set-state-in-effect shape already accepted
-  // elsewhere in this codebase (use-session-bootstrap.ts, LoginForm).
   useEffect(() => {
-    setPage(1);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filterKey, transactions]);
-
-  useEffect(() => {
-    if (transactionsStatus !== "loaded") return;
-
     let cancelled = false;
 
     void queryTransactions(queryParams).then((result) => {
@@ -143,7 +141,7 @@ export function TransactionsPage() {
       cancelled = true;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [transactionsStatus, queryKey, queryTransactions]);
+  }, [queryKey, queryTransactions]);
 
   // Infinite scroll: advance the page once the sentinel at the bottom of
   // the list comes into view, instead of a "Load More" button.

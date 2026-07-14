@@ -22,7 +22,7 @@ export type TransactionSortOption = "dateDesc" | "dateAsc" | "amountDesc" | "amo
 
 export interface TransactionListParams {
   /** "YYYY-MM" */
-  month: string;
+  month?: string;
   idWallet?: string;
   idCategory?: string;
   idSubCategory?: string;
