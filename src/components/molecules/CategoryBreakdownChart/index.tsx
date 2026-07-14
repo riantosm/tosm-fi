@@ -1,97 +1,22 @@
-import { createElement, useMemo, useState } from "react";
+import { createElement, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { HiOutlineChevronDown, HiOutlineTag } from "react-icons/hi2";
+import { IconLoader } from "@/components/atoms/IconLoader";
 import { Words } from "@/components/atoms/Words";
 import { DonutChart, type DonutChartDatum } from "@/components/molecules/DonutChart";
 import { resolveCategoryIcon } from "@/constants/category-icons";
 import { useCurrency } from "@/hooks/use-currency";
-import { generateShades } from "@/utils/color";
 import { cn } from "@/utils/cn";
-import type { Category } from "@/types/category.types";
-import type { Transaction } from "@/types/transaction.types";
+import type { CategorySlice as ChartSlice } from "@/utils/category-breakdown";
 
 interface CategoryBreakdownChartProps {
-  /** Already filtered to `type === "expense"` and the desired period. */
-  expenseTransactions: Transaction[];
-  categories: Category[];
+  /** Already-aggregated slices — from the API summary (Dashboard) or
+   * `buildCategoryBreakdown()` (Reports). This component never reduces a
+   * raw transaction list itself. */
+  slices: ChartSlice[];
   title: string;
   periodLabel: string;
-}
-
-interface ChartSlice {
-  id: string;
-  name: string;
-  icon: string;
-  color: string;
-  total: number;
-  count: number;
-  percentage: number;
-}
-
-const OTHER_SUB_CATEGORY_ID = "__other__";
-
-function buildCategorySlices(
-  expenseTransactions: Transaction[],
-  categories: Category[],
-): ChartSlice[] {
-  const totals = new Map<string, { total: number; count: number }>();
-  for (const transaction of expenseTransactions) {
-    if (!transaction.idCategory) continue;
-    const entry = totals.get(transaction.idCategory) ?? { total: 0, count: 0 };
-    entry.total += Math.abs(transaction.amount);
-    entry.count += 1;
-    totals.set(transaction.idCategory, entry);
-  }
-
-  const grandTotal = [...totals.values()].reduce((sum, entry) => sum + entry.total, 0);
-
-  return [...totals.entries()]
-    .map(([idCategory, entry]) => {
-      const category = categories.find((item) => item.idCategory === idCategory);
-      return {
-        id: idCategory,
-        name: category?.nameCategory ?? "-",
-        icon: category?.icon ?? "",
-        color: category?.color ?? "#71717a",
-        total: entry.total,
-        count: entry.count,
-        percentage: grandTotal > 0 ? (entry.total / grandTotal) * 100 : 0,
-      };
-    })
-    .sort((a, b) => b.total - a.total);
-}
-
-function buildSubCategorySlices(
-  expenseTransactions: Transaction[],
-  category: Category,
-  otherLabel: string,
-): ChartSlice[] {
-  const totals = new Map<string, { total: number; count: number }>();
-  for (const transaction of expenseTransactions) {
-    if (transaction.idCategory !== category.idCategory) continue;
-    const key = transaction.idSubCategory ?? OTHER_SUB_CATEGORY_ID;
-    const entry = totals.get(key) ?? { total: 0, count: 0 };
-    entry.total += Math.abs(transaction.amount);
-    entry.count += 1;
-    totals.set(key, entry);
-  }
-
-  const grandTotal = [...totals.values()].reduce((sum, entry) => sum + entry.total, 0);
-  const sortedEntries = [...totals.entries()].sort((a, b) => b[1].total - a[1].total);
-  const shades = generateShades(category.color, sortedEntries.length);
-
-  return sortedEntries.map(([idSubCategory, entry], index) => {
-    const subCategory = category.subCategories.find((item) => item.idSubCategory === idSubCategory);
-    return {
-      id: idSubCategory,
-      name: subCategory?.nameSubCategory ?? otherLabel,
-      icon: subCategory?.icon ?? category.icon,
-      color: shades[index] ?? category.color,
-      total: entry.total,
-      count: entry.count,
-      percentage: grandTotal > 0 ? (entry.total / grandTotal) * 100 : 0,
-    };
-  });
+  isLoading?: boolean;
 }
 
 interface SliceRowProps {
@@ -114,6 +39,7 @@ function SliceRow({
   const { t } = useTranslation();
   const Icon = slice.icon ? resolveCategoryIcon(slice.icon) : HiOutlineTag;
   const Tag = onClick ? "button" : "div";
+  const name = slice.name ?? t("dashboard.otherSubCategory");
 
   return (
     <Tag
@@ -139,7 +65,7 @@ function SliceRow({
           as="span"
           className="block truncate text-ink-700 dark:text-ink-300"
         >
-          {slice.name}
+          {name}
         </Words>
         <Words type="xxs/regular" as="span" className="block text-ink-400 dark:text-ink-500">
           {t("wallet.transactionCount", { n: slice.count })}
@@ -225,42 +151,27 @@ function CategoryRow({
 }
 
 export function CategoryBreakdownChart({
-  expenseTransactions,
-  categories,
+  slices,
   title,
   periodLabel,
+  isLoading = false,
 }: CategoryBreakdownChartProps) {
   const { t } = useTranslation();
   const { format } = useCurrency();
   const [expandedCategoryId, setExpandedCategoryId] = useState<string | null>(null);
   const [hoveredSliceId, setHoveredSliceId] = useState<string | null>(null);
 
-  const overviewSlices = useMemo(
-    () => buildCategorySlices(expenseTransactions, categories),
-    [expenseTransactions, categories],
-  );
-
+  const overviewSlices = slices;
   const expandedCategory = expandedCategoryId
-    ? categories.find((item) => item.idCategory === expandedCategoryId)
+    ? overviewSlices.find((item) => item.id === expandedCategoryId)
     : undefined;
-
-  const detailSlices = useMemo(
-    () =>
-      expandedCategory
-        ? buildSubCategorySlices(
-            expenseTransactions,
-            expandedCategory,
-            t("dashboard.otherSubCategory"),
-          )
-        : [],
-    [expandedCategory, expenseTransactions, t],
-  );
+  const detailSlices = expandedCategory?.subSlices ?? [];
 
   const isEmpty = overviewSlices.length === 0;
   const activeSlices = expandedCategory ? detailSlices : overviewSlices;
   const activeTotal = activeSlices.reduce((sum, slice) => sum + slice.total, 0);
   const centerLabel = expandedCategory
-    ? t("dashboard.totalOfCategory", { category: expandedCategory.nameCategory })
+    ? t("dashboard.totalOfCategory", { category: expandedCategory.name ?? t("dashboard.otherSubCategory") })
     : t("dashboard.totalExpense");
 
   function handleToggle(idCategory: string) {
@@ -280,46 +191,54 @@ export function CategoryBreakdownChart({
         </span>
       </div>
 
-      {isEmpty ? (
-        <div className="flex flex-col items-center justify-center gap-1 rounded-2xl border border-dashed border-ink-200 py-10 dark:border-ink-800">
-          <Words type="sm/bold" className="text-ink-500 dark:text-ink-400">
-            {t("dashboard.noExpenseData")}
-          </Words>
-        </div>
-      ) : (
-        <div className="flex flex-col items-center gap-6 sm:flex-row sm:items-start">
-          <DonutChart
-            data={activeSlices.map((slice): DonutChartDatum => ({
-              id: slice.id,
-              label: slice.name,
-              value: slice.total,
-              color: slice.color,
-            }))}
-            size={180}
-            thickness={24}
-            centerLabel={centerLabel}
-            centerValue={format(activeTotal)}
-            formatValue={format}
-            activeId={hoveredSliceId}
-            onSliceClick={!expandedCategory ? (datum) => handleToggle(datum.id) : undefined}
-          />
-
-          <div className="flex w-full min-w-0 flex-1 flex-col gap-1">
-            {overviewSlices.map((slice) => (
-              <CategoryRow
-                key={slice.id}
-                slice={slice}
-                subSlices={expandedCategoryId === slice.id ? detailSlices : []}
-                isExpanded={expandedCategoryId === slice.id}
-                isDimmed={expandedCategoryId !== null && expandedCategoryId !== slice.id}
-                onToggle={() => handleToggle(slice.id)}
-                onHoverSlice={setHoveredSliceId}
-                formatAmount={format}
-              />
-            ))}
+      <div className="relative">
+        {isEmpty ? (
+          <div className="flex flex-col items-center justify-center gap-1 rounded-2xl border border-dashed border-ink-200 py-10 dark:border-ink-800">
+            <Words type="sm/bold" className="text-ink-500 dark:text-ink-400">
+              {t("dashboard.noExpenseData")}
+            </Words>
           </div>
-        </div>
-      )}
+        ) : (
+          <div className="flex flex-col items-center gap-6 sm:flex-row sm:items-start">
+            <DonutChart
+              data={activeSlices.map((slice): DonutChartDatum => ({
+                id: slice.id,
+                label: slice.name ?? t("dashboard.otherSubCategory"),
+                value: slice.total,
+                color: slice.color,
+              }))}
+              size={180}
+              thickness={24}
+              centerLabel={centerLabel}
+              centerValue={format(activeTotal)}
+              formatValue={format}
+              activeId={hoveredSliceId}
+              onSliceClick={!expandedCategory ? (datum) => handleToggle(datum.id) : undefined}
+            />
+
+            <div className="flex w-full min-w-0 flex-1 flex-col gap-1">
+              {overviewSlices.map((slice) => (
+                <CategoryRow
+                  key={slice.id}
+                  slice={slice}
+                  subSlices={expandedCategoryId === slice.id ? detailSlices : []}
+                  isExpanded={expandedCategoryId === slice.id}
+                  isDimmed={expandedCategoryId !== null && expandedCategoryId !== slice.id}
+                  onToggle={() => handleToggle(slice.id)}
+                  onHoverSlice={setHoveredSliceId}
+                  formatAmount={format}
+                />
+              ))}
+            </div>
+          </div>
+        )}
+
+        {isLoading && (
+          <div className="absolute inset-0 flex items-start justify-center rounded-2xl bg-white/60 pt-12 backdrop-blur-[2px] dark:bg-ink-950/60">
+            <IconLoader className="h-6 w-6 animate-spin text-primary-500" />
+          </div>
+        )}
+      </div>
     </div>
   );
 }

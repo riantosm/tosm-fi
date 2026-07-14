@@ -1,32 +1,50 @@
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { CategoryBreakdownChart } from "@/components/molecules/CategoryBreakdownChart";
-import { isSameMonthAs, startOfMonth } from "@/utils/month";
-import type { Category } from "@/types/category.types";
-import type { Transaction } from "@/types/transaction.types";
+import { OTHER_SUB_CATEGORY_ID, type CategorySlice } from "@/utils/category-breakdown";
+import { generateShades } from "@/utils/color";
+import type { TransactionSummary } from "@/types/transaction.types";
 
 interface ExpenseByCategoryChartProps {
-  transactions: Transaction[];
-  categories: Category[];
+  summary: TransactionSummary | null;
+  isLoading: boolean;
 }
 
-export function ExpenseByCategoryChart({ transactions, categories }: ExpenseByCategoryChartProps) {
+function mapSummaryToSlices(summary: TransactionSummary): CategorySlice[] {
+  return summary.categoryBreakdown.map((category): CategorySlice => {
+    const shades = generateShades(category.color, category.subCategoryBreakdown.length);
+    return {
+      id: category.idCategory,
+      name: category.nameCategory,
+      icon: category.icon,
+      color: category.color,
+      total: category.amount,
+      count: category.transactionCount,
+      percentage: category.percentage,
+      subSlices: category.subCategoryBreakdown.map((sub, index) => ({
+        id: sub.idSubCategory ?? OTHER_SUB_CATEGORY_ID,
+        name: sub.nameSubCategory,
+        icon: sub.icon ?? category.icon,
+        color: shades[index] ?? category.color,
+        total: sub.amount,
+        count: sub.transactionCount,
+        percentage: sub.percentage,
+      })),
+    };
+  });
+}
+
+export function ExpenseByCategoryChart({ summary, isLoading }: ExpenseByCategoryChartProps) {
   const { t } = useTranslation();
 
-  const currentExpenseTransactions = useMemo(() => {
-    const now = startOfMonth(new Date());
-    return transactions.filter(
-      (transaction) =>
-        transaction.type === "expense" && isSameMonthAs(new Date(transaction.date), now),
-    );
-  }, [transactions]);
+  const slices = useMemo(() => (summary ? mapSummaryToSlices(summary) : []), [summary]);
 
   return (
     <CategoryBreakdownChart
-      expenseTransactions={currentExpenseTransactions}
-      categories={categories}
+      slices={slices}
       title={t("dashboard.expenseByCategory")}
       periodLabel={t("dashboard.thisMonth")}
+      isLoading={isLoading}
     />
   );
 }

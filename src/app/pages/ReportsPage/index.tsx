@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { DashboardLayout } from "@/components/templates/DashboardLayout";
 import { Words } from "@/components/atoms/Words";
@@ -14,6 +14,7 @@ import { useReports } from "@/hooks/use-reports";
 import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/hooks/use-language";
 import { useCurrency } from "@/hooks/use-currency";
+import { buildCategoryBreakdown } from "@/utils/category-breakdown";
 import { parseIsoDateLocal } from "@/utils/report-period";
 import type { ExportDocument } from "@/utils/report-export-types";
 import type {
@@ -224,6 +225,11 @@ export function ReportsPage() {
     }
   }
 
+  const categoryBreakdownSlices = useMemo(
+    () => buildCategoryBreakdown(expenseTransactions, categories),
+    [expenseTransactions, categories],
+  );
+
   return (
     <DashboardLayout>
       <div className="flex flex-col gap-6">
@@ -258,8 +264,7 @@ export function ReportsPage() {
           <div className="flex flex-col gap-4 flex-1">
             <div>
               <CategoryBreakdownChart
-                expenseTransactions={expenseTransactions}
-                categories={categories}
+                slices={categoryBreakdownSlices}
                 title={t("reports.expenseByCategory.title")}
                 periodLabel={periodLabel}
               />

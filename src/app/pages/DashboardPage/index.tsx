@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { DashboardLayout } from "@/components/templates/DashboardLayout";
 import { Words } from "@/components/atoms/Words";
@@ -12,8 +12,8 @@ import { useAuth } from "@/hooks/use-auth";
 import { useCategories } from "@/hooks/use-categories";
 import { useWallets } from "@/hooks/use-wallets";
 import { useTransactions } from "@/hooks/use-transactions";
-import { isSameMonthAs, startOfMonth } from "@/utils/month";
-import type { Transaction } from "@/types/transaction.types";
+import { formatMonthParam, startOfMonth } from "@/utils/month";
+import type { Transaction, TransactionListResult } from "@/types/transaction.types";
 import type { WalletAccount } from "@/types/wallet.types";
 
 interface CorrectionState {
@@ -26,17 +26,16 @@ export function DashboardPage() {
   const { user } = useAuth();
   const { categories, status: categoriesStatus, loadCategories } = useCategories();
   const { wallets, status: walletsStatus, loadWallets } = useWallets();
-  const { transactions, status: transactionsStatus, loadTransactions } = useTransactions();
+  // `transactions` is used only as a change-detection dependency below (the
+  // reference changes after any create/edit/delete anywhere in the app) —
+  // its contents are never rendered. Dashboard fetches its own month-scoped
+  // data instead of reading the full unpaginated history.
+  const { transactions, queryTransactions } = useTransactions();
 
   const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
   const [correctionState, setCorrectionState] = useState<CorrectionState | null>(null);
-
-  const currentMonthTransactions = useMemo(() => {
-    const currentMonth = startOfMonth(new Date());
-    return transactions.filter((transaction) =>
-      isSameMonthAs(new Date(transaction.date), currentMonth),
-    );
-  }, [transactions]);
+  const [monthResult, setMonthResult] = useState<TransactionListResult | null>(null);
+  const [isMonthLoading, setIsMonthLoading] = useState(true);
 
   useEffect(() => {
     if (categoriesStatus === "idle") void loadCategories();
@@ -47,8 +46,19 @@ export function DashboardPage() {
   }, [walletsStatus, loadWallets]);
 
   useEffect(() => {
-    if (transactionsStatus === "idle") void loadTransactions();
-  }, [transactionsStatus, loadTransactions]);
+    let cancelled = false;
+    setIsMonthLoading(true);
+
+    void queryTransactions({ month: formatMonthParam(startOfMonth(new Date())) }).then((result) => {
+      if (cancelled) return;
+      setMonthResult(result);
+      setIsMonthLoading(false);
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [queryTransactions, transactions]);
 
   function handleEditTransaction(transaction: Transaction) {
     if (transaction.type === "correction") {
@@ -77,14 +87,19 @@ export function DashboardPage() {
 
         <div className="xl:flex-row flex-col flex w-full lg:items-start gap-8">
           <div className="flex-1 w-full">
-            <ExpenseByCategoryChart transactions={transactions} categories={categories} />
+            <ExpenseByCategoryChart summary={monthResult?.summary ?? null} isLoading={isMonthLoading} />
           </div>
           <div className="flex-1 w-full">
             <TransactionList
-              transactions={currentMonthTransactions}
+              transactions={monthResult?.transactions ?? []}
               categories={categories}
               wallets={wallets}
               onEditTransaction={handleEditTransaction}
+              isLoading={
+                isMonthLoading ||
+                walletsStatus !== "loaded" ||
+                categoriesStatus !== "loaded"
+              }
             />
           </div>
         </div>

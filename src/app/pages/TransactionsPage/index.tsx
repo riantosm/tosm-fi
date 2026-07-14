@@ -1,7 +1,8 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { DashboardLayout } from "@/components/templates/DashboardLayout";
+import { IconLoader } from "@/components/atoms/IconLoader";
 import { Words } from "@/components/atoms/Words";
 import { MonthTabs } from "@/layouts/transaction/MonthTabs";
 import { TransactionFilterChips } from "@/layouts/transaction/TransactionFilterChips";
@@ -19,10 +20,11 @@ import { useCategories } from "@/hooks/use-categories";
 import { useWallets } from "@/hooks/use-wallets";
 import { useTransactions } from "@/hooks/use-transactions";
 import { formatMonthParam, generateMonthRange, startOfMonth } from "@/utils/month";
-import type { Transaction, TransactionListParams } from "@/types/transaction.types";
+import type { Transaction, TransactionListParams, TransactionSummary } from "@/types/transaction.types";
 import type { WalletAccount } from "@/types/wallet.types";
 
 const SEARCH_DEBOUNCE_MS = 2000;
+const PAGE_SIZE = 20;
 
 interface CorrectionState {
   wallet: WalletAccount;
@@ -46,7 +48,12 @@ export function TransactionsPage() {
   const location = useLocation();
   const { categories, status: categoriesStatus, loadCategories } = useCategories();
   const { wallets, status: walletsStatus, loadWallets } = useWallets();
-  const { status: transactionsStatus, loadTransactions, queryTransactions } = useTransactions();
+  const {
+    transactions,
+    status: transactionsStatus,
+    loadTransactions,
+    queryTransactions,
+  } = useTransactions();
 
   const shouldFocusSearch = Boolean(
     (location.state as { focusSearch?: boolean } | null)?.focusSearch,
@@ -64,7 +71,11 @@ export function TransactionsPage() {
   const [sortOption, setSortOption] = useState<TransactionSortOption>("dateDesc");
 
   const [displayedTransactions, setDisplayedTransactions] = useState<Transaction[]>([]);
+  const [summary, setSummary] = useState<TransactionSummary | null>(null);
   const [completedQueryKey, setCompletedQueryKey] = useState<string | null>(null);
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(0);
+  const sentinelRef = useRef<HTMLDivElement | null>(null);
 
   const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
   const [correctionState, setCorrectionState] = useState<CorrectionState | null>(null);
@@ -86,7 +97,7 @@ export function TransactionsPage() {
     return () => clearTimeout(timer);
   }, [searchQuery]);
 
-  const queryParams: TransactionListParams = {
+  const filterParams: Omit<TransactionListParams, "page" | "limit"> = {
     month: formatMonthParam(selectedMonth),
     idWallet: walletFilter !== "all" ? walletFilter : undefined,
     idCategory: categoryFilter !== "all" ? categoryFilter : undefined,
@@ -96,8 +107,22 @@ export function TransactionsPage() {
     search: debouncedSearch || undefined,
     sort: sortOption,
   };
+  const filterKey = JSON.stringify(filterParams);
+  const queryParams: TransactionListParams = { ...filterParams, page, limit: PAGE_SIZE };
   const queryKey = JSON.stringify(queryParams);
-  const isQueryLoading = transactionsStatus === "loaded" && completedQueryKey !== queryKey;
+  const isQueryLoading = transactionsStatus === "loaded" && page === 1 && completedQueryKey !== queryKey;
+  const isLoadingMore = transactionsStatus === "loaded" && page > 1 && completedQueryKey !== queryKey;
+  const hasMore = page < totalPages;
+
+  // Resets back to page 1 whenever the filters change, or whenever the
+  // (full-history) transaction set changes — i.e. after any create/edit/
+  // delete anywhere in the app — so the accumulated "load more" list can't
+  // go stale or duplicated. Same set-state-in-effect shape already accepted
+  // elsewhere in this codebase (use-session-bootstrap.ts, LoginForm).
+  useEffect(() => {
+    setPage(1);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filterKey, transactions]);
 
   useEffect(() => {
     if (transactionsStatus !== "loaded") return;
@@ -106,7 +131,11 @@ export function TransactionsPage() {
 
     void queryTransactions(queryParams).then((result) => {
       if (cancelled) return;
-      setDisplayedTransactions(result);
+      setDisplayedTransactions((prev) =>
+        page === 1 ? result.transactions : [...prev, ...result.transactions],
+      );
+      setTotalPages(result.totalPages ?? 0);
+      setSummary(result.summary);
       setCompletedQueryKey(queryKey);
     });
 
@@ -115,6 +144,23 @@ export function TransactionsPage() {
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [transactionsStatus, queryKey, queryTransactions]);
+
+  // Infinite scroll: advance the page once the sentinel at the bottom of
+  // the list comes into view, instead of a "Load More" button.
+  useEffect(() => {
+    if (!hasMore || isLoadingMore) return;
+    const el = sentinelRef.current;
+    if (!el) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0]?.isIntersecting) setPage((prev) => prev + 1);
+      },
+      { rootMargin: "200px" },
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [hasMore, isLoadingMore]);
 
   function handleSelectCategory(id: string) {
     setCategoryFilter(id);
@@ -129,16 +175,6 @@ export function TransactionsPage() {
     }
     setEditingTransaction(transaction);
   }
-
-  const summary = useMemo(() => {
-    let income = 0;
-    let expense = 0;
-    for (const transaction of displayedTransactions) {
-      if (transaction.type === "income") income += transaction.amount;
-      if (transaction.type === "expense") expense += transaction.amount;
-    }
-    return { income, expense };
-  }, [displayedTransactions]);
 
   const displaySortConfig = DISPLAY_SORT_CONFIG[sortOption];
   const hasActiveFilter =
@@ -179,7 +215,7 @@ export function TransactionsPage() {
 
         <MonthTabs months={months} selected={selectedMonth} onSelect={setSelectedMonth} />
 
-        <TransactionSummaryBar expense={summary.expense} income={summary.income} />
+        <TransactionSummaryBar expense={summary?.expense ?? 0} income={summary?.income ?? 0} />
 
         <TransactionList
           transactions={displayedTransactions}
@@ -192,6 +228,12 @@ export function TransactionsPage() {
           sortWithinDay={displaySortConfig.sortWithinDay}
           isLoading={isQueryLoading}
         />
+
+        {hasMore && (
+          <div ref={sentinelRef} className="flex justify-center py-4">
+            {isLoadingMore && <IconLoader className="h-5 w-5 animate-spin text-primary-500" />}
+          </div>
+        )}
       </div>
 
       <AddTransactionFab />

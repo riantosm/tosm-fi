@@ -14,6 +14,7 @@ import {
   userApprovalSlice,
   walletSlice,
   type ICategoryReduxState,
+  type ITransactionReduxState,
   type IWalletReduxState,
 } from "./slices";
 
@@ -39,10 +40,9 @@ const reducer = combineReducers({
 // showing indefinitely-stale data (a previous account's wallets/categories,
 // or changes made directly via the API). Forcing it back to "idle" on
 // rehydrate makes every such guard refetch fresh data on the next mount.
-// One transform per slice backed by a real API today; add another here
-// once transaction's backend exists too.
+// One transform per slice backed by a real API.
 function createResetStatusOnRehydrateTransform<T extends { status: string }>(
-  sliceKey: "wallet" | "category",
+  sliceKey: "wallet" | "category" | "transaction",
 ) {
   return createTransform<T, T>(
     (inboundState) => inboundState,
@@ -59,6 +59,7 @@ const persistConfig: PersistConfig<ReturnType<typeof reducer>> = {
   transforms: [
     createResetStatusOnRehydrateTransform<IWalletReduxState>("wallet"),
     createResetStatusOnRehydrateTransform<ICategoryReduxState>("category"),
+    createResetStatusOnRehydrateTransform<ITransactionReduxState>("transaction"),
   ],
 };
 
