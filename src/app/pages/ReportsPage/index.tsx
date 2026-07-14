@@ -56,8 +56,11 @@ export function ReportsPage() {
     exportReport,
   } = useReports(period, monthlyTrendMetric);
 
-  const periodLabel =
-    period.preset === "custom"
+  const periodLabel = period.preset.startsWith("month:")
+    ? new Intl.DateTimeFormat(language, { month: "long", year: "numeric" }).format(
+        parseIsoDateLocal(resolvedPeriod.dateFrom),
+      )
+    : period.preset === "custom"
       ? `${new Intl.DateTimeFormat(language, { day: "numeric", month: "short" }).format(
           parseIsoDateLocal(resolvedPeriod.dateFrom),
         )} - ${new Intl.DateTimeFormat(language, { day: "numeric", month: "short" }).format(

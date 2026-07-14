@@ -335,7 +335,11 @@
       "title": "Cash Flow",
       "income": "Income",
       "expense": "Expense",
-      "empty": "No cash flow data for this period yet"
+      "empty": "No cash flow data for this period yet",
+      "modes": {
+        "cumulative": "Cumulative",
+        "period": "Per Period"
+      }
     },
     "expenseByCategory": {
       "title": "Expenses by Category"

@@ -1,11 +1,13 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { HiOutlineCalendarDays, HiOutlineChevronLeft } from "react-icons/hi2";
 import { Words } from "@/components/atoms/Words";
 import { Button } from "@/components/atoms/Button";
 import { DateTimePickerFields } from "@/layouts/transaction/DateTimePickerModal";
 import { useLanguage } from "@/hooks/use-language";
+import { useFirstTransactionMonth } from "@/hooks/use-first-transaction-month";
 import { cn } from "@/utils/cn";
+import { addMonths, formatMonthParam, startOfMonth } from "@/utils/month";
 import { parseIsoDateLocal, toIsoDateString } from "@/utils/report-period";
 import type { ReportPeriodFilter as ReportPeriodFilterValue, ReportPeriodPreset } from "@/types/report.types";
 
@@ -15,6 +17,25 @@ type ActiveField = "from" | "to" | null;
 
 function resolveDraftDate(value: string): Date {
   return value ? parseIsoDateLocal(value) : new Date();
+}
+
+/** "YYYY-MM" presets for every month from the user's first transaction up to (excluding) the current month. */
+function generatePastMonthPresets(firstMonth: string, referenceDate: Date): string[] {
+  const [year, month] = firstMonth.split("-").map(Number);
+  const currentStart = startOfMonth(referenceDate);
+
+  const months: string[] = [];
+  let cursor = new Date(year, month - 1, 1);
+  while (cursor.getTime() < currentStart.getTime()) {
+    months.push(formatMonthParam(cursor));
+    cursor = addMonths(cursor, 1);
+  }
+  return months;
+}
+
+function formatMonthLabel(month: string, locale: string): string {
+  const [year, monthNum] = month.split("-").map(Number);
+  return new Intl.DateTimeFormat(locale, { month: "short" }).format(new Date(year, monthNum - 1, 1));
 }
 
 function formatDisplayDate(value: string, locale: string): string {
@@ -42,6 +63,17 @@ export function ReportPeriodFilter({ value, onChange }: ReportPeriodFilterProps)
   const [activeField, setActiveField] = useState<ActiveField>(null);
   const [draftRange, setDraftRange] = useState({ from: value.dateFrom, to: value.dateTo });
   const containerRef = useRef<HTMLDivElement>(null);
+  const presetScrollRef = useRef<HTMLDivElement>(null);
+
+  const firstTransactionMonth = useFirstTransactionMonth();
+  const pastMonthPresets = useMemo(
+    () => (firstTransactionMonth ? generatePastMonthPresets(firstTransactionMonth, new Date()) : []),
+    [firstTransactionMonth],
+  );
+  const presets = useMemo(
+    () => [...pastMonthPresets.map((month): ReportPeriodPreset => `month:${month}`), ...FIXED_PRESETS],
+    [pastMonthPresets],
+  );
 
   useEffect(() => {
     if (!isOpen) return;
@@ -56,6 +88,10 @@ export function ReportPeriodFilter({ value, onChange }: ReportPeriodFilterProps)
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [isOpen]);
+
+  useEffect(() => {
+    presetScrollRef.current?.scrollTo({ left: presetScrollRef.current.scrollWidth });
+  }, [presets.length]);
 
   function openCustomPopover() {
     setDraftRange(
@@ -73,9 +109,15 @@ export function ReportPeriodFilter({ value, onChange }: ReportPeriodFilterProps)
 
   return (
     <div className="flex min-w-0 max-w-full flex-wrap items-center gap-2">
-      <div className="flex min-w-0 max-w-full items-center gap-1 overflow-x-auto scrollbar-hide rounded-full bg-ink-100 p-1 dark:bg-ink-800">
-        {FIXED_PRESETS.map((preset) => {
+      <div
+        ref={presetScrollRef}
+        className="flex w-[300px] max-w-full items-center gap-1 overflow-x-auto scrollbar-hide rounded-full bg-ink-100 p-1 dark:bg-ink-800"
+      >
+        {presets.map((preset) => {
           const isActive = value.preset === preset;
+          const label = preset.startsWith("month:")
+            ? formatMonthLabel(preset.slice("month:".length), language)
+            : t(`reports.period.${preset}`);
           return (
             <button
               key={preset}
@@ -89,7 +131,7 @@ export function ReportPeriodFilter({ value, onChange }: ReportPeriodFilterProps)
               )}
             >
               <Words type={isActive ? "sm/bold" : "sm/regular"} as="span">
-                {t(`reports.period.${preset}`)}
+                {label}
               </Words>
             </button>
           );

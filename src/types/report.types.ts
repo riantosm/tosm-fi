@@ -1,4 +1,4 @@
-export type ReportPeriodPreset = "today" | "week" | "month" | "year" | "custom";
+export type ReportPeriodPreset = "today" | "week" | "month" | "year" | "custom" | `month:${string}`;
 
 export interface ReportPeriodFilter {
   preset: ReportPeriodPreset;
@@ -25,7 +25,10 @@ export interface CashFlowPoint {
   label: string;
   income: number;
   expense: number;
+  isToday: boolean;
 }
+
+export type CashFlowDisplayMode = "cumulative" | "period";
 
 export interface CategoryBreakdownItem {
   id: string;

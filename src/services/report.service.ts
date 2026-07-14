@@ -96,6 +96,7 @@ export const reportService = {
     await delay();
 
     const buckets = buildReportBuckets(period.dateFrom, period.dateTo, locale);
+    const now = Date.now();
 
     return buckets.map((bucket) => {
       let income = 0;
@@ -106,7 +107,12 @@ export const reportService = {
         if (transaction.type === "income") income += transaction.amount;
         if (transaction.type === "expense") expense += Math.abs(transaction.amount);
       }
-      return { label: bucket.label, income, expense };
+      return {
+        label: bucket.label,
+        income,
+        expense,
+        isToday: now >= bucket.start.getTime() && now <= bucket.end.getTime(),
+      };
     });
   },
 

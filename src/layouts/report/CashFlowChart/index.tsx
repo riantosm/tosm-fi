@@ -1,17 +1,60 @@
+import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { CartesianGrid, Legend, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import {
+  CartesianGrid,
+  Legend,
+  Line,
+  LineChart,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+  type DotItemDotProps,
+} from "recharts";
 import { Words } from "@/components/atoms/Words";
 import { useCurrency } from "@/hooks/use-currency";
 import { useLanguage } from "@/hooks/use-language";
 import { useTheme } from "@/hooks/use-theme";
-import type { CashFlowPoint } from "@/types/report.types";
+import { cn } from "@/utils/cn";
+import type { CashFlowDisplayMode, CashFlowPoint } from "@/types/report.types";
 
 const INCOME_COLOR = "#23ac82";
 const EXPENSE_COLOR = "#ef4444";
 
+const DISPLAY_MODES: CashFlowDisplayMode[] = ["cumulative", "period"];
+
+type CashFlowSeries = "income" | "expense";
+
 interface CashFlowChartProps {
   data: CashFlowPoint[];
   periodLabel: string;
+}
+
+function toCumulative(data: CashFlowPoint[]): CashFlowPoint[] {
+  let cumulativeIncome = 0;
+  let cumulativeExpense = 0;
+  return data.map((point) => {
+    cumulativeIncome += point.income;
+    cumulativeExpense += point.expense;
+    return { ...point, income: cumulativeIncome, expense: cumulativeExpense };
+  });
+}
+
+function renderTodayDot(color: string) {
+  return ({ cx, cy, payload, index }: DotItemDotProps) => {
+    if (!payload.isToday) return null;
+    return (
+      <circle
+        key={`today-${index}`}
+        cx={cx}
+        cy={cy}
+        r={5}
+        fill={color}
+        stroke="#fff"
+        strokeWidth={2}
+      />
+    );
+  };
 }
 
 export function CashFlowChart({ data, periodLabel }: CashFlowChartProps) {
@@ -20,10 +63,22 @@ export function CashFlowChart({ data, periodLabel }: CashFlowChartProps) {
   const { language } = useLanguage();
   const { theme } = useTheme();
   const isDark = theme === "dark";
+  const [mode, setMode] = useState<CashFlowDisplayMode>("cumulative");
+  const [hiddenSeries, setHiddenSeries] = useState<Set<CashFlowSeries>>(new Set());
 
   const gridColor = isDark ? "#27272a" : "#e4e4e7";
   const tickColor = isDark ? "#71717a" : "#a1a1aa";
   const isEmpty = data.every((point) => point.income === 0 && point.expense === 0);
+  const chartData = useMemo(() => (mode === "cumulative" ? toCumulative(data) : data), [data, mode]);
+
+  function toggleSeries(series: CashFlowSeries) {
+    setHiddenSeries((prev) => {
+      const next = new Set(prev);
+      if (next.has(series)) next.delete(series);
+      else next.add(series);
+      return next;
+    });
+  }
 
   function compactFormat(value: number) {
     return new Intl.NumberFormat(language, { notation: "compact", maximumFractionDigits: 1 }).format(value);
@@ -42,6 +97,29 @@ export function CashFlowChart({ data, periodLabel }: CashFlowChartProps) {
         </span>
       </div>
 
+      <div className="flex items-center gap-1 self-start rounded-full bg-ink-100 p-1 dark:bg-ink-800">
+        {DISPLAY_MODES.map((option) => {
+          const isActive = mode === option;
+          return (
+            <button
+              key={option}
+              type="button"
+              onClick={() => setMode(option)}
+              className={cn(
+                "rounded-full px-3.5 py-1.5 transition-colors",
+                isActive
+                  ? "bg-white text-ink-900 shadow-sm dark:bg-ink-950 dark:text-ink-50"
+                  : "text-ink-500 hover:text-ink-700 dark:text-ink-400 dark:hover:text-ink-200",
+              )}
+            >
+              <Words type={isActive ? "sm/bold" : "sm/regular"} as="span">
+                {t(`reports.cashFlow.modes.${option}`)}
+              </Words>
+            </button>
+          );
+        })}
+      </div>
+
       {isEmpty ? (
         <div className="flex flex-1 flex-col items-center justify-center gap-1 rounded-2xl border border-dashed border-ink-200 py-16 dark:border-ink-800">
           <Words type="sm/bold" className="text-ink-500 dark:text-ink-400">
@@ -51,7 +129,7 @@ export function CashFlowChart({ data, periodLabel }: CashFlowChartProps) {
       ) : (
         <div className="h-72 w-full">
           <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={data} margin={{ top: 4, right: 8, left: 0, bottom: 0 }}>
+            <LineChart data={chartData} margin={{ top: 4, right: 8, left: 0, bottom: 0 }}>
               <CartesianGrid stroke={gridColor} vertical={false} />
               <XAxis dataKey="label" axisLine={false} tickLine={false} tick={{ fill: tickColor, fontSize: 12 }} />
               <YAxis
@@ -77,11 +155,20 @@ export function CashFlowChart({ data, periodLabel }: CashFlowChartProps) {
               />
               <Legend
                 iconType="circle"
-                formatter={(value) => (
-                  <span className="text-xs text-ink-600 dark:text-ink-300">
-                    {value === "income" ? t("reports.cashFlow.income") : t("reports.cashFlow.expense")}
-                  </span>
-                )}
+                onClick={(entry) => toggleSeries(entry.dataKey as CashFlowSeries)}
+                formatter={(value) => {
+                  const isHidden = hiddenSeries.has(value as CashFlowSeries);
+                  return (
+                    <span
+                      className={cn(
+                        "cursor-pointer select-none text-xs",
+                        isHidden ? "text-ink-400 line-through dark:text-ink-600" : "text-ink-600 dark:text-ink-300",
+                      )}
+                    >
+                      {value === "income" ? t("reports.cashFlow.income") : t("reports.cashFlow.expense")}
+                    </span>
+                  );
+                }}
               />
               <Line
                 type="monotone"
@@ -89,9 +176,10 @@ export function CashFlowChart({ data, periodLabel }: CashFlowChartProps) {
                 name="income"
                 stroke={INCOME_COLOR}
                 strokeWidth={2.5}
-                dot={false}
+                dot={renderTodayDot(INCOME_COLOR)}
                 activeDot={{ r: 5 }}
                 animationDuration={600}
+                hide={hiddenSeries.has("income")}
               />
               <Line
                 type="monotone"
@@ -99,9 +187,10 @@ export function CashFlowChart({ data, periodLabel }: CashFlowChartProps) {
                 name="expense"
                 stroke={EXPENSE_COLOR}
                 strokeWidth={2.5}
-                dot={false}
+                dot={renderTodayDot(EXPENSE_COLOR)}
                 activeDot={{ r: 5 }}
                 animationDuration={600}
+                hide={hiddenSeries.has("expense")}
               />
             </LineChart>
           </ResponsiveContainer>

@@ -335,7 +335,11 @@
       "title": "キャッシュフロー",
       "income": "収入",
       "expense": "支出",
-      "empty": "この期間のキャッシュフローデータはまだありません"
+      "empty": "この期間のキャッシュフローデータはまだありません",
+      "modes": {
+        "cumulative": "累積",
+        "period": "期間別"
+      }
     },
     "expenseByCategory": {
       "title": "カテゴリ別支出"

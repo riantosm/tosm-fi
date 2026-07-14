@@ -335,7 +335,11 @@
       "title": "Cash Flow",
       "income": "Pemasukan",
       "expense": "Pengeluaran",
-      "empty": "Belum ada data cash flow untuk periode ini"
+      "empty": "Belum ada data cash flow untuk periode ini",
+      "modes": {
+        "cumulative": "Kumulatif",
+        "period": "Per Periode"
+      }
     },
     "expenseByCategory": {
       "title": "Pengeluaran Berdasarkan Kategori"

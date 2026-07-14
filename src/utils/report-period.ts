@@ -73,7 +73,11 @@ export function resolveReportPeriod(
   let from: Date;
   let to: Date;
 
-  switch (preset) {
+  if (preset.startsWith("month:")) {
+    const [year, month] = preset.slice("month:".length).split("-").map(Number);
+    from = new Date(year, month - 1, 1);
+    to = new Date(year, month, 0);
+  } else switch (preset) {
     case "today":
       from = startOfDay(referenceDate);
       to = from;
