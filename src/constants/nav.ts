@@ -5,6 +5,7 @@ import {
   HiOutlineArrowsRightLeft,
   HiOutlineWallet,
   HiOutlineTag,
+  HiOutlineChartPie,
   HiOutlineDocumentText,
   HiOutlineCog6Tooth,
 } from "react-icons/hi2";
@@ -19,6 +20,7 @@ export interface NavItem {
 export const NAV_GROUPS: NavItem[][] = [
   [
     { labelKey: "nav.dashboard", path: ROUTES.DASHBOARD, icon: HiOutlineSquares2X2 },
+    { labelKey: "nav.investment", path: ROUTES.INVESTMENT, icon: HiOutlineChartPie },
     { labelKey: "nav.transactions", path: ROUTES.TRANSACTIONS, icon: HiOutlineArrowsRightLeft },
   ],
   [

@@ -10,14 +10,17 @@ import {
 import { Modal } from "@/components/molecules/Modal";
 import { Button } from "@/components/atoms/Button";
 import { Input } from "@/components/atoms/Input";
+import { Checkbox } from "@/components/atoms/Checkbox";
 import { Words } from "@/components/atoms/Words";
 import { SelectCategoryModal } from "@/layouts/transaction/SelectCategoryModal";
 import { SelectSubCategoryModal } from "@/layouts/transaction/SelectSubCategoryModal";
 import { AmountCalculatorModal } from "@/layouts/transaction/AmountCalculatorModal";
 import { DateTimePickerModal } from "@/layouts/transaction/DateTimePickerModal";
+import { InvestmentAccountPickerButton } from "@/layouts/investment/InvestmentAccountPickerButton";
 import { useCategories } from "@/hooks/use-categories";
 import { useWallets } from "@/hooks/use-wallets";
 import { useTransactions } from "@/hooks/use-transactions";
+import { useInvestmentTransactions } from "@/hooks/use-investment-transactions";
 import { useCurrency } from "@/hooks/use-currency";
 import { useLanguage } from "@/hooks/use-language";
 import { useToast } from "@/hooks/use-toast";
@@ -82,6 +85,7 @@ function AddTransactionFields({
   const { categories, status: categoriesStatus, loadCategories } = useCategories();
   const { wallets, status: walletsStatus, loadWallets } = useWallets();
   const { createTransaction, editTransaction, deleteTransaction } = useTransactions();
+  const { createMoneyIn } = useInvestmentTransactions();
   const { format } = useCurrency();
   const { showToast } = useToast();
   const { confirm } = useConfirmDialog();
@@ -102,6 +106,10 @@ function AddTransactionFields({
   const [date, setDate] = useState(() => (transaction ? new Date(transaction.date) : new Date()));
   const [isSaving, setIsSaving] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+
+  const [isInvestment, setIsInvestment] = useState(false);
+  const [investmentInstrumentId, setInvestmentInstrumentId] = useState<string | null>(null);
+  const [investmentAccountId, setInvestmentAccountId] = useState<string | null>(null);
 
   const [isCategoryPickerOpen, setIsCategoryPickerOpen] = useState(false);
   const [isSubCategoryPickerOpen, setIsSubCategoryPickerOpen] = useState(false);
@@ -144,6 +152,9 @@ function AddTransactionFields({
     setSubCategoryId(null);
     setWalletFromId(null);
     setWalletToId(null);
+    setIsInvestment(false);
+    setInvestmentInstrumentId(null);
+    setInvestmentAccountId(null);
   }
 
   function handleCategorySelect(selected: Category) {
@@ -206,6 +217,15 @@ function AddTransactionFields({
         showToast(t("transaction.walletRequiredError"), "error");
         return;
       }
+      if (
+        type === "expense" &&
+        !transaction &&
+        isInvestment &&
+        (!investmentInstrumentId || !investmentAccountId)
+      ) {
+        showToast(t("investment.selectAccountRequiredError"), "error");
+        return;
+      }
 
       input = {
         type,
@@ -227,8 +247,27 @@ function AddTransactionFields({
         await editTransaction(transaction.idTransaction, input);
         showToast(t("transaction.updateSuccess"), "success");
       } else {
-        await createTransaction(input);
+        const created = await createTransaction(input);
         showToast(t("transaction.createSuccess"), "success");
+
+        if (type === "expense" && isInvestment && investmentInstrumentId && investmentAccountId) {
+          try {
+            await createMoneyIn({
+              idInstrument: investmentInstrumentId,
+              idInvestmentAccount: investmentAccountId,
+              amount: input.amount,
+              date: input.date,
+              idTransaction: created.idTransaction,
+            });
+          } catch (investmentError) {
+            showToast(
+              investmentError instanceof Error
+                ? investmentError.message
+                : t("investment.moneyInFailedButTransactionSaved"),
+              "error",
+            );
+          }
+        }
       }
       onClose();
     } catch (error) {
@@ -466,6 +505,31 @@ function AddTransactionFields({
                 selectedId={selectedWalletId}
                 onSelect={setWalletId}
               />
+            )}
+
+            {type === "expense" && !transaction && (
+              <div className="flex flex-col gap-2">
+                <label className="flex items-center gap-2">
+                  <Checkbox
+                    checked={isInvestment}
+                    onChange={(event) => setIsInvestment(event.target.checked)}
+                  />
+                  <Words type="sm/bold" as="span" className="text-ink-700 dark:text-ink-300">
+                    {t("transaction.markAsInvestment")}
+                  </Words>
+                </label>
+
+                {isInvestment && (
+                  <InvestmentAccountPickerButton
+                    idInstrument={investmentInstrumentId}
+                    idInvestmentAccount={investmentAccountId}
+                    onChange={(instrument, account) => {
+                      setInvestmentInstrumentId(instrument.idInstrument);
+                      setInvestmentAccountId(account.idInvestmentAccount);
+                    }}
+                  />
+                )}
+              </div>
             )}
           </div>
         </div>

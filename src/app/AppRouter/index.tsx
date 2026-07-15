@@ -22,6 +22,9 @@ const WalletPage = lazy(() =>
 const CategoriesPage = lazy(() =>
   import("@/app/pages/CategoriesPage").then((m) => ({ default: m.CategoriesPage })),
 );
+const InvestmentPage = lazy(() =>
+  import("@/app/pages/InvestmentPage").then((m) => ({ default: m.InvestmentPage })),
+);
 const ReportsPage = lazy(() =>
   import("@/app/pages/ReportsPage").then((m) => ({ default: m.ReportsPage })),
 );
@@ -84,6 +87,14 @@ export function AppRouter() {
           element={
             <ProtectedRoute>
               <CategoriesPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path={ROUTES.INVESTMENT}
+          element={
+            <ProtectedRoute>
+              <InvestmentPage />
             </ProtectedRoute>
           }
         />

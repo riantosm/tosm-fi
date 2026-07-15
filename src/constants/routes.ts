@@ -5,6 +5,7 @@ export const ROUTES = {
   TRANSACTIONS: "/transactions",
   WALLET: "/wallet",
   CATEGORIES: "/categories",
+  INVESTMENT: "/investment",
   REPORTS: "/reports",
   SETTINGS: "/settings",
   SETTINGS_API_DOC: "/settings/api-doc",

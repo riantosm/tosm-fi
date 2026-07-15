@@ -10,3 +10,7 @@ export { default as settingsSlice } from "./settingsSlice";
 export * from "./settingsSlice";
 export { default as userApprovalSlice } from "./userApprovalSlice";
 export * from "./userApprovalSlice";
+export { default as instrumentSlice } from "./instrumentSlice";
+export * from "./instrumentSlice";
+export { default as investmentTransactionSlice } from "./investmentTransactionSlice";
+export * from "./investmentTransactionSlice";

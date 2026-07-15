@@ -9,11 +9,14 @@ import {
 import {
   authenticationSlice,
   categorySlice,
+  instrumentSlice,
+  investmentTransactionSlice,
   settingsSlice,
   transactionSlice,
   userApprovalSlice,
   walletSlice,
   type ICategoryReduxState,
+  type IInstrumentReduxState,
   type IWalletReduxState,
 } from "./slices";
 
@@ -32,6 +35,8 @@ const reducer = combineReducers({
   // Not persisted — always refetched from the server, since it's an
   // admin-only view of other users' pending requests.
   userApproval: userApprovalSlice,
+  instrument: instrumentSlice,
+  investmentTransaction: investmentTransactionSlice,
 });
 
 // Persisted `status: "loaded"` would otherwise make every consumer's
@@ -41,7 +46,7 @@ const reducer = combineReducers({
 // rehydrate makes every such guard refetch fresh data on the next mount.
 // One transform per slice backed by a real API.
 function createResetStatusOnRehydrateTransform<T extends { status: string }>(
-  sliceKey: "wallet" | "category",
+  sliceKey: "wallet" | "category" | "instrument",
 ) {
   return createTransform<T, T>(
     (inboundState) => inboundState,
@@ -57,10 +62,14 @@ const persistConfig: PersistConfig<ReturnType<typeof reducer>> = {
   // `transaction` is deliberately not persisted: the slice is only a
   // mutation-change signal now (every page fetches its own scoped window via
   // queryTransactions), so persisting its accumulated array would be dead weight.
-  whitelist: ["authentication", "wallet", "category", "settings"],
+  // `investmentTransaction` is the same story — a growing ledger, always
+  // freshly fetched, never persisted. `instrument` IS persisted now that it's
+  // backed by a real API, same treatment as wallet/category.
+  whitelist: ["authentication", "wallet", "category", "settings", "instrument"],
   transforms: [
     createResetStatusOnRehydrateTransform<IWalletReduxState>("wallet"),
     createResetStatusOnRehydrateTransform<ICategoryReduxState>("category"),
+    createResetStatusOnRehydrateTransform<IInstrumentReduxState>("instrument"),
   ],
 };
 
