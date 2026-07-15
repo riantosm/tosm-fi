@@ -69,7 +69,31 @@
     "search": "Cari",
     "logout": "Keluar",
     "openMenu": "Buka menu",
-    "netWorth": "Total Kekayaan Bersih"
+    "netWorth": "Total Kekayaan Bersih",
+    "editProfile": "Edit Profil"
+  },
+  "profile": {
+    "editProfileTitle": "Edit Profil",
+    "subtitle": "Kelola informasi akun dan password kamu.",
+    "accountInfoTitle": "Informasi Akun",
+    "updateConfirmTitle": "Simpan perubahan profil?",
+    "updateConfirmDescription": "Nama dan username akun kamu akan diperbarui.",
+    "updateConfirmAction": "Simpan",
+    "nameLabel": "Nama Lengkap",
+    "namePlaceholder": "nama lengkap",
+    "usernameLabel": "Username",
+    "usernamePlaceholder": "username",
+    "updateSuccess": "Profil berhasil diperbarui",
+    "changePasswordTitle": "Ubah Password",
+    "changePasswordHint": "Kamu akan diminta login kembali setelah password berhasil diubah.",
+    "currentPasswordLabel": "Password Lama",
+    "newPasswordLabel": "Password Baru",
+    "confirmPasswordLabel": "Konfirmasi Password Baru",
+    "changePasswordAction": "Ubah Password",
+    "changePasswordSuccess": "Password berhasil diubah, silakan login kembali.",
+    "passwordMismatchError": "Konfirmasi password baru tidak cocok",
+    "passwordTooShortError": "Password baru minimal 6 karakter",
+    "genericError": "Terjadi kesalahan, coba lagi."
   },
   "theme": {
     "toggle": "Ubah tema"

@@ -66,7 +66,11 @@ export function NavLink({ item }: NavLinkProps) {
           <HiChevronRight
             className={cn(
               "h-4 w-4 shrink-0",
-              isActive ? "text-white/70" : "text-ink-300 dark:text-ink-600",
+              isInvestment
+                ? "text-yellow-600 dark:text-white"
+                : isActive
+                  ? "text-white/70"
+                  : "text-ink-300 dark:text-ink-600",
             )}
           />
         </>

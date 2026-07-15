@@ -7,6 +7,7 @@ export const ROUTES = {
   CATEGORIES: "/categories",
   INVESTMENT: "/investment",
   REPORTS: "/reports",
+  PROFILE: "/profile",
   SETTINGS: "/settings",
   SETTINGS_API_DOC: "/settings/api-doc",
   SETTINGS_CURRENCY: "/settings/currency",

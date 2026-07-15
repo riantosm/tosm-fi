@@ -69,7 +69,31 @@
     "search": "Search",
     "logout": "Log out",
     "openMenu": "Open menu",
-    "netWorth": "Total Net Worth"
+    "netWorth": "Total Net Worth",
+    "editProfile": "Edit Profile"
+  },
+  "profile": {
+    "editProfileTitle": "Edit Profile",
+    "subtitle": "Manage your account information and password.",
+    "accountInfoTitle": "Account Information",
+    "updateConfirmTitle": "Save profile changes?",
+    "updateConfirmDescription": "Your account's name and username will be updated.",
+    "updateConfirmAction": "Save",
+    "nameLabel": "Full Name",
+    "namePlaceholder": "full name",
+    "usernameLabel": "Username",
+    "usernamePlaceholder": "username",
+    "updateSuccess": "Profile updated successfully",
+    "changePasswordTitle": "Change Password",
+    "changePasswordHint": "You'll be asked to log in again after your password is changed.",
+    "currentPasswordLabel": "Current Password",
+    "newPasswordLabel": "New Password",
+    "confirmPasswordLabel": "Confirm New Password",
+    "changePasswordAction": "Change Password",
+    "changePasswordSuccess": "Password changed successfully, please log in again.",
+    "passwordMismatchError": "New password confirmation doesn't match",
+    "passwordTooShortError": "New password must be at least 6 characters",
+    "genericError": "Something went wrong, please try again."
   },
   "theme": {
     "toggle": "Toggle theme"

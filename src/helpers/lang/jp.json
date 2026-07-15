@@ -69,7 +69,31 @@
     "search": "検索",
     "logout": "ログアウト",
     "openMenu": "メニューを開く",
-    "netWorth": "純資産合計"
+    "netWorth": "純資産合計",
+    "editProfile": "プロフィール編集"
+  },
+  "profile": {
+    "editProfileTitle": "プロフィール編集",
+    "subtitle": "アカウント情報とパスワードを管理します。",
+    "accountInfoTitle": "アカウント情報",
+    "updateConfirmTitle": "プロフィールの変更を保存しますか？",
+    "updateConfirmDescription": "アカウントの氏名とユーザー名が更新されます。",
+    "updateConfirmAction": "保存",
+    "nameLabel": "氏名",
+    "namePlaceholder": "氏名",
+    "usernameLabel": "ユーザー名",
+    "usernamePlaceholder": "ユーザー名",
+    "updateSuccess": "プロフィールを更新しました",
+    "changePasswordTitle": "パスワードを変更",
+    "changePasswordHint": "パスワード変更後は再度ログインが必要です。",
+    "currentPasswordLabel": "現在のパスワード",
+    "newPasswordLabel": "新しいパスワード",
+    "confirmPasswordLabel": "新しいパスワード（確認）",
+    "changePasswordAction": "パスワードを変更",
+    "changePasswordSuccess": "パスワードを変更しました。再度ログインしてください。",
+    "passwordMismatchError": "新しいパスワードの確認が一致しません",
+    "passwordTooShortError": "新しいパスワードは6文字以上で入力してください",
+    "genericError": "エラーが発生しました。もう一度お試しください。"
   },
   "theme": {
     "toggle": "テーマを切り替え"

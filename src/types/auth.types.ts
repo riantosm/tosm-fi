@@ -10,6 +10,16 @@ export interface RegisterInput {
   password: string;
 }
 
+export interface UpdateProfileInput {
+  nameUser: string;
+  username: string;
+}
+
+export interface ChangePasswordInput {
+  currentPassword: string;
+  newPassword: string;
+}
+
 export type UserRole = "admin" | "user";
 export type UserStatus = "pending" | "active";
 

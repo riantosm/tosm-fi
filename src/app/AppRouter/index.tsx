@@ -28,6 +28,9 @@ const InvestmentPage = lazy(() =>
 const ReportsPage = lazy(() =>
   import("@/app/pages/ReportsPage").then((m) => ({ default: m.ReportsPage })),
 );
+const EditProfilePage = lazy(() =>
+  import("@/app/pages/EditProfilePage").then((m) => ({ default: m.EditProfilePage })),
+);
 const SettingsPage = lazy(() =>
   import("@/app/pages/SettingsPage").then((m) => ({ default: m.SettingsPage })),
 );
@@ -103,6 +106,14 @@ export function AppRouter() {
           element={
             <ProtectedRoute>
               <ReportsPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path={ROUTES.PROFILE}
+          element={
+            <ProtectedRoute>
+              <EditProfilePage />
             </ProtectedRoute>
           }
         />

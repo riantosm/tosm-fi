@@ -1,9 +1,8 @@
 import { IconSearch } from "@/components/atoms/Icons";
 import { Logo } from "@/components/atoms/Logo";
 import { ThemeToggle } from "@/components/atoms/ThemeToggle";
-import { Words } from "@/components/atoms/Words";
+import { UserMenu } from "@/components/organisms/UserMenu";
 import { ROUTES } from "@/constants/routes";
-import { useAuth } from "@/hooks/use-auth";
 import { useTranslation } from "react-i18next";
 import { HiOutlineBars3 } from "react-icons/hi2";
 import { useNavigate } from "react-router-dom";
@@ -15,7 +14,6 @@ interface TopbarProps {
 export function Topbar({ onOpenMenu }: TopbarProps) {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const { user } = useAuth();
 
   return (
     <header className="flex items-center justify-between gap-3 border-b border-ink-200 bg-white/80 px-4 py-4 backdrop-blur-sm dark:border-ink-800 dark:bg-ink-900/80 sm:gap-4 sm:px-6">
@@ -42,22 +40,7 @@ export function Topbar({ onOpenMenu }: TopbarProps) {
         >
           <IconSearch className="h-4 w-4" />
         </button>
-        <div className="hidden items-center gap-2 sm:flex">
-          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-bl from-primary-400 to-primary-900 uppercase text-white">
-            <Words type="xs/bold" as="span">
-              {user.nameUser?.slice(0, 2)}
-            </Words>
-          </div>
-          <div className="hidden flex-col md:flex">
-            <Words
-              type="sm/bold"
-              as="span"
-              className="max-w-32 truncate text-ink-700 dark:text-ink-300"
-            >
-              {user?.nameUser}
-            </Words>
-          </div>
-        </div>
+        <UserMenu className="hidden sm:block" nameClassName="hidden md:flex" panelAlign="end" />
       </div>
     </header>
   );

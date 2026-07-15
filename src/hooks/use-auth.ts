@@ -1,7 +1,19 @@
 import { useCallback } from "react";
 import { authService } from "@/services/auth.service";
-import type { LoginCredentials, RegisterInput } from "@/types/auth.types";
-import { onLogin, onLogout, resetAccountData, useAppDispatch, useAppSelector } from "@/redux";
+import type {
+  ChangePasswordInput,
+  LoginCredentials,
+  RegisterInput,
+  UpdateProfileInput,
+} from "@/types/auth.types";
+import {
+  onLogin,
+  onLogout,
+  onSetUserDetail,
+  resetAccountData,
+  useAppDispatch,
+  useAppSelector,
+} from "@/redux";
 
 export function useAuth() {
   const dispatch = useAppDispatch();
@@ -42,11 +54,36 @@ export function useAuth() {
     }
   }, [dispatch]);
 
+  const updateProfile = useCallback(
+    async (input: UpdateProfileInput) => {
+      const updated = await authService.updateProfile(input);
+      dispatch(onSetUserDetail(updated));
+      return updated;
+    },
+    [dispatch],
+  );
+
+  // The backend stamps tokenValidAfter on a successful password change,
+  // invalidating every token already issued (including the one used for
+  // this very request) — same as logout(). No need to call the logout
+  // endpoint too; it's already invalidated server-side, so this just
+  // mirrors logout()'s local cleanup.
+  const changePassword = useCallback(
+    async (input: ChangePasswordInput) => {
+      await authService.changePassword(input);
+      dispatch(onLogout());
+      resetAccountData(dispatch);
+    },
+    [dispatch],
+  );
+
   return {
     user: userDetail,
     isAuthenticated: isLogin,
     register,
     login,
     logout,
+    updateProfile,
+    changePassword,
   };
 }

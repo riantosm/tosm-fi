@@ -1,6 +1,12 @@
 import i18n from "@/helpers/i18n";
 import { getApiErrorMessage, httpClient } from "@/services/http-client";
-import type { AuthUser, LoginCredentials, RegisterInput } from "@/types/auth.types";
+import type {
+  AuthUser,
+  ChangePasswordInput,
+  LoginCredentials,
+  RegisterInput,
+  UpdateProfileInput,
+} from "@/types/auth.types";
 
 interface LoginResponse {
   token: string;
@@ -44,5 +50,22 @@ export const authService = {
     // Relies on http-client's request interceptor to attach the current
     // token — must be called before the caller clears it from Redux.
     await httpClient.post("/auth/logout");
+  },
+
+  async updateProfile(input: UpdateProfileInput): Promise<AuthUser> {
+    try {
+      const { data } = await httpClient.patch("/user/me", input);
+      return data.data as AuthUser;
+    } catch (error) {
+      throw new Error(getApiErrorMessage(error, i18n.t("profile.genericError")));
+    }
+  },
+
+  async changePassword(input: ChangePasswordInput): Promise<void> {
+    try {
+      await httpClient.patch("/user/me/password", input);
+    } catch (error) {
+      throw new Error(getApiErrorMessage(error, i18n.t("profile.genericError")));
+    }
   },
 };

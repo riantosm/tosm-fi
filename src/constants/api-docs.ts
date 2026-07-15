@@ -140,6 +140,73 @@ export const API_DOC_GROUPS: ApiDocGroup[] = [
         ),
       },
       {
+        id: "update-profile",
+        title: "Update Profile",
+        method: "PATCH",
+        endpoint: "/user/me",
+        payload: [
+          { name: "nameUser", type: "string", required: true },
+          { name: "username", type: "string", required: true },
+        ],
+        successExample: JSON.stringify(
+          {
+            message: "Profil berhasil diperbarui",
+            data: {
+              idUser: "1",
+              nameUser: "John Doe Updated",
+              username: "johndoe2",
+              role: "admin",
+              status: "active",
+              createdAt: "2026-01-05T02:15:00.000Z",
+            },
+            isSuccess: true,
+            status: 200,
+          },
+          null,
+          2,
+        ),
+        errorExample: JSON.stringify(
+          {
+            message: "Username sudah digunakan",
+            data: { error: "Username sudah digunakan" },
+            isSuccess: false,
+            status: 400,
+          },
+          null,
+          2,
+        ),
+      },
+      {
+        id: "change-password",
+        title: "Change Password",
+        method: "PATCH",
+        endpoint: "/user/me/password",
+        payload: [
+          { name: "currentPassword", type: "string", required: true },
+          { name: "newPassword", type: "string (min. 6 characters)", required: true },
+        ],
+        successExample: JSON.stringify(
+          {
+            message: "Password berhasil diubah, silakan login kembali",
+            data: {},
+            isSuccess: true,
+            status: 200,
+          },
+          null,
+          2,
+        ),
+        errorExample: JSON.stringify(
+          {
+            message: "Password lama salah",
+            data: { error: "Password lama salah" },
+            isSuccess: false,
+            status: 400,
+          },
+          null,
+          2,
+        ),
+      },
+      {
         id: "get-list-user",
         title: "Get List User",
         method: "GET",
