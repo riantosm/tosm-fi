@@ -12,8 +12,6 @@ import type {
 import {
   addInvestmentTransaction,
   removeInvestmentTransaction,
-  setInvestmentTransactions,
-  setInvestmentTransactionsLoading,
   updateInvestmentTransaction,
   useAppDispatch,
   useAppSelector,
@@ -22,25 +20,25 @@ import {
 export function useInvestmentTransactions() {
   const dispatch = useAppDispatch();
   const { loadInstruments } = useInstruments();
+  // Only ever used as an app-wide "something changed" signal (see
+  // investmentTransactionSlice) — never rendered directly.
   const investmentTransactions = useAppSelector(
     (state) => state.investmentTransaction.investmentTransactions,
   );
-  const status = useAppSelector((state) => state.investmentTransaction.status);
-
-  const loadInvestmentTransactions = useCallback(async () => {
-    dispatch(setInvestmentTransactionsLoading());
-    const data = await investmentTransactionService.fetchInvestmentTransactions();
-    dispatch(setInvestmentTransactions(data));
-  }, [dispatch]);
 
   // Read-only, doesn't touch the redux slice — used by the paginated/filtered
   // transaction list, which manages its own local query state instead of
-  // relying on the full-history array above.
+  // relying on any globally-held array.
   const queryInvestmentTransactions = useCallback(
     (params: InvestmentTransactionListParams) =>
       investmentTransactionService.queryInvestmentTransactions(params),
     [],
   );
+
+  // Read-only, doesn't touch the redux slice — powers InstrumentCard's
+  // sparkline, InstrumentDetailPanel's history chart, and
+  // InvestmentAccountCard's sparkline.
+  const fetchTimelines = useCallback(() => investmentTransactionService.fetchTimelines(), []);
 
   const createMoneyIn = useCallback(
     async (input: MoneyInInput) => {
@@ -103,9 +101,8 @@ export function useInvestmentTransactions() {
 
   return {
     investmentTransactions,
-    status,
-    loadInvestmentTransactions,
     queryInvestmentTransactions,
+    fetchTimelines,
     createMoneyIn,
     createMoneyOut,
     createTransfer,

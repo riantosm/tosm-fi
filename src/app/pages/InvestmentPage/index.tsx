@@ -37,6 +37,7 @@ import type {
   InvestmentAccountInput,
 } from "@/types/instrument.types";
 import type {
+  InvestmentTimelinesResult,
   InvestmentTransaction,
   InvestmentTransactionListParams,
   InvestmentTransactionType,
@@ -69,13 +70,9 @@ export function InvestmentPage() {
     editInvestmentAccount,
     deleteInvestmentAccount,
   } = useInstruments();
-  const {
-    investmentTransactions,
-    status: investmentTransactionsStatus,
-    loadInvestmentTransactions,
-    queryInvestmentTransactions,
-  } = useInvestmentTransactions();
-  const isLoading = status === "loading" || investmentTransactionsStatus === "loading";
+  const { investmentTransactions, queryInvestmentTransactions, fetchTimelines } =
+    useInvestmentTransactions();
+  const isLoading = status === "loading";
   const { confirm } = useConfirmDialog();
   const { showToast } = useToast();
 
@@ -125,10 +122,63 @@ export function InvestmentPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  const [timelines, setTimelines] = useState<InvestmentTimelinesResult>({
+    accounts: {},
+    instruments: {},
+  });
+  // Same "derive isLoading by comparing against what the last completed
+  // fetch was for" trick as isQueryLoading below — avoids setting a loading
+  // flag synchronously inside the effect body.
+  const [completedTimelinesFor, setCompletedTimelinesFor] = useState(investmentTransactions);
+  const isTimelinesLoading = completedTimelinesFor !== investmentTransactions;
+
+  // investmentTransactions is only ever a mutation signal here (see the
+  // filterKey/prevTransactions effect below) — its reference changes after
+  // any create/edit/delete anywhere in the app, so refetching timelines when
+  // it changes keeps every sparkline/history chart in sync without a
+  // dedicated invalidation call site.
   useEffect(() => {
-    void loadInvestmentTransactions();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    let cancelled = false;
+    void fetchTimelines().then((result) => {
+      if (cancelled) return;
+      setTimelines(result);
+      setCompletedTimelinesFor(investmentTransactions);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [fetchTimelines, investmentTransactions]);
+
+  const [accountTransactions, setAccountTransactions] = useState<InvestmentTransaction[]>([]);
+  const [completedAccountTransactionsFor, setCompletedAccountTransactionsFor] = useState<{
+    selectedAccountId: string | null;
+    investmentTransactions: InvestmentTransaction[];
+  } | null>(null);
+  const isAccountTransactionsLoading =
+    Boolean(selectedAccountId) &&
+    (completedAccountTransactionsFor?.selectedAccountId !== selectedAccountId ||
+      completedAccountTransactionsFor?.investmentTransactions !== investmentTransactions);
+
+  // Only the selected account's ledger rows are ever rendered (by
+  // InvestmentTransactionList inside InstrumentDetailPanel, gated on
+  // selectedAccount being set), so fetch just that scope instead of
+  // filtering it out of a full-history array. No fetch when nothing's
+  // selected — accountTransactions just goes unused until then.
+  useEffect(() => {
+    if (!selectedAccountId) return;
+    let cancelled = false;
+    void queryInvestmentTransactions({
+      idInvestmentAccount: selectedAccountId,
+      sort: "dateDesc",
+    }).then((result) => {
+      if (cancelled) return;
+      setAccountTransactions(result.investmentTransactions);
+      setCompletedAccountTransactionsFor({ selectedAccountId, investmentTransactions });
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [selectedAccountId, queryInvestmentTransactions, investmentTransactions]);
 
   useEffect(() => {
     const timer = setTimeout(() => setDebouncedSearch(searchQuery.trim()), SEARCH_DEBOUNCE_MS);
@@ -498,7 +548,7 @@ export function InvestmentPage() {
                     <InstrumentCard
                       key={instrument.idInstrument}
                       instrument={instrument}
-                      investmentTransactions={investmentTransactions}
+                      sparkline={timelines.instruments[instrument.idInstrument] ?? []}
                       isSelected={instrument.idInstrument === selectedInstrumentId}
                       onClick={() => {
                         if (instrument.idInstrument === selectedInstrumentId) {
@@ -512,7 +562,7 @@ export function InvestmentPage() {
                   <AddInstrumentCard onClick={openCreateInstrumentModal} />
                 </div>
 
-                {isLoading && (
+                {(isLoading || isTimelinesLoading) && (
                   <div className="absolute inset-0 flex items-start justify-center rounded-2xl bg-white/60 pt-6 backdrop-blur-[2px] dark:bg-ink-950/60">
                     <IconLoader className="h-6 w-6 animate-spin text-primary-500" />
                   </div>
@@ -524,7 +574,9 @@ export function InvestmentPage() {
               <InstrumentDetailPanel
                 instrument={selectedInstrument}
                 instruments={instruments}
-                investmentTransactions={investmentTransactions}
+                timelines={timelines}
+                accountTransactions={accountTransactions}
+                isAccountTransactionsLoading={isAccountTransactionsLoading}
                 selectedAccountId={selectedAccountId}
                 onSelectAccount={setSelectedAccountId}
                 onEdit={() => openEditInstrumentModal(selectedInstrument)}
@@ -544,7 +596,7 @@ export function InvestmentPage() {
                   })
                 }
                 onEditTransaction={setEditingTransaction}
-                isLoading={isLoading}
+                isLoading={isLoading || isTimelinesLoading}
               />
             )}
 

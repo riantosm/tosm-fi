@@ -1,29 +1,23 @@
 import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
 import type { InvestmentTransaction } from "@/types/investment-transaction.types";
 
-export type InvestmentTransactionLoadStatus = "idle" | "loading" | "loaded";
-
+// This slice is never seeded from the server — every consumer fetches its own
+// scoped data (queryInvestmentTransactions() or fetchTimelines()). The array
+// only accumulates mutation results so its reference change can serve as an
+// app-wide "an investment transaction was created/edited/deleted" signal,
+// same as transactionSlice.
 export interface IInvestmentTransactionReduxState {
   investmentTransactions: InvestmentTransaction[];
-  status: InvestmentTransactionLoadStatus;
 }
 
 const initialState: IInvestmentTransactionReduxState = {
   investmentTransactions: [],
-  status: "idle",
 };
 
 export const investmentTransactionSlice = createSlice({
   name: "investmentTransaction",
   initialState,
   reducers: {
-    setInvestmentTransactionsLoading: (state) => {
-      state.status = "loading";
-    },
-    setInvestmentTransactions: (state, action: PayloadAction<InvestmentTransaction[]>) => {
-      state.investmentTransactions = action.payload;
-      state.status = "loaded";
-    },
     addInvestmentTransaction: (state, action: PayloadAction<InvestmentTransaction>) => {
       state.investmentTransactions.push(action.payload);
     },
@@ -43,8 +37,6 @@ export const investmentTransactionSlice = createSlice({
 });
 
 export const {
-  setInvestmentTransactionsLoading,
-  setInvestmentTransactions,
   addInvestmentTransaction,
   updateInvestmentTransaction,
   removeInvestmentTransaction,

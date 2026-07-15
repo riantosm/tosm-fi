@@ -8,14 +8,18 @@ import { InstrumentHistoryChart } from "@/layouts/investment/InstrumentHistoryCh
 import { InvestmentAccountCard } from "@/layouts/investment/InvestmentAccountCard";
 import { InvestmentTransactionList } from "@/layouts/investment/InvestmentTransactionList";
 import { getAccountTotals, getInstrumentTotals } from "@/utils/investment";
-import { buildAccountTimeline, buildInstrumentTimeline } from "@/utils/investment-timeline";
 import type { Instrument, InvestmentAccount } from "@/types/instrument.types";
-import type { InvestmentTransaction } from "@/types/investment-transaction.types";
+import type {
+  InvestmentTimelinesResult,
+  InvestmentTransaction,
+} from "@/types/investment-transaction.types";
 
 interface InstrumentDetailPanelProps {
   instrument: Instrument;
   instruments: Instrument[];
-  investmentTransactions: InvestmentTransaction[];
+  timelines: InvestmentTimelinesResult;
+  accountTransactions: InvestmentTransaction[];
+  isAccountTransactionsLoading?: boolean;
   selectedAccountId: string | null;
   onSelectAccount: (idInvestmentAccount: string | null) => void;
   onEdit: () => void;
@@ -31,7 +35,9 @@ interface InstrumentDetailPanelProps {
 export function InstrumentDetailPanel({
   instrument,
   instruments,
-  investmentTransactions,
+  timelines,
+  accountTransactions,
+  isAccountTransactionsLoading = false,
   selectedAccountId,
   onSelectAccount,
   onEdit,
@@ -59,24 +65,9 @@ export function InstrumentDetailPanel({
     () => (selectedAccount ? getAccountTotals(selectedAccount) : getInstrumentTotals(instrument)),
     [selectedAccount, instrument],
   );
-  const history = useMemo(
-    () =>
-      selectedAccount
-        ? buildAccountTimeline(investmentTransactions, selectedAccount.idInvestmentAccount)
-        : buildInstrumentTimeline(investmentTransactions, instrument),
-    [selectedAccount, investmentTransactions, instrument],
-  );
-  const accountTransactions = useMemo(
-    () =>
-      selectedAccount
-        ? investmentTransactions.filter(
-            (item) =>
-              item.idInvestmentAccount === selectedAccount.idInvestmentAccount ||
-              item.idInvestmentAccountTo === selectedAccount.idInvestmentAccount,
-          )
-        : [],
-    [selectedAccount, investmentTransactions],
-  );
+  const history = selectedAccount
+    ? (timelines.accounts[selectedAccount.idInvestmentAccount] ?? [])
+    : (timelines.instruments[instrument.idInstrument] ?? []);
   const isPositive = totals.profitLoss >= 0;
 
   return (
@@ -186,7 +177,7 @@ export function InstrumentDetailPanel({
               account={account}
               instrumentName={instrument.nameInstrument}
               color={instrument.color}
-              investmentTransactions={investmentTransactions}
+              sparkline={timelines.accounts[account.idInvestmentAccount] ?? []}
               isSelected={account.idInvestmentAccount === selectedAccountId}
               onSelect={() =>
                 onSelectAccount(
@@ -219,6 +210,7 @@ export function InstrumentDetailPanel({
             instruments={instruments}
             emptyMessage={t("investment.noAccountTransactions")}
             onEditTransaction={onEditTransaction}
+            isLoading={isAccountTransactionsLoading}
           />
         )}
       </div>

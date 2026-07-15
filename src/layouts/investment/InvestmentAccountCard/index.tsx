@@ -1,19 +1,17 @@
-import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { HiOutlineArrowTrendingUp, HiOutlineBanknotes, HiOutlinePencil } from "react-icons/hi2";
 import { Area, AreaChart, ResponsiveContainer } from "recharts";
 import { Words } from "@/components/atoms/Words";
 import { useCurrency } from "@/hooks/use-currency";
-import { buildAccountTimeline } from "@/utils/investment-timeline";
 import type { InvestmentAccount } from "@/types/instrument.types";
-import type { InvestmentTransaction } from "@/types/investment-transaction.types";
+import type { TimelinePoint } from "@/types/investment-transaction.types";
 import { cn } from "@/utils/cn";
 
 interface InvestmentAccountCardProps {
   account: InvestmentAccount;
   instrumentName: string;
   color: string;
-  investmentTransactions: InvestmentTransaction[];
+  sparkline: TimelinePoint[];
   isSelected: boolean;
   onSelect: () => void;
   onEdit: () => void;
@@ -25,7 +23,7 @@ export function InvestmentAccountCard({
   account,
   instrumentName,
   color,
-  investmentTransactions,
+  sparkline,
   isSelected,
   onSelect,
   onEdit,
@@ -35,10 +33,6 @@ export function InvestmentAccountCard({
   const { t } = useTranslation();
   const { format } = useCurrency();
 
-  const sparkline = useMemo(
-    () => buildAccountTimeline(investmentTransactions, account.idInvestmentAccount),
-    [investmentTransactions, account.idInvestmentAccount],
-  );
   const gradientId = `account-spark-${account.idInvestmentAccount}`;
 
   return (

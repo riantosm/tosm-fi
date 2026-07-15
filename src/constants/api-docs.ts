@@ -1668,11 +1668,16 @@ export const API_DOC_GROUPS: ApiDocGroup[] = [
         title: "List Investment Transactions",
         method: "GET",
         endpoint:
-          "/investment-transactions?idInstrument=6a54775fb2c4f567c96e7501&type=out&dateFrom=2026-04-01&dateTo=2026-07-15&search=bibit&sort=dateDesc&page=1&limit=20",
+          "/investment-transactions?idInstrument=6a54775fb2c4f567c96e7501&idInvestmentAccount=6a54775fb2c4f567c96e7502&type=out&dateFrom=2026-04-01&dateTo=2026-07-15&search=bibit&sort=dateDesc&page=1&limit=20",
         payload: [
           {
             name: "idInstrument",
-            type: "string",
+            type: "string (matches idInstrument OR idInstrumentTo)",
+            required: false,
+          },
+          {
+            name: "idInvestmentAccount",
+            type: "string (matches idInvestmentAccount OR idInvestmentAccountTo)",
             required: false,
           },
           { name: "type", type: '"in" | "out" | "transfer" | "pl"', required: false },
@@ -1766,6 +1771,41 @@ export const API_DOC_GROUPS: ApiDocGroup[] = [
             isSuccess: false,
             status: 400,
           },
+          null,
+          2,
+        ),
+      },
+      {
+        id: "get-investment-timelines",
+        title: "Get Investment Timelines",
+        method: "GET",
+        endpoint: "/investment-transactions/timelines",
+        payload: [],
+        successExample: JSON.stringify(
+          {
+            message: "Berhasil mengambil grafik histori investasi",
+            data: {
+              accounts: {
+                "6a54775fb2c4f567c96e7502": [
+                  { date: "2026-07-01T02:00:00.000Z", invested: 25000000, current: 25000000 },
+                  { date: "2026-07-10T02:00:00.000Z", invested: 25000000, current: 25620000 },
+                ],
+              },
+              instruments: {
+                "6a54775fb2c4f567c96e7501": [
+                  { date: "2026-07-01T02:00:00.000Z", invested: 25000000, current: 25000000 },
+                  { date: "2026-07-10T02:00:00.000Z", invested: 25000000, current: 25620000 },
+                ],
+              },
+            },
+            isSuccess: true,
+            status: 200,
+          },
+          null,
+          2,
+        ),
+        errorExample: JSON.stringify(
+          { message: "Unauthorized", data: {}, isSuccess: false, status: 401 },
           null,
           2,
         ),

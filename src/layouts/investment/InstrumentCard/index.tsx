@@ -4,21 +4,20 @@ import { Area, AreaChart, ResponsiveContainer } from "recharts";
 import { Words } from "@/components/atoms/Words";
 import { useCurrency } from "@/hooks/use-currency";
 import { getInstrumentTotals } from "@/utils/investment";
-import { buildInstrumentTimeline } from "@/utils/investment-timeline";
 import type { Instrument } from "@/types/instrument.types";
-import type { InvestmentTransaction } from "@/types/investment-transaction.types";
+import type { TimelinePoint } from "@/types/investment-transaction.types";
 import { cn } from "@/utils/cn";
 
 interface InstrumentCardProps {
   instrument: Instrument;
-  investmentTransactions: InvestmentTransaction[];
+  sparkline: TimelinePoint[];
   isSelected: boolean;
   onClick: () => void;
 }
 
 export function InstrumentCard({
   instrument,
-  investmentTransactions,
+  sparkline,
   isSelected,
   onClick,
 }: InstrumentCardProps) {
@@ -26,10 +25,6 @@ export function InstrumentCard({
   const { format } = useCurrency();
 
   const totals = useMemo(() => getInstrumentTotals(instrument), [instrument]);
-  const sparkline = useMemo(
-    () => buildInstrumentTimeline(investmentTransactions, instrument),
-    [investmentTransactions, instrument],
-  );
   const isPositive = totals.profitLoss >= 0;
   const gradientId = `instrument-spark-${instrument.idInstrument}`;
 

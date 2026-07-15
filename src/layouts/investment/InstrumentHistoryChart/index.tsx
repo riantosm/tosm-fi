@@ -4,7 +4,7 @@ import { useCurrency } from "@/hooks/use-currency";
 import { useLanguage } from "@/hooks/use-language";
 import { useTheme } from "@/hooks/use-theme";
 import { cn } from "@/utils/cn";
-import type { TimelinePoint } from "@/utils/investment-timeline";
+import type { TimelinePoint } from "@/types/investment-transaction.types";
 
 interface InstrumentHistoryChartProps {
   data: TimelinePoint[];
