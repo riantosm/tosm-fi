@@ -1,5 +1,6 @@
 import { useTranslation } from "react-i18next";
 import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import { IconLoader } from "@/components/atoms/IconLoader";
 import { Words } from "@/components/atoms/Words";
 import { useCurrency } from "@/hooks/use-currency";
 import { useLanguage } from "@/hooks/use-language";
@@ -9,9 +10,10 @@ import type { TimelinePoint } from "@/utils/investment-timeline";
 interface NetWorthChartProps {
   data: TimelinePoint[];
   total: number;
+  isLoading?: boolean;
 }
 
-export function NetWorthChart({ data, total }: NetWorthChartProps) {
+export function NetWorthChart({ data, total, isLoading = false }: NetWorthChartProps) {
   const { t } = useTranslation();
   const { format } = useCurrency();
   const { language } = useLanguage();
@@ -35,7 +37,7 @@ export function NetWorthChart({ data, total }: NetWorthChartProps) {
   }
 
   return (
-    <div className="flex flex-col gap-4 rounded-2xl border border-ink-200 bg-white p-5 dark:border-ink-800 dark:bg-ink-900">
+    <div className="relative flex flex-col gap-4 rounded-2xl border border-ink-200 bg-white p-5 dark:border-ink-800 dark:bg-ink-900">
       <div className="h-56 w-full">
         <ResponsiveContainer width="100%" height="100%">
           <AreaChart data={data} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
@@ -95,6 +97,12 @@ export function NetWorthChart({ data, total }: NetWorthChartProps) {
           {format(total)}
         </Words>
       </div>
+
+      {isLoading && (
+        <div className="absolute inset-0 flex items-start justify-center rounded-2xl bg-white/60 pt-12 backdrop-blur-[2px] dark:bg-ink-950/60">
+          <IconLoader className="h-6 w-6 animate-spin text-primary-500" />
+        </div>
+      )}
     </div>
   );
 }

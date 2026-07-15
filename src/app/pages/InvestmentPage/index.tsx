@@ -7,6 +7,7 @@ import {
   HiOutlinePlus,
 } from "react-icons/hi2";
 import { DashboardLayout } from "@/components/templates/DashboardLayout";
+import { IconLoader } from "@/components/atoms/IconLoader";
 import { Words } from "@/components/atoms/Words";
 import { NetWorthChart } from "@/layouts/investment/NetWorthChart";
 import { InstrumentCard } from "@/layouts/investment/InstrumentCard";
@@ -47,6 +48,7 @@ export function InvestmentPage() {
   const { t } = useTranslation();
   const {
     instruments,
+    status,
     loadInstruments,
     createInstrument,
     editInstrument,
@@ -55,7 +57,12 @@ export function InvestmentPage() {
     editInvestmentAccount,
     deleteInvestmentAccount,
   } = useInstruments();
-  const { investmentTransactions, loadInvestmentTransactions } = useInvestmentTransactions();
+  const {
+    investmentTransactions,
+    status: investmentTransactionsStatus,
+    loadInvestmentTransactions,
+  } = useInvestmentTransactions();
+  const isLoading = status === "loading" || investmentTransactionsStatus === "loading";
   const { confirm } = useConfirmDialog();
   const { showToast } = useToast();
 
@@ -294,17 +301,27 @@ export function InvestmentPage() {
         </div>
 
         {instruments.length === 0 ? (
-          <div className="flex flex-col items-center gap-2 rounded-2xl border border-dashed border-ink-200 p-10 text-center dark:border-ink-800">
-            <Words type="sm/bold" className="text-ink-500 dark:text-ink-400">
-              {t("investment.noInstruments")}
-            </Words>
-            <Words type="xs/regular" className="max-w-sm text-ink-400 dark:text-ink-500">
-              {t("investment.noInstrumentsHint")}
-            </Words>
-          </div>
+          isLoading ? (
+            <div className="flex flex-col items-center gap-2 rounded-2xl border border-dashed border-ink-200 p-10 text-center dark:border-ink-800">
+              <IconLoader className="h-6 w-6 animate-spin text-primary-500" />
+            </div>
+          ) : (
+            <div className="flex flex-col items-center gap-2 rounded-2xl border border-dashed border-ink-200 p-10 text-center dark:border-ink-800">
+              <Words type="sm/bold" className="text-ink-500 dark:text-ink-400">
+                {t("investment.noInstruments")}
+              </Words>
+              <Words type="xs/regular" className="max-w-sm text-ink-400 dark:text-ink-500">
+                {t("investment.noInstrumentsHint")}
+              </Words>
+            </div>
+          )
         ) : (
           <>
-            <NetWorthChart data={portfolioHistory} total={portfolioTotals.currentValue} />
+            <NetWorthChart
+              data={portfolioHistory}
+              total={portfolioTotals.currentValue}
+              isLoading={isLoading}
+            />
 
             <div className="flex flex-col gap-3">
               <div className="flex items-center justify-between gap-2">
@@ -331,23 +348,31 @@ export function InvestmentPage() {
                 </div>
               </div>
 
-              <div ref={scrollRef} className="flex gap-3 overflow-x-auto pb-1 scrollbar-hide">
-                {instruments.map((instrument) => (
-                  <InstrumentCard
-                    key={instrument.idInstrument}
-                    instrument={instrument}
-                    investmentTransactions={investmentTransactions}
-                    isSelected={instrument.idInstrument === selectedInstrumentId}
-                    onClick={() => {
-                      if (instrument.idInstrument === selectedInstrumentId) {
-                        selectInstrument(null);
-                      } else {
-                        selectInstrument(instrument.idInstrument);
-                      }
-                    }}
-                  />
-                ))}
-                <AddInstrumentCard onClick={openCreateInstrumentModal} />
+              <div className="relative">
+                <div ref={scrollRef} className="flex gap-3 overflow-x-auto pb-1 scrollbar-hide">
+                  {instruments.map((instrument) => (
+                    <InstrumentCard
+                      key={instrument.idInstrument}
+                      instrument={instrument}
+                      investmentTransactions={investmentTransactions}
+                      isSelected={instrument.idInstrument === selectedInstrumentId}
+                      onClick={() => {
+                        if (instrument.idInstrument === selectedInstrumentId) {
+                          selectInstrument(null);
+                        } else {
+                          selectInstrument(instrument.idInstrument);
+                        }
+                      }}
+                    />
+                  ))}
+                  <AddInstrumentCard onClick={openCreateInstrumentModal} />
+                </div>
+
+                {isLoading && (
+                  <div className="absolute inset-0 flex items-start justify-center rounded-2xl bg-white/60 pt-6 backdrop-blur-[2px] dark:bg-ink-950/60">
+                    <IconLoader className="h-6 w-6 animate-spin text-primary-500" />
+                  </div>
+                )}
               </div>
             </div>
 
@@ -375,6 +400,7 @@ export function InvestmentPage() {
                   })
                 }
                 onEditTransaction={setEditingTransaction}
+                isLoading={isLoading}
               />
             )}
 
@@ -384,6 +410,7 @@ export function InvestmentPage() {
               instruments={instruments}
               emptyMessage={t("investment.allTransactionsEmpty")}
               onEditTransaction={setEditingTransaction}
+              isLoading={isLoading}
             />
           </>
         )}

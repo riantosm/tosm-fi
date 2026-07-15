@@ -1,4 +1,5 @@
 import { useMemo } from "react";
+import { IconLoader } from "@/components/atoms/IconLoader";
 import { Words } from "@/components/atoms/Words";
 import { InvestmentTransactionRow } from "@/layouts/investment/InvestmentTransactionRow";
 import type { Instrument } from "@/types/instrument.types";
@@ -10,6 +11,7 @@ interface InvestmentTransactionListProps {
   instruments: Instrument[];
   emptyMessage: string;
   onEditTransaction: (transaction: InvestmentTransaction) => void;
+  isLoading?: boolean;
 }
 
 export function InvestmentTransactionList({
@@ -18,6 +20,7 @@ export function InvestmentTransactionList({
   instruments,
   emptyMessage,
   onEditTransaction,
+  isLoading = false,
 }: InvestmentTransactionListProps) {
   const sorted = useMemo(
     () =>
@@ -35,24 +38,32 @@ export function InvestmentTransactionList({
         </Words>
       )}
 
-      {sorted.length === 0 ? (
-        <div className="flex flex-col items-center justify-center gap-1 rounded-2xl border border-dashed border-ink-200 py-10 dark:border-ink-800">
-          <Words type="sm/bold" className="text-ink-500 dark:text-ink-400">
-            {emptyMessage}
-          </Words>
-        </div>
-      ) : (
-        <div className="flex flex-col divide-y divide-ink-100 dark:divide-ink-800">
-          {sorted.map((transaction) => (
-            <InvestmentTransactionRow
-              key={transaction.idInvestmentTransaction}
-              transaction={transaction}
-              instruments={instruments}
-              onClick={() => onEditTransaction(transaction)}
-            />
-          ))}
-        </div>
-      )}
+      <div className="relative">
+        {sorted.length === 0 ? (
+          <div className="flex flex-col items-center justify-center gap-1 rounded-2xl border border-dashed border-ink-200 py-10 dark:border-ink-800">
+            <Words type="sm/bold" className="text-ink-500 dark:text-ink-400">
+              {emptyMessage}
+            </Words>
+          </div>
+        ) : (
+          <div className="flex flex-col divide-y divide-ink-100 dark:divide-ink-800">
+            {sorted.map((transaction) => (
+              <InvestmentTransactionRow
+                key={transaction.idInvestmentTransaction}
+                transaction={transaction}
+                instruments={instruments}
+                onClick={() => onEditTransaction(transaction)}
+              />
+            ))}
+          </div>
+        )}
+
+        {isLoading && (
+          <div className="absolute inset-0 flex items-start justify-center rounded-2xl bg-white/60 pt-8 backdrop-blur-[2px] dark:bg-ink-950/60">
+            <IconLoader className="h-6 w-6 animate-spin text-primary-500" />
+          </div>
+        )}
+      </div>
     </div>
   );
 }

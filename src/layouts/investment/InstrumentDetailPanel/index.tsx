@@ -1,6 +1,7 @@
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { HiOutlinePencil, HiOutlinePlus, HiXMark } from "react-icons/hi2";
+import { IconLoader } from "@/components/atoms/IconLoader";
 import { Words } from "@/components/atoms/Words";
 import { useCurrency } from "@/hooks/use-currency";
 import { InstrumentHistoryChart } from "@/layouts/investment/InstrumentHistoryChart";
@@ -24,6 +25,7 @@ interface InstrumentDetailPanelProps {
   onWithdrawAccount: (account: InvestmentAccount) => void;
   onProfitLossAccount: (account: InvestmentAccount) => void;
   onEditTransaction: (transaction: InvestmentTransaction) => void;
+  isLoading?: boolean;
 }
 
 export function InstrumentDetailPanel({
@@ -39,6 +41,7 @@ export function InstrumentDetailPanel({
   onWithdrawAccount,
   onProfitLossAccount,
   onEditTransaction,
+  isLoading = false,
 }: InstrumentDetailPanelProps) {
   const { t } = useTranslation();
   const { format } = useCurrency();
@@ -73,7 +76,7 @@ export function InstrumentDetailPanel({
   const isPositive = totals.profitLoss >= 0;
 
   return (
-    <div className="flex flex-col gap-5 rounded-2xl border border-ink-200 bg-white p-5 dark:border-ink-800 dark:bg-ink-900">
+    <div className="relative flex flex-col gap-5 rounded-2xl border border-ink-200 bg-white p-5 dark:border-ink-800 dark:bg-ink-900">
       <div className="flex items-center justify-between gap-2">
         <div className="flex items-center gap-1.5">
           <Words as="h2" type="lg/bold" className="text-ink-900 dark:text-ink-50">
@@ -214,6 +217,12 @@ export function InstrumentDetailPanel({
           />
         )}
       </div>
+
+      {isLoading && (
+        <div className="absolute inset-0 flex items-start justify-center rounded-2xl bg-white/60 pt-16 backdrop-blur-[2px] dark:bg-ink-950/60">
+          <IconLoader className="h-6 w-6 animate-spin text-primary-500" />
+        </div>
+      )}
     </div>
   );
 }
