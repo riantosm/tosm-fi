@@ -338,6 +338,20 @@
     "negativeChangeLabel": "This change decreases the value",
     "noteLabel": "Note",
     "notePlaceholder": "Add a note (optional)",
+    "searchPlaceholder": "Search investment transactions...",
+    "noDataForFilter": "No investment transactions match these filters",
+    "netWorth": {
+      "granularity": {
+        "day": "Day",
+        "month": "Month",
+        "year": "Year"
+      },
+      "period": {
+        "month": "This Month",
+        "year": "This Year",
+        "all": "All"
+      }
+    },
     "type": {
       "in": "Money In",
       "out": "Money Out",

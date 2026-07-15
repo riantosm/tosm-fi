@@ -62,3 +62,48 @@ export interface ProfitLossInput {
   newCurrentValue: number;
   date: string;
 }
+
+export type InvestmentTransactionSortOption = "dateDesc" | "dateAsc" | "amountDesc" | "amountAsc";
+
+export interface InvestmentTransactionListParams {
+  /** Matches idInstrument OR idInstrumentTo (source or transfer destination). */
+  idInstrument?: string;
+  type?: InvestmentTransactionType;
+  /** "YYYY-MM-DD" */
+  dateFrom?: string;
+  /** "YYYY-MM-DD" */
+  dateTo?: string;
+  /** Matches note, or the resolved instrument/account name. */
+  search?: string;
+  sort?: InvestmentTransactionSortOption;
+  page?: number;
+  limit?: number;
+}
+
+export interface InvestmentTransactionListResult {
+  investmentTransactions: InvestmentTransaction[];
+  total: number | null;
+  page: number | null;
+  limit: number | null;
+  totalPages: number | null;
+}
+
+export type NetWorthTimelineGranularity = "day" | "month" | "year";
+
+export interface NetWorthTimelineParams {
+  granularity: NetWorthTimelineGranularity;
+  /** "YYYY-MM-DD" */
+  dateFrom: string;
+  /** "YYYY-MM-DD" */
+  dateTo: string;
+  locale: string;
+  /** Subset of instrument ids to scope the timeline to; omit for the whole portfolio. */
+  idInstrument?: string[];
+}
+
+export interface NetWorthTimelinePoint {
+  label: string;
+  date: string;
+  invested: number;
+  current: number;
+}

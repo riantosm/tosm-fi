@@ -5,15 +5,35 @@ import { Words } from "@/components/atoms/Words";
 import { useCurrency } from "@/hooks/use-currency";
 import { useLanguage } from "@/hooks/use-language";
 import { useTheme } from "@/hooks/use-theme";
-import type { TimelinePoint } from "@/utils/investment-timeline";
+import { cn } from "@/utils/cn";
+import type { NetWorthPeriodPreset } from "@/utils/net-worth-period";
+import type {
+  NetWorthTimelineGranularity,
+  NetWorthTimelinePoint,
+} from "@/types/investment-transaction.types";
+
+const GRANULARITIES: NetWorthTimelineGranularity[] = ["day", "month", "year"];
+const PERIODS: NetWorthPeriodPreset[] = ["month", "year", "all"];
 
 interface NetWorthChartProps {
-  data: TimelinePoint[];
+  data: NetWorthTimelinePoint[];
   total: number;
+  granularity: NetWorthTimelineGranularity;
+  onGranularityChange: (granularity: NetWorthTimelineGranularity) => void;
+  period: NetWorthPeriodPreset;
+  onPeriodChange: (period: NetWorthPeriodPreset) => void;
   isLoading?: boolean;
 }
 
-export function NetWorthChart({ data, total, isLoading = false }: NetWorthChartProps) {
+export function NetWorthChart({
+  data,
+  total,
+  granularity,
+  onGranularityChange,
+  period,
+  onPeriodChange,
+  isLoading = false,
+}: NetWorthChartProps) {
   const { t } = useTranslation();
   const { format } = useCurrency();
   const { language } = useLanguage();
@@ -30,14 +50,56 @@ export function NetWorthChart({ data, total, isLoading = false }: NetWorthChartP
     }).format(value);
   }
 
-  function dateFormat(value: string) {
-    return new Intl.DateTimeFormat(language, { day: "numeric", month: "short" }).format(
-      new Date(value),
-    );
-  }
-
   return (
     <div className="relative flex flex-col gap-4 rounded-2xl border border-ink-200 bg-white p-5 dark:border-ink-800 dark:bg-ink-900">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <div className="flex items-center gap-1 rounded-full bg-ink-100 p-1 dark:bg-ink-800">
+          {GRANULARITIES.map((option) => {
+            const isActive = granularity === option;
+            return (
+              <button
+                key={option}
+                type="button"
+                onClick={() => onGranularityChange(option)}
+                className={cn(
+                  "rounded-full px-3 py-1.5 transition-colors",
+                  isActive
+                    ? "bg-white text-ink-900 shadow-sm dark:bg-ink-950 dark:text-ink-50"
+                    : "text-ink-500 hover:text-ink-700 dark:text-ink-400 dark:hover:text-ink-200",
+                )}
+              >
+                <Words type={isActive ? "xs/bold" : "xs/regular"} as="span">
+                  {t(`investment.netWorth.granularity.${option}`)}
+                </Words>
+              </button>
+            );
+          })}
+        </div>
+
+        <div className="flex items-center gap-1 rounded-full bg-ink-100 p-1 dark:bg-ink-800">
+          {PERIODS.map((option) => {
+            const isActive = period === option;
+            return (
+              <button
+                key={option}
+                type="button"
+                onClick={() => onPeriodChange(option)}
+                className={cn(
+                  "rounded-full px-3 py-1.5 transition-colors",
+                  isActive
+                    ? "bg-white text-ink-900 shadow-sm dark:bg-ink-950 dark:text-ink-50"
+                    : "text-ink-500 hover:text-ink-700 dark:text-ink-400 dark:hover:text-ink-200",
+                )}
+              >
+                <Words type={isActive ? "xs/bold" : "xs/regular"} as="span">
+                  {t(`investment.netWorth.period.${option}`)}
+                </Words>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
       <div className="h-56 w-full">
         <ResponsiveContainer width="100%" height="100%">
           <AreaChart data={data} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
@@ -49,8 +111,7 @@ export function NetWorthChart({ data, total, isLoading = false }: NetWorthChartP
             </defs>
             <CartesianGrid stroke={gridColor} vertical={false} />
             <XAxis
-              dataKey="date"
-              tickFormatter={dateFormat}
+              dataKey="label"
               axisLine={false}
               tickLine={false}
               tick={{ fill: tickColor, fontSize: 12 }}
@@ -70,7 +131,6 @@ export function NetWorthChart({ data, total, isLoading = false }: NetWorthChartP
                 backgroundColor: isDark ? "#18181b" : "#ffffff",
                 fontSize: 12,
               }}
-              labelFormatter={(value) => dateFormat(String(value))}
               labelStyle={{ color: isDark ? "#fafafa" : "#18181b", fontWeight: 600 }}
               formatter={(value) => [format(Number(value)), t("investment.currentValue")]}
             />

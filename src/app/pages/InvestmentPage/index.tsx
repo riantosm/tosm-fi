@@ -10,6 +10,7 @@ import { DashboardLayout } from "@/components/templates/DashboardLayout";
 import { IconLoader } from "@/components/atoms/IconLoader";
 import { Words } from "@/components/atoms/Words";
 import { NetWorthChart } from "@/layouts/investment/NetWorthChart";
+import { InstrumentFilterChips } from "@/layouts/investment/InstrumentFilterChips";
 import { InstrumentCard } from "@/layouts/investment/InstrumentCard";
 import { AddInstrumentCard } from "@/layouts/investment/AddInstrumentCard";
 import { InstrumentFormModal } from "@/layouts/investment/InstrumentFormModal";
@@ -18,21 +19,32 @@ import { InvestmentAccountFormModal } from "@/layouts/investment/InvestmentAccou
 import { WithdrawalFormModal } from "@/layouts/investment/WithdrawalFormModal";
 import { TransferFormModal } from "@/layouts/investment/TransferFormModal";
 import { ProfitLossFormModal } from "@/layouts/investment/ProfitLossFormModal";
+import { InvestmentTransactionToolbar } from "@/layouts/investment/InvestmentTransactionToolbar";
 import { InvestmentTransactionList } from "@/layouts/investment/InvestmentTransactionList";
 import { EditInvestmentTransactionModal } from "@/layouts/investment/EditInvestmentTransactionModal";
 import { useInstruments } from "@/hooks/use-instruments";
 import { useInvestmentTransactions } from "@/hooks/use-investment-transactions";
+import { useFirstInvestmentDate } from "@/hooks/use-first-investment-date";
+import { useNetWorthTimeline } from "@/hooks/use-net-worth-timeline";
 import { useConfirmDialog } from "@/hooks/use-confirm-dialog";
 import { useToast } from "@/hooks/use-toast";
 import { getPortfolioTotals } from "@/utils/investment";
-import { buildPortfolioTimeline } from "@/utils/investment-timeline";
+import { resolveNetWorthPeriod, type NetWorthPeriodPreset } from "@/utils/net-worth-period";
 import type {
   Instrument,
   InstrumentInput,
   InvestmentAccount,
   InvestmentAccountInput,
 } from "@/types/instrument.types";
-import type { InvestmentTransaction } from "@/types/investment-transaction.types";
+import type {
+  InvestmentTransaction,
+  InvestmentTransactionListParams,
+  InvestmentTransactionType,
+  NetWorthTimelineGranularity,
+} from "@/types/investment-transaction.types";
+
+const SEARCH_DEBOUNCE_MS = 2000;
+const PAGE_SIZE = 20;
 
 interface AccountModalState {
   idInstrument: string;
@@ -61,12 +73,14 @@ export function InvestmentPage() {
     investmentTransactions,
     status: investmentTransactionsStatus,
     loadInvestmentTransactions,
+    queryInvestmentTransactions,
   } = useInvestmentTransactions();
   const isLoading = status === "loading" || investmentTransactionsStatus === "loading";
   const { confirm } = useConfirmDialog();
   const { showToast } = useToast();
 
   const scrollRef = useRef<HTMLDivElement>(null);
+  const [selectedInstrumentIds, setSelectedInstrumentIds] = useState<string[]>([]);
   const [selectedInstrumentId, setSelectedInstrumentId] = useState<string | null>(null);
   const [selectedAccountId, setSelectedAccountId] = useState<string | null>(null);
   const [editingTransaction, setEditingTransaction] = useState<InvestmentTransaction | null>(null);
@@ -87,6 +101,21 @@ export function InvestmentPage() {
 
   const [hasAutoSelected, setHasAutoSelected] = useState(false);
 
+  const [netWorthGranularity, setNetWorthGranularity] =
+    useState<NetWorthTimelineGranularity>("month");
+  const [netWorthPeriod, setNetWorthPeriod] = useState<NetWorthPeriodPreset>("all");
+
+  const [searchQuery, setSearchQuery] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+  const [typeFilter, setTypeFilter] = useState<InvestmentTransactionType | "all">("all");
+  const [instrumentFilter, setInstrumentFilter] = useState("all");
+
+  const [displayedTransactions, setDisplayedTransactions] = useState<InvestmentTransaction[]>([]);
+  const [completedQueryKey, setCompletedQueryKey] = useState<string | null>(null);
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(0);
+  const sentinelRef = useRef<HTMLDivElement | null>(null);
+
   // Always refetch on mount (like TransactionsPage's queryTransactions effect)
   // instead of gating on status === "idle" — otherwise navigating away and
   // back within the same session would keep showing whatever was loaded
@@ -100,6 +129,11 @@ export function InvestmentPage() {
     void loadInvestmentTransactions();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedSearch(searchQuery.trim()), SEARCH_DEBOUNCE_MS);
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
 
   function selectInstrument(id: string | null) {
     setSelectedInstrumentId(id);
@@ -120,13 +154,40 @@ export function InvestmentPage() {
     selectInstrument(instruments[0].idInstrument);
   }
 
-  const selectedInstrument =
-    instruments.find((instrument) => instrument.idInstrument === selectedInstrumentId) ?? null;
+  const visibleInstruments = useMemo(
+    () =>
+      selectedInstrumentIds.length === 0
+        ? instruments
+        : instruments.filter((instrument) => selectedInstrumentIds.includes(instrument.idInstrument)),
+    [instruments, selectedInstrumentIds],
+  );
 
-  const portfolioTotals = useMemo(() => getPortfolioTotals(instruments), [instruments]);
-  const portfolioHistory = useMemo(
-    () => buildPortfolioTimeline(investmentTransactions, instruments),
-    [investmentTransactions, instruments],
+  // If the instrument filter narrows the visible set and the currently
+  // selected/detailed instrument falls outside of it, close the detail panel
+  // instead of leaving it open on a now-hidden instrument.
+  if (
+    selectedInstrumentId !== null &&
+    visibleInstruments.length > 0 &&
+    !visibleInstruments.some((instrument) => instrument.idInstrument === selectedInstrumentId)
+  ) {
+    selectInstrument(null);
+  }
+
+  const selectedInstrument =
+    visibleInstruments.find((instrument) => instrument.idInstrument === selectedInstrumentId) ?? null;
+
+  const portfolioTotals = useMemo(() => getPortfolioTotals(visibleInstruments), [visibleInstruments]);
+
+  const firstInvestmentDate = useFirstInvestmentDate();
+  const resolvedNetWorthPeriod = useMemo(
+    () => resolveNetWorthPeriod(netWorthPeriod, new Date(), firstInvestmentDate),
+    [netWorthPeriod, firstInvestmentDate],
+  );
+  const { data: netWorthTimeline, isLoading: isNetWorthLoading } = useNetWorthTimeline(
+    netWorthGranularity,
+    resolvedNetWorthPeriod.dateFrom,
+    resolvedNetWorthPeriod.dateTo,
+    selectedInstrumentIds,
   );
 
   const editingInstrument = instrumentModalState?.idInstrument
@@ -268,6 +329,71 @@ export function InvestmentPage() {
     }
   }
 
+  const filterParams: Omit<InvestmentTransactionListParams, "page" | "limit"> = {
+    idInstrument: instrumentFilter !== "all" ? instrumentFilter : undefined,
+    type: typeFilter !== "all" ? typeFilter : undefined,
+    search: debouncedSearch || undefined,
+    sort: "dateDesc",
+  };
+  const filterKey = JSON.stringify(filterParams);
+
+  // Same "reset to page 1 whenever filters change or a mutation happens
+  // anywhere in the app" trick as TransactionsPage — investmentTransactions
+  // here is only ever used as that change signal, not rendered directly.
+  const [refreshToken, setRefreshToken] = useState(0);
+  const [prevFilterKey, setPrevFilterKey] = useState(filterKey);
+  const [prevTransactions, setPrevTransactions] = useState(investmentTransactions);
+  if (prevFilterKey !== filterKey || prevTransactions !== investmentTransactions) {
+    setPrevFilterKey(filterKey);
+    setPrevTransactions(investmentTransactions);
+    setPage(1);
+    setRefreshToken((token) => token + 1);
+  }
+
+  const queryParams: InvestmentTransactionListParams = { ...filterParams, page, limit: PAGE_SIZE };
+  const queryKey = JSON.stringify({ ...queryParams, refreshToken });
+  const isQueryLoading = page === 1 && completedQueryKey !== queryKey;
+  const isLoadingMore = page > 1 && completedQueryKey !== queryKey;
+  const hasMore = page < totalPages;
+
+  useEffect(() => {
+    let cancelled = false;
+
+    void queryInvestmentTransactions(queryParams).then((result) => {
+      if (cancelled) return;
+      setDisplayedTransactions((prev) =>
+        page === 1 ? result.investmentTransactions : [...prev, ...result.investmentTransactions],
+      );
+      setTotalPages(result.totalPages ?? 0);
+      setCompletedQueryKey(queryKey);
+    });
+
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [queryKey, queryInvestmentTransactions]);
+
+  // Infinite scroll: advance the page once the sentinel at the bottom of
+  // the list comes into view, instead of a "Load More" button.
+  useEffect(() => {
+    if (!hasMore || isLoadingMore) return;
+    const el = sentinelRef.current;
+    if (!el) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0]?.isIntersecting) setPage((prev) => prev + 1);
+      },
+      { rootMargin: "200px" },
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [hasMore, isLoadingMore]);
+
+  const hasActiveTransactionFilter =
+    typeFilter !== "all" || instrumentFilter !== "all" || Boolean(searchQuery);
+
   return (
     <DashboardLayout>
       <div className="flex flex-col gap-6">
@@ -317,10 +443,22 @@ export function InvestmentPage() {
           )
         ) : (
           <>
+            {instruments.length > 1 && (
+              <InstrumentFilterChips
+                instruments={instruments}
+                selectedIds={selectedInstrumentIds}
+                onChange={setSelectedInstrumentIds}
+              />
+            )}
+
             <NetWorthChart
-              data={portfolioHistory}
+              data={netWorthTimeline}
               total={portfolioTotals.currentValue}
-              isLoading={isLoading}
+              granularity={netWorthGranularity}
+              onGranularityChange={setNetWorthGranularity}
+              period={netWorthPeriod}
+              onPeriodChange={setNetWorthPeriod}
+              isLoading={isNetWorthLoading}
             />
 
             <div className="flex flex-col gap-3">
@@ -350,7 +488,7 @@ export function InvestmentPage() {
 
               <div className="relative">
                 <div ref={scrollRef} className="flex gap-3 overflow-x-auto pb-1 scrollbar-hide">
-                  {instruments.map((instrument) => (
+                  {visibleInstruments.map((instrument) => (
                     <InstrumentCard
                       key={instrument.idInstrument}
                       instrument={instrument}
@@ -404,14 +542,39 @@ export function InvestmentPage() {
               />
             )}
 
-            <InvestmentTransactionList
-              title={t("investment.allTransactionsTitle")}
-              transactions={investmentTransactions}
-              instruments={instruments}
-              emptyMessage={t("investment.allTransactionsEmpty")}
-              onEditTransaction={setEditingTransaction}
-              isLoading={isLoading}
-            />
+            <div className="flex flex-col gap-3">
+              <Words type="sm/bold" className="text-ink-700 dark:text-ink-300">
+                {t("investment.allTransactionsTitle")}
+              </Words>
+
+              <InvestmentTransactionToolbar
+                instruments={instruments}
+                searchQuery={searchQuery}
+                onSearchChange={setSearchQuery}
+                typeFilter={typeFilter}
+                onTypeFilterChange={setTypeFilter}
+                instrumentFilter={instrumentFilter}
+                onInstrumentFilterChange={setInstrumentFilter}
+              />
+
+              <InvestmentTransactionList
+                transactions={displayedTransactions}
+                instruments={instruments}
+                emptyMessage={
+                  hasActiveTransactionFilter
+                    ? t("investment.noDataForFilter")
+                    : t("investment.allTransactionsEmpty")
+                }
+                onEditTransaction={setEditingTransaction}
+                isLoading={isQueryLoading}
+              />
+
+              {hasMore && (
+                <div ref={sentinelRef} className="flex justify-center py-4">
+                  {isLoadingMore && <IconLoader className="h-5 w-5 animate-spin text-primary-500" />}
+                </div>
+              )}
+            </div>
           </>
         )}
       </div>

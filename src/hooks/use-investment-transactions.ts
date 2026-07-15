@@ -2,6 +2,7 @@ import { useCallback } from "react";
 import { investmentTransactionService } from "@/services/investment-transaction.service";
 import { useInstruments } from "@/hooks/use-instruments";
 import type {
+  InvestmentTransactionListParams,
   MoneyInInput,
   MoneyOutInput,
   ProfitLossInput,
@@ -31,6 +32,15 @@ export function useInvestmentTransactions() {
     const data = await investmentTransactionService.fetchInvestmentTransactions();
     dispatch(setInvestmentTransactions(data));
   }, [dispatch]);
+
+  // Read-only, doesn't touch the redux slice — used by the paginated/filtered
+  // transaction list, which manages its own local query state instead of
+  // relying on the full-history array above.
+  const queryInvestmentTransactions = useCallback(
+    (params: InvestmentTransactionListParams) =>
+      investmentTransactionService.queryInvestmentTransactions(params),
+    [],
+  );
 
   const createMoneyIn = useCallback(
     async (input: MoneyInInput) => {
@@ -95,6 +105,7 @@ export function useInvestmentTransactions() {
     investmentTransactions,
     status,
     loadInvestmentTransactions,
+    queryInvestmentTransactions,
     createMoneyIn,
     createMoneyOut,
     createTransfer,

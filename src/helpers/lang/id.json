@@ -338,6 +338,20 @@
     "negativeChangeLabel": "Perubahan ini menurunkan nilai",
     "noteLabel": "Catatan",
     "notePlaceholder": "Tambahkan catatan (opsional)",
+    "searchPlaceholder": "Cari transaksi investasi...",
+    "noDataForFilter": "Tidak ada transaksi investasi yang sesuai dengan filter ini",
+    "netWorth": {
+      "granularity": {
+        "day": "Hari",
+        "month": "Bulan",
+        "year": "Tahun"
+      },
+      "period": {
+        "month": "Bulan Ini",
+        "year": "Tahun Ini",
+        "all": "Semua"
+      }
+    },
     "type": {
       "in": "Uang Masuk",
       "out": "Uang Keluar",

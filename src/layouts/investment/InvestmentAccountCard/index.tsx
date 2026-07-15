@@ -1,14 +1,19 @@
+import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { HiOutlineArrowTrendingUp, HiOutlineBanknotes, HiOutlinePencil } from "react-icons/hi2";
+import { Area, AreaChart, ResponsiveContainer } from "recharts";
 import { Words } from "@/components/atoms/Words";
 import { useCurrency } from "@/hooks/use-currency";
+import { buildAccountTimeline } from "@/utils/investment-timeline";
 import type { InvestmentAccount } from "@/types/instrument.types";
+import type { InvestmentTransaction } from "@/types/investment-transaction.types";
 import { cn } from "@/utils/cn";
 
 interface InvestmentAccountCardProps {
   account: InvestmentAccount;
   instrumentName: string;
   color: string;
+  investmentTransactions: InvestmentTransaction[];
   isSelected: boolean;
   onSelect: () => void;
   onEdit: () => void;
@@ -20,6 +25,7 @@ export function InvestmentAccountCard({
   account,
   instrumentName,
   color,
+  investmentTransactions,
   isSelected,
   onSelect,
   onEdit,
@@ -29,15 +35,21 @@ export function InvestmentAccountCard({
   const { t } = useTranslation();
   const { format } = useCurrency();
 
+  const sparkline = useMemo(
+    () => buildAccountTimeline(investmentTransactions, account.idInvestmentAccount),
+    [investmentTransactions, account.idInvestmentAccount],
+  );
+  const gradientId = `account-spark-${account.idInvestmentAccount}`;
+
   return (
     <div
       className={cn(
-        "flex flex-col gap-1 rounded-2xl border bg-white dark:bg-ink-900",
+        "relative flex flex-col gap-1 overflow-hidden rounded-2xl border bg-white dark:bg-ink-900",
         isSelected ? "" : "border-ink-200 dark:border-ink-800",
       )}
       style={isSelected ? { borderColor: color } : undefined}
     >
-      <div className="flex items-start justify-between gap-2">
+      <div className="relative z-10 flex items-start justify-between gap-2">
         <button
           type="button"
           onClick={onSelect}
@@ -84,6 +96,29 @@ export function InvestmentAccountCard({
           </button>
         </div>
       </div>
+
+      {sparkline.length > 0 && (
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-10 opacity-60">
+          <ResponsiveContainer width="100%" height="100%">
+            <AreaChart data={sparkline} margin={{ top: 0, right: 0, left: 0, bottom: 0 }}>
+              <defs>
+                <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor={color} stopOpacity={0.4} />
+                  <stop offset="100%" stopColor={color} stopOpacity={0} />
+                </linearGradient>
+              </defs>
+              <Area
+                type="monotone"
+                dataKey="current"
+                stroke={color}
+                strokeWidth={1.5}
+                fill={`url(#${gradientId})`}
+                isAnimationActive={false}
+              />
+            </AreaChart>
+          </ResponsiveContainer>
+        </div>
+      )}
     </div>
   );
 }

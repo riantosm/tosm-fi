@@ -1653,28 +1653,56 @@ export const API_DOC_GROUPS: ApiDocGroup[] = [
     endpoints: [
       {
         id: "get-investment-transactions",
-        title: "Get Investment Transactions",
+        title: "List Investment Transactions",
         method: "GET",
-        endpoint: "/investment-transactions",
-        payload: [],
+        endpoint:
+          "/investment-transactions?idInstrument=6a54775fb2c4f567c96e7501&type=out&dateFrom=2026-04-01&dateTo=2026-07-15&search=bibit&sort=dateDesc&page=1&limit=20",
+        payload: [
+          {
+            name: "idInstrument",
+            type: "string",
+            required: false,
+          },
+          { name: "type", type: '"in" | "out" | "transfer" | "pl"', required: false },
+          { name: "dateFrom", type: "string (YYYY-MM-DD)", required: false },
+          { name: "dateTo", type: "string (YYYY-MM-DD)", required: false },
+          {
+            name: "search",
+            type: "string (matches note, or resolved instrument/account name)",
+            required: false,
+          },
+          {
+            name: "sort",
+            type: '"dateDesc" | "dateAsc" | "amountDesc" | "amountAsc"',
+            required: false,
+          },
+          { name: "page", type: "number (omit with limit for the full unpaginated result)", required: false },
+          { name: "limit", type: "number", required: false },
+        ],
         successExample: JSON.stringify(
           {
             message: "Berhasil mengambil daftar transaksi investasi",
-            data: [
-              {
-                idInvestmentTransaction: "6a54775fb2c4f567c96e7601",
-                type: "in",
-                date: "2026-07-01T02:00:00.000Z",
-                idInstrument: "6a54775fb2c4f567c96e7501",
-                idInvestmentAccount: "6a54775fb2c4f567c96e7502",
-                idInstrumentTo: null,
-                idInvestmentAccountTo: null,
-                amount: 25000000,
-                investedDelta: 25000000,
-                currentDelta: 25000000,
-                idTransaction: "6a54775fb2c4f567c96e7010",
-              },
-            ],
+            data: {
+              investmentTransactions: [
+                {
+                  idInvestmentTransaction: "6a54775fb2c4f567c96e7601",
+                  type: "in",
+                  date: "2026-07-01T02:00:00.000Z",
+                  idInstrument: "6a54775fb2c4f567c96e7501",
+                  idInvestmentAccount: "6a54775fb2c4f567c96e7502",
+                  idInstrumentTo: null,
+                  idInvestmentAccountTo: null,
+                  amount: 25000000,
+                  investedDelta: 25000000,
+                  currentDelta: 25000000,
+                  idTransaction: "6a54775fb2c4f567c96e7010",
+                },
+              ],
+              total: 1,
+              page: 1,
+              limit: 20,
+              totalPages: 1,
+            },
             isSuccess: true,
             status: 200,
           },
@@ -1683,6 +1711,49 @@ export const API_DOC_GROUPS: ApiDocGroup[] = [
         ),
         errorExample: JSON.stringify(
           { message: "Unauthorized", data: {}, isSuccess: false, status: 401 },
+          null,
+          2,
+        ),
+      },
+      {
+        id: "get-net-worth-timeline",
+        title: "Get Net Worth Timeline",
+        method: "GET",
+        endpoint:
+          "/investment-transactions/net-worth-timeline?granularity=month&dateFrom=2026-04-15&dateTo=2026-07-15&locale=id&idInstrument=6a54775fb2c4f567c96e7501",
+        payload: [
+          { name: "granularity", type: '"day" | "month" | "year"', required: true },
+          { name: "dateFrom", type: "string (YYYY-MM-DD)", required: true },
+          { name: "dateTo", type: "string (YYYY-MM-DD)", required: true },
+          { name: "locale", type: "string, e.g. \"id\"", required: false },
+          {
+            name: "idInstrument",
+            type: "string, comma-separated ids (e.g. \"a,b\") — omit for the whole portfolio",
+            required: false,
+          },
+        ],
+        successExample: JSON.stringify(
+          {
+            message: "Berhasil mengambil grafik nilai investasi",
+            data: [
+              { label: "Apr 2026", date: "2026-04-30T23:59:59.999Z", invested: 5000000, current: 5000000 },
+              { label: "Mei 2026", date: "2026-05-31T23:59:59.999Z", invested: 8000000, current: 8250000 },
+              { label: "Jun 2026", date: "2026-06-30T23:59:59.999Z", invested: 8000000, current: 8620000 },
+              { label: "Jul 2026", date: "2026-07-15T23:59:59.999Z", invested: 8000000, current: 8920248 },
+            ],
+            isSuccess: true,
+            status: 200,
+          },
+          null,
+          2,
+        ),
+        errorExample: JSON.stringify(
+          {
+            message: "granularity, dateFrom, dan dateTo wajib diisi",
+            data: { error: "granularity, dateFrom, dan dateTo wajib diisi" },
+            isSuccess: false,
+            status: 400,
+          },
           null,
           2,
         ),

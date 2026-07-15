@@ -182,6 +182,7 @@ export function InstrumentDetailPanel({
               account={account}
               instrumentName={instrument.nameInstrument}
               color={instrument.color}
+              investmentTransactions={investmentTransactions}
               isSelected={account.idInvestmentAccount === selectedAccountId}
               onSelect={() =>
                 onSelectAccount(

@@ -86,17 +86,3 @@ export function buildInstrumentTimeline(
     new Set(instrument.investmentAccounts.map((account) => account.idInvestmentAccount)),
   );
 }
-
-export function buildPortfolioTimeline(
-  entries: InvestmentTransaction[],
-  instruments: Instrument[],
-): TimelinePoint[] {
-  return buildInvestmentTimeline(
-    entries,
-    new Set(
-      instruments.flatMap((instrument) =>
-        instrument.investmentAccounts.map((account) => account.idInvestmentAccount),
-      ),
-    ),
-  );
-}

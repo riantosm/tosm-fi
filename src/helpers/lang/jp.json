@@ -338,6 +338,20 @@
     "negativeChangeLabel": "この変更は評価額を減少させます",
     "noteLabel": "メモ",
     "notePlaceholder": "メモを追加（任意）",
+    "searchPlaceholder": "投資取引を検索...",
+    "noDataForFilter": "この条件に一致する投資取引はありません",
+    "netWorth": {
+      "granularity": {
+        "day": "日次",
+        "month": "月次",
+        "year": "年次"
+      },
+      "period": {
+        "month": "今月",
+        "year": "今年",
+        "all": "すべて"
+      }
+    },
     "type": {
       "in": "入金",
       "out": "出金",
