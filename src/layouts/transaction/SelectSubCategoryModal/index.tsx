@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { HiOutlineNoSymbol, HiOutlinePlus } from "react-icons/hi2";
 import { Modal } from "@/components/molecules/Modal";
 import { Words } from "@/components/atoms/Words";
+import { ModalCloseButton } from "@/components/atoms/ModalCloseButton";
 import { SubCategoryFormModal } from "@/layouts/category/SubCategoryFormModal";
 import { useCategories } from "@/hooks/use-categories";
 import { useToast } from "@/hooks/use-toast";
@@ -45,9 +46,12 @@ export function SelectSubCategoryModal({
     <>
       <Modal isOpen={isOpen} onClose={onClose} size="lg">
         <div className="flex max-h-[75vh] flex-col gap-4">
-          <Words as="h2" type="lg/bold" className="shrink-0 text-ink-900 dark:text-ink-50">
-            {t("transaction.selectSubCategoryTitle")}
-          </Words>
+          <div className="flex shrink-0 items-center justify-between gap-2">
+            <Words as="h2" type="lg/bold" className="text-ink-900 dark:text-ink-50">
+              {t("transaction.selectSubCategoryTitle")}
+            </Words>
+            <ModalCloseButton onClose={onClose} />
+          </div>
 
           <div className="-mx-2 min-h-0 overflow-y-auto px-2">
             <div className="grid grid-cols-4 gap-3 sm:grid-cols-5">

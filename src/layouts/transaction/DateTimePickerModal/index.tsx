@@ -5,6 +5,7 @@ import { Modal } from "@/components/molecules/Modal";
 import { Button } from "@/components/atoms/Button";
 import { Input } from "@/components/atoms/Input";
 import { Words } from "@/components/atoms/Words";
+import { ModalCloseButton } from "@/components/atoms/ModalCloseButton";
 import { useLanguage } from "@/hooks/use-language";
 import { cn } from "@/utils/cn";
 
@@ -127,15 +128,18 @@ export function DateTimePickerFields({
         <Words as="h2" type="lg/bold" className="text-ink-900 dark:text-ink-50">
           {title ?? t("transaction.selectDateTimeTitle")}
         </Words>
-        <button
-          type="button"
-          onClick={goToToday}
-          className="rounded-full bg-ink-100 px-3 py-1 text-ink-600 transition-colors hover:bg-ink-200 dark:bg-ink-800 dark:text-ink-300 dark:hover:bg-ink-700"
-        >
-          <Words type="xs/bold" as="span">
-            {t("transaction.today")}
-          </Words>
-        </button>
+        <div className="flex shrink-0 items-center gap-1">
+          <button
+            type="button"
+            onClick={goToToday}
+            className="rounded-full bg-ink-100 px-3 py-1 text-ink-600 transition-colors hover:bg-ink-200 dark:bg-ink-800 dark:text-ink-300 dark:hover:bg-ink-700"
+          >
+            <Words type="xs/bold" as="span">
+              {t("transaction.today")}
+            </Words>
+          </button>
+          <ModalCloseButton onClose={onClose} />
+        </div>
       </div>
 
       <div className="flex items-center justify-between">

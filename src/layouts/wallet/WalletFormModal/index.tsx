@@ -5,6 +5,7 @@ import { Modal } from "@/components/molecules/Modal";
 import { Button } from "@/components/atoms/Button";
 import { Input } from "@/components/atoms/Input";
 import { IconLoader } from "@/components/atoms/IconLoader";
+import { ModalCloseButton } from "@/components/atoms/ModalCloseButton";
 import { FormField } from "@/components/molecules/FormField";
 import { Words } from "@/components/atoms/Words";
 import { ColorPicker } from "@/components/molecules/ColorPicker";
@@ -97,24 +98,24 @@ function WalletFormFields({
           {wallet ? t("wallet.editTitle") : t("wallet.addTitle")}
         </Words>
 
-        {wallet && (
-          <div className="flex shrink-0 items-center gap-1">
-            {!wallet.isPrimary && (
-              <button
-                type="button"
-                onClick={() => onSetPrimary?.(wallet.idWallet)}
-                disabled={isSettingPrimary}
-                aria-label={t("wallet.setPrimaryButton")}
-                title={t("wallet.setPrimaryButton")}
-                className="flex h-8 w-8 items-center justify-center rounded-md text-ink-400 transition-colors hover:bg-ink-100 hover:text-primary-600 disabled:opacity-60 dark:hover:bg-ink-800 dark:hover:text-primary-400"
-              >
-                {isSettingPrimary ? (
-                  <IconLoader className="h-4 w-4 animate-spin" />
-                ) : (
-                  <HiOutlineStar className="h-4 w-4" />
-                )}
-              </button>
-            )}
+        <div className="flex shrink-0 items-center gap-1">
+          {wallet && !wallet.isPrimary && (
+            <button
+              type="button"
+              onClick={() => onSetPrimary?.(wallet.idWallet)}
+              disabled={isSettingPrimary}
+              aria-label={t("wallet.setPrimaryButton")}
+              title={t("wallet.setPrimaryButton")}
+              className="flex h-8 w-8 items-center justify-center rounded-md text-ink-400 transition-colors hover:bg-ink-100 hover:text-primary-600 disabled:opacity-60 dark:hover:bg-ink-800 dark:hover:text-primary-400"
+            >
+              {isSettingPrimary ? (
+                <IconLoader className="h-4 w-4 animate-spin" />
+              ) : (
+                <HiOutlineStar className="h-4 w-4" />
+              )}
+            </button>
+          )}
+          {wallet && (
             <button
               type="button"
               onClick={() => onDelete?.(wallet.idWallet)}
@@ -129,8 +130,9 @@ function WalletFormFields({
                 <HiOutlineTrash className="h-4 w-4" />
               )}
             </button>
-          </div>
-        )}
+          )}
+          <ModalCloseButton onClose={onClose} />
+        </div>
       </div>
 
       <FormField label={t("wallet.nameLabel")} htmlFor="wallet-name">

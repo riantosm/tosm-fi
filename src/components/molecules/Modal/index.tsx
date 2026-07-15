@@ -60,7 +60,7 @@ export function Modal({ isOpen, onClose, children, className, size = "sm" }: Mod
         role="dialog"
         aria-modal="true"
         className={cn(
-          "relative w-full rounded-2xl border border-ink-200 bg-white p-6 shadow-xl dark:border-ink-800 dark:bg-ink-900",
+          "relative max-h-[calc(100vh-2rem)] w-full overflow-y-auto rounded-2xl border border-ink-200 bg-white p-6 shadow-xl dark:border-ink-800 dark:bg-ink-900",
           SIZE_CLASS[size],
           className,
         )}

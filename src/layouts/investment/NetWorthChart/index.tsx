@@ -62,7 +62,7 @@ export function NetWorthChart({
                 type="button"
                 onClick={() => onGranularityChange(option)}
                 className={cn(
-                  "rounded-full px-3 py-1.5 transition-colors",
+                  "rounded-full px-3 py-1.5 transition-colors flex",
                   isActive
                     ? "bg-white text-ink-900 shadow-sm dark:bg-ink-950 dark:text-ink-50"
                     : "text-ink-500 hover:text-ink-700 dark:text-ink-400 dark:hover:text-ink-200",
@@ -85,7 +85,7 @@ export function NetWorthChart({
                 type="button"
                 onClick={() => onPeriodChange(option)}
                 className={cn(
-                  "rounded-full px-3 py-1.5 transition-colors",
+                  "rounded-full px-3 py-1.5 transition-colors flex",
                   isActive
                     ? "bg-white text-ink-900 shadow-sm dark:bg-ink-950 dark:text-ink-50"
                     : "text-ink-500 hover:text-ink-700 dark:text-ink-400 dark:hover:text-ink-200",

@@ -74,12 +74,12 @@ export function InvestmentTransactionToolbar({
           )}
         </div>
 
-        <div className="flex flex-1 gap-1.5 overflow-x-auto pb-1 scrollbar-hide">
+        <div className="flex flex-1 gap-1.5 overflow-x-auto scrollbar-hide h-fit">
           <button
             type="button"
             onClick={() => onTypeFilterChange("all")}
             className={cn(
-              "shrink-0 rounded-full px-2.5 py-1.5 transition-colors",
+              "shrink-0 rounded-full px-2.5 py-2 flex items-center transition-colors",
               typeFilter === "all"
                 ? "bg-ink-900 text-white dark:bg-ink-100 dark:text-ink-900"
                 : "bg-ink-100 text-ink-600 hover:bg-ink-200 dark:bg-ink-800 dark:text-ink-300 dark:hover:bg-ink-700",
@@ -95,7 +95,7 @@ export function InvestmentTransactionToolbar({
               type="button"
               onClick={() => onTypeFilterChange(type)}
               className={cn(
-                "shrink-0 rounded-full px-2.5 py-1.5 transition-colors",
+                "shrink-0 rounded-full px-2.5 py-2 flex items-center transition-colors",
                 typeFilter === type
                   ? "bg-ink-900 text-white dark:bg-ink-100 dark:text-ink-900"
                   : "bg-ink-100 text-ink-600 hover:bg-ink-200 dark:bg-ink-800 dark:text-ink-300 dark:hover:bg-ink-700",
@@ -115,7 +115,7 @@ export function InvestmentTransactionToolbar({
             type="button"
             onClick={() => onInstrumentFilterChange("all")}
             className={cn(
-              "shrink-0 rounded-full px-2.5 py-1.5 transition-colors",
+              "shrink-0 rounded-full px-2.5 py-2 flex items-center transition-colors",
               instrumentFilter === "all"
                 ? "bg-ink-900 text-white dark:bg-ink-100 dark:text-ink-900"
                 : "bg-ink-100 text-ink-600 hover:bg-ink-200 dark:bg-ink-800 dark:text-ink-300 dark:hover:bg-ink-700",
@@ -133,12 +133,16 @@ export function InvestmentTransactionToolbar({
                 type="button"
                 onClick={() => onInstrumentFilterChange(instrument.idInstrument)}
                 className={cn(
-                  "flex shrink-0 items-center gap-1 rounded-full px-2.5 py-1.5 transition-colors",
+                  "shrink-0 rounded-full px-2.5 py-2 flex items-center transition-colors",
                   isSelected
                     ? undefined
                     : "bg-ink-100 text-ink-600 hover:bg-ink-200 dark:bg-ink-800 dark:text-ink-300 dark:hover:bg-ink-700",
                 )}
-                style={isSelected ? { backgroundColor: `${instrument.color}26`, color: instrument.color } : undefined}
+                style={
+                  isSelected
+                    ? { backgroundColor: `${instrument.color}26`, color: instrument.color }
+                    : undefined
+                }
               >
                 <Words type="xs/bold" as="span" className="whitespace-nowrap">
                   {instrument.nameInstrument}

@@ -6,6 +6,7 @@ import { Input } from "@/components/atoms/Input";
 import { Checkbox } from "@/components/atoms/Checkbox";
 import { FormField } from "@/components/molecules/FormField";
 import { Words } from "@/components/atoms/Words";
+import { ModalCloseButton } from "@/components/atoms/ModalCloseButton";
 import { SelectCategoryModal } from "@/layouts/transaction/SelectCategoryModal";
 import { SelectSubCategoryModal } from "@/layouts/transaction/SelectSubCategoryModal";
 import { useInvestmentTransactions } from "@/hooks/use-investment-transactions";
@@ -144,14 +145,17 @@ function WithdrawalFormFields({
   return (
     <>
       <form onSubmit={(event) => void handleSubmit(event)} className="flex flex-col gap-5">
-        <div className="flex flex-col gap-1">
-          <Words as="h2" type="lg/bold" className="text-ink-900 dark:text-ink-50">
-            {t("investment.withdrawalTitle")}
-          </Words>
-          <Words type="sm/regular" className="text-ink-500 dark:text-ink-400">
-            {instrument.nameInstrument} — {account.nameInvestmentAccount} ·{" "}
-            {t("investment.currentValue")}: {format(account.currentValue)}
-          </Words>
+        <div className="flex items-start justify-between gap-2">
+          <div className="flex flex-col gap-1">
+            <Words as="h2" type="lg/bold" className="text-ink-900 dark:text-ink-50">
+              {t("investment.withdrawalTitle")}
+            </Words>
+            <Words type="sm/regular" className="text-ink-500 dark:text-ink-400">
+              {instrument.nameInstrument} — {account.nameInvestmentAccount} ·{" "}
+              {t("investment.currentValue")}: {format(account.currentValue)}
+            </Words>
+          </div>
+          <ModalCloseButton onClose={onClose} />
         </div>
 
         <FormField label={t("investment.investedAmountLabel")} htmlFor="withdrawal-amount">

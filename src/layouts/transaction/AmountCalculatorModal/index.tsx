@@ -2,6 +2,7 @@ import { useTranslation } from "react-i18next";
 import { Modal } from "@/components/molecules/Modal";
 import { Button } from "@/components/atoms/Button";
 import { Words } from "@/components/atoms/Words";
+import { ModalCloseButton } from "@/components/atoms/ModalCloseButton";
 import { AmountCalculatorKeypad } from "@/components/molecules/AmountCalculatorKeypad";
 import { useAmountCalculator } from "@/hooks/use-amount-calculator";
 import type { WalletAccount } from "@/types/wallet.types";
@@ -67,6 +68,7 @@ function AmountCalculatorFields({
         <Words as="h2" type="lg/bold" className="text-ink-900 dark:text-ink-50">
           {t("transaction.enterAmountTitle")}
         </Words>
+        <ModalCloseButton onClose={onClose} />
       </div>
 
       <div className="flex min-w-0 flex-col items-end gap-0.5">

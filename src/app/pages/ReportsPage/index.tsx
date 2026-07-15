@@ -278,8 +278,8 @@ export function ReportsPage() {
                 isLoading={isSummaryLoading}
               />
             </div>
-            <div className="grid sm:grid-cols-2 grid-cols-1 gap-4">
-              <div className="">
+            <div className="xl:flex grid sm:grid-cols-2 grid-cols-1 gap-4">
+              <div className="flex-2">
                 <TopSpendingList items={topSpending} isLoading={isTopSpendingLoading} />
               </div>
               <div className="h-fit">

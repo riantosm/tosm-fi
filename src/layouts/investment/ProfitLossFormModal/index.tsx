@@ -5,6 +5,7 @@ import { Button } from "@/components/atoms/Button";
 import { Input } from "@/components/atoms/Input";
 import { FormField } from "@/components/molecules/FormField";
 import { Words } from "@/components/atoms/Words";
+import { ModalCloseButton } from "@/components/atoms/ModalCloseButton";
 import { useInvestmentTransactions } from "@/hooks/use-investment-transactions";
 import { useCurrency } from "@/hooks/use-currency";
 import { useToast } from "@/hooks/use-toast";
@@ -88,14 +89,17 @@ function ProfitLossFormFields({
 
   return (
     <form onSubmit={(event) => void handleSubmit(event)} className="flex flex-col gap-5">
-      <div className="flex flex-col gap-1">
-        <Words as="h2" type="lg/bold" className="text-ink-900 dark:text-ink-50">
-          {t("investment.profitLossTitle")}
-        </Words>
-        <Words type="sm/regular" className="text-ink-500 dark:text-ink-400">
-          {instrument.nameInstrument} — {account.nameInvestmentAccount} ·{" "}
-          {t("investment.investedAmount")}: {format(account.investedAmount)}
-        </Words>
+      <div className="flex items-start justify-between gap-2">
+        <div className="flex flex-col gap-1">
+          <Words as="h2" type="lg/bold" className="text-ink-900 dark:text-ink-50">
+            {t("investment.profitLossTitle")}
+          </Words>
+          <Words type="sm/regular" className="text-ink-500 dark:text-ink-400">
+            {instrument.nameInstrument} — {account.nameInvestmentAccount} ·{" "}
+            {t("investment.investedAmount")}: {format(account.investedAmount)}
+          </Words>
+        </div>
+        <ModalCloseButton onClose={onClose} />
       </div>
 
       <FormField label={t("investment.newCurrentValueLabel")} htmlFor="pl-new-value">

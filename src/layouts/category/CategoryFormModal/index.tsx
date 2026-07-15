@@ -6,6 +6,7 @@ import { Button } from "@/components/atoms/Button";
 import { Input } from "@/components/atoms/Input";
 import { Words } from "@/components/atoms/Words";
 import { IconLoader } from "@/components/atoms/IconLoader";
+import { ModalCloseButton } from "@/components/atoms/ModalCloseButton";
 import { ColorPicker } from "@/components/molecules/ColorPicker";
 import { CategoryIconPicker } from "@/layouts/category/CategoryIconPicker";
 import { CATEGORY_ICONS, resolveCategoryIcon } from "@/constants/category-icons";
@@ -113,9 +114,12 @@ function CategoryFormFields({
 
   return (
     <form onSubmit={handleSubmit} className="flex max-h-[80vh] flex-col gap-5 overflow-y-auto">
-      <Words as="h2" type="lg/bold" className="text-ink-900 dark:text-ink-50">
-        {category ? t("category.editTitle") : t("category.addTitle")}
-      </Words>
+      <div className="flex items-center justify-between gap-2">
+        <Words as="h2" type="lg/bold" className="text-ink-900 dark:text-ink-50">
+          {category ? t("category.editTitle") : t("category.addTitle")}
+        </Words>
+        <ModalCloseButton onClose={onClose} />
+      </div>
 
       <div className="flex rounded-xl border border-ink-200 p-1 dark:border-ink-800">
         <button

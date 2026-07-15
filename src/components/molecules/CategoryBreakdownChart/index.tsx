@@ -67,7 +67,7 @@ function SliceRow({
         >
           {name}
         </Words>
-        <Words type="xxs/regular" as="span" className="block text-ink-400 dark:text-ink-500">
+        <Words type="xs/regular" as="span" className="block text-ink-400 dark:text-ink-500">
           {t("wallet.transactionCount", { n: slice.count })}
         </Words>
       </div>
@@ -171,7 +171,9 @@ export function CategoryBreakdownChart({
   const activeSlices = expandedCategory ? detailSlices : overviewSlices;
   const activeTotal = activeSlices.reduce((sum, slice) => sum + slice.total, 0);
   const centerLabel = expandedCategory
-    ? t("dashboard.totalOfCategory", { category: expandedCategory.name ?? t("dashboard.otherSubCategory") })
+    ? t("dashboard.totalOfCategory", {
+        category: expandedCategory.name ?? t("dashboard.otherSubCategory"),
+      })
     : t("dashboard.totalExpense");
 
   function handleToggle(idCategory: string) {
@@ -185,7 +187,11 @@ export function CategoryBreakdownChart({
           {title}
         </Words>
         <span className="shrink-0 rounded-full bg-ink-100 px-3 py-1.5 dark:bg-ink-800">
-          <Words type="xs/bold" as="span" className="text-ink-600 dark:text-ink-300 flex items-center justify-center">
+          <Words
+            type="xs/bold"
+            as="span"
+            className="text-ink-600 dark:text-ink-300 flex items-center justify-center"
+          >
             {periodLabel}
           </Words>
         </span>

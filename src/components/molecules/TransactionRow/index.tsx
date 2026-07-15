@@ -60,10 +60,10 @@ export function TransactionRow({
             {wallet && (
               <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-ink-100 px-2 py-0.5 dark:bg-ink-800">
                 <span
-                  className="h-1.5 w-1.5 shrink-0 rounded-full"
+                  className="size-2 shrink-0 rounded-full"
                   style={{ backgroundColor: wallet.color }}
                 />
-                <Words type="xxs/bold" as="span" className="text-ink-700 dark:text-ink-300">
+                <Words type="xs/bold" as="span" className="text-ink-700 dark:text-ink-300">
                   {wallet.nameWallet}
                 </Words>
               </span>
@@ -73,8 +73,8 @@ export function TransactionRow({
                 className="inline-flex shrink-0 items-center gap-1 rounded-full px-2 py-0.5"
                 style={{ backgroundColor: `${category.color}1A`, color: category.color }}
               >
-                {createElement(Icon, { className: "h-3 w-3 shrink-0" })}
-                <Words type="xxs/bold" as="span">
+                {createElement(Icon, { className: "size-4 shrink-0" })}
+                <Words type="xs/bold" as="span">
                   {category.nameCategory}
                 </Words>
               </span>
@@ -84,8 +84,8 @@ export function TransactionRow({
                 className="inline-flex shrink-0 items-center gap-1 rounded-full px-2 py-0.5"
                 style={{ backgroundColor: `${category?.color}1A`, color: category?.color }}
               >
-                {createElement(SubIcon, { className: "h-3 w-3 shrink-0" })}
-                <Words type="xxs/bold" as="span">
+                {createElement(SubIcon, { className: "size-4 shrink-0" })}
+                <Words type="xs/bold" as="span">
                   {subCategory.nameSubCategory}
                 </Words>
               </span>

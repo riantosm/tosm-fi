@@ -5,6 +5,7 @@ import { Button } from "@/components/atoms/Button";
 import { Input } from "@/components/atoms/Input";
 import { FormField } from "@/components/molecules/FormField";
 import { Words } from "@/components/atoms/Words";
+import { ModalCloseButton } from "@/components/atoms/ModalCloseButton";
 import { InvestmentAccountPickerButton } from "@/layouts/investment/InvestmentAccountPickerButton";
 import { useInvestmentTransactions } from "@/hooks/use-investment-transactions";
 import { useCurrency } from "@/hooks/use-currency";
@@ -80,9 +81,12 @@ function TransferFormFields({ onClose }: { onClose: () => void }) {
 
   return (
     <form onSubmit={(event) => void handleSubmit(event)} className="flex flex-col gap-5">
-      <Words as="h2" type="lg/bold" className="text-ink-900 dark:text-ink-50">
-        {t("investment.transferTitle")}
-      </Words>
+      <div className="flex items-center justify-between gap-2">
+        <Words as="h2" type="lg/bold" className="text-ink-900 dark:text-ink-50">
+          {t("investment.transferTitle")}
+        </Words>
+        <ModalCloseButton onClose={onClose} />
+      </div>
 
       <FormField label={t("investment.transferFromLabel")} htmlFor="transfer-from">
         <InvestmentAccountPickerButton

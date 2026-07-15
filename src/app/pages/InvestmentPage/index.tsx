@@ -99,10 +99,10 @@ export function InvestmentPage() {
   const [profitLossState, setProfitLossState] = useState<AccountActionState | null>(null);
   const [isTransferOpen, setIsTransferOpen] = useState(false);
 
-  const [hasAutoSelected, setHasAutoSelected] = useState(false);
+  // const [hasAutoSelected, setHasAutoSelected] = useState(false);
 
   const [netWorthGranularity, setNetWorthGranularity] =
-    useState<NetWorthTimelineGranularity>("month");
+    useState<NetWorthTimelineGranularity>("day");
   const [netWorthPeriod, setNetWorthPeriod] = useState<NetWorthPeriodPreset>("all");
 
   const [searchQuery, setSearchQuery] = useState("");
@@ -143,22 +143,24 @@ export function InvestmentPage() {
   // Auto-select the first instrument only once, right after instruments
   // first become available — never re-trigger this after the user
   // deliberately closes the detail panel (which also sets id to null).
-  if (!hasAutoSelected && instruments.length > 0) {
-    setHasAutoSelected(true);
-    if (selectedInstrumentId === null) selectInstrument(instruments[0].idInstrument);
-  } else if (
-    selectedInstrumentId !== null &&
-    instruments.length > 0 &&
-    !instruments.some((instrument) => instrument.idInstrument === selectedInstrumentId)
-  ) {
-    selectInstrument(instruments[0].idInstrument);
-  }
+  // if (!hasAutoSelected && instruments.length > 0) {
+  //   setHasAutoSelected(true);
+  //   if (selectedInstrumentId === null) selectInstrument(instruments[0].idInstrument);
+  // } else if (
+  //   selectedInstrumentId !== null &&
+  //   instruments.length > 0 &&
+  //   !instruments.some((instrument) => instrument.idInstrument === selectedInstrumentId)
+  // ) {
+  //   selectInstrument(instruments[0].idInstrument);
+  // }
 
   const visibleInstruments = useMemo(
     () =>
       selectedInstrumentIds.length === 0
         ? instruments
-        : instruments.filter((instrument) => selectedInstrumentIds.includes(instrument.idInstrument)),
+        : instruments.filter((instrument) =>
+            selectedInstrumentIds.includes(instrument.idInstrument),
+          ),
     [instruments, selectedInstrumentIds],
   );
 
@@ -174,9 +176,13 @@ export function InvestmentPage() {
   }
 
   const selectedInstrument =
-    visibleInstruments.find((instrument) => instrument.idInstrument === selectedInstrumentId) ?? null;
+    visibleInstruments.find((instrument) => instrument.idInstrument === selectedInstrumentId) ??
+    null;
 
-  const portfolioTotals = useMemo(() => getPortfolioTotals(visibleInstruments), [visibleInstruments]);
+  const portfolioTotals = useMemo(
+    () => getPortfolioTotals(visibleInstruments),
+    [visibleInstruments],
+  );
 
   const firstInvestmentDate = useFirstInvestmentDate();
   const resolvedNetWorthPeriod = useMemo(
@@ -571,7 +577,9 @@ export function InvestmentPage() {
 
               {hasMore && (
                 <div ref={sentinelRef} className="flex justify-center py-4">
-                  {isLoadingMore && <IconLoader className="h-5 w-5 animate-spin text-primary-500" />}
+                  {isLoadingMore && (
+                    <IconLoader className="h-5 w-5 animate-spin text-primary-500" />
+                  )}
                 </div>
               )}
             </div>

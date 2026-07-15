@@ -12,6 +12,7 @@ import { Button } from "@/components/atoms/Button";
 import { Input } from "@/components/atoms/Input";
 import { Checkbox } from "@/components/atoms/Checkbox";
 import { Words } from "@/components/atoms/Words";
+import { ModalCloseButton } from "@/components/atoms/ModalCloseButton";
 import { SelectCategoryModal } from "@/layouts/transaction/SelectCategoryModal";
 import { SelectSubCategoryModal } from "@/layouts/transaction/SelectSubCategoryModal";
 import { AmountCalculatorModal } from "@/layouts/transaction/AmountCalculatorModal";
@@ -307,17 +308,20 @@ function AddTransactionFields({
           <Words as="h2" type="xl/bold" className="text-ink-900 dark:text-ink-50">
             {transaction ? t("transaction.editTransaction") : t("transaction.addTransaction")}
           </Words>
-          {transaction && (
-            <button
-              type="button"
-              onClick={() => void handleDelete()}
-              disabled={isDeleting}
-              aria-label={t("transaction.deleteButton")}
-              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-ink-400 transition-colors hover:bg-red-50 hover:text-red-500 disabled:opacity-60 dark:hover:bg-red-500/10 dark:hover:text-red-400"
-            >
-              <HiOutlineTrash className="h-4 w-4" />
-            </button>
-          )}
+          <div className="flex shrink-0 items-center gap-1">
+            {transaction && (
+              <button
+                type="button"
+                onClick={() => void handleDelete()}
+                disabled={isDeleting}
+                aria-label={t("transaction.deleteButton")}
+                className="flex h-9 w-9 items-center justify-center rounded-full text-ink-400 transition-colors hover:bg-red-50 hover:text-red-500 disabled:opacity-60 dark:hover:bg-red-500/10 dark:hover:text-red-400"
+              >
+                <HiOutlineTrash className="h-4 w-4" />
+              </button>
+            )}
+            <ModalCloseButton onClose={onClose} />
+          </div>
         </div>
 
         <div className="flex rounded-xl border border-ink-200 p-1 dark:border-ink-800">

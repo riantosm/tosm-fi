@@ -58,8 +58,8 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
 
       <div className="flex h-svh min-w-0 flex-1 flex-col">
         <Topbar onOpenMenu={() => setIsNavOpen(true)} />
-        <main className="min-w-0 flex-1 overflow-y-auto">
-          <div className="flex min-h-full flex-col px-4 py-6 sm:px-6">
+        <main className="min-w-0 flex-1 overflow-y-auto flex justify-center">
+          <div className="flex min-h-full flex-col px-4 py-6 sm:px-6 max-w-[1200px] w-full">
             <div className="flex-1">{children}</div>
             <Footer />
           </div>

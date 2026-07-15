@@ -1,13 +1,12 @@
-import { useNavigate } from "react-router-dom";
-import { useTranslation } from "react-i18next";
-import { HiOutlineBars3 } from "react-icons/hi2";
 import { IconSearch } from "@/components/atoms/Icons";
 import { Logo } from "@/components/atoms/Logo";
 import { ThemeToggle } from "@/components/atoms/ThemeToggle";
 import { Words } from "@/components/atoms/Words";
 import { ROUTES } from "@/constants/routes";
 import { useAuth } from "@/hooks/use-auth";
-import { useCurrency } from "@/hooks/use-currency";
+import { useTranslation } from "react-i18next";
+import { HiOutlineBars3 } from "react-icons/hi2";
+import { useNavigate } from "react-router-dom";
 
 interface TopbarProps {
   onOpenMenu?: () => void;
@@ -17,7 +16,6 @@ export function Topbar({ onOpenMenu }: TopbarProps) {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { format } = useCurrency();
 
   return (
     <header className="flex items-center justify-between gap-3 border-b border-ink-200 bg-white/80 px-4 py-4 backdrop-blur-sm dark:border-ink-800 dark:bg-ink-900/80 sm:gap-4 sm:px-6">
@@ -57,13 +55,6 @@ export function Topbar({ onOpenMenu }: TopbarProps) {
               className="max-w-32 truncate text-ink-700 dark:text-ink-300"
             >
               {user?.nameUser}
-            </Words>
-            <Words
-              type="xxs/regular"
-              as="span"
-              className="max-w-40 truncate text-ink-400 dark:text-ink-500"
-            >
-              {t("topbar.netWorth")}: {format(user.netWorth ?? 0)}
             </Words>
           </div>
         </div>

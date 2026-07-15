@@ -4,6 +4,7 @@ import { HiOutlineCalendarDays, HiOutlineClock, HiOutlineScale, HiOutlineTrash }
 import { Modal } from "@/components/molecules/Modal";
 import { Button } from "@/components/atoms/Button";
 import { Words } from "@/components/atoms/Words";
+import { ModalCloseButton } from "@/components/atoms/ModalCloseButton";
 import { AmountCalculatorKeypad } from "@/components/molecules/AmountCalculatorKeypad";
 import { DateTimePickerModal } from "@/layouts/transaction/DateTimePickerModal";
 import { useAmountCalculator } from "@/hooks/use-amount-calculator";
@@ -155,17 +156,20 @@ function BalanceCorrectionFields({
           <Words as="h2" type="xl/bold" className="text-ink-900 dark:text-ink-50">
             {t("transaction.balanceCorrection")}
           </Words>
-          {transaction && (
-            <button
-              type="button"
-              onClick={() => void handleDelete()}
-              disabled={isDeleting}
-              aria-label={t("transaction.deleteButton")}
-              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-ink-400 transition-colors hover:bg-red-50 hover:text-red-500 disabled:opacity-60 dark:hover:bg-red-500/10 dark:hover:text-red-400"
-            >
-              <HiOutlineTrash className="h-4 w-4" />
-            </button>
-          )}
+          <div className="flex shrink-0 items-center gap-1">
+            {transaction && (
+              <button
+                type="button"
+                onClick={() => void handleDelete()}
+                disabled={isDeleting}
+                aria-label={t("transaction.deleteButton")}
+                className="flex h-9 w-9 items-center justify-center rounded-full text-ink-400 transition-colors hover:bg-red-50 hover:text-red-500 disabled:opacity-60 dark:hover:bg-red-500/10 dark:hover:text-red-400"
+              >
+                <HiOutlineTrash className="h-4 w-4" />
+              </button>
+            )}
+            <ModalCloseButton onClose={onClose} />
+          </div>
         </div>
 
         <div className="flex items-center gap-3 rounded-2xl bg-ink-100 p-4 dark:bg-ink-800">

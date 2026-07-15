@@ -83,7 +83,7 @@ export function TopSpendingList({ items, isLoading = false }: TopSpendingListPro
                     {item.title}
                   </Words>
                   <Words
-                    type="xxs/regular"
+                    type="xs/regular"
                     as="span"
                     className="block truncate text-ink-400 dark:text-ink-500"
                   >
@@ -100,7 +100,7 @@ export function TopSpendingList({ items, isLoading = false }: TopSpendingListPro
                   >
                     {format(item.amount)}
                   </Words>
-                  <Words type="xxs/regular" as="span" className="text-ink-400 dark:text-ink-500">
+                  <Words type="xs/regular" as="span" className="text-ink-400 dark:text-ink-500">
                     {formatDate(item.date)}
                   </Words>
                 </div>

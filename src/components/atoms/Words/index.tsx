@@ -7,8 +7,8 @@ export type WordStylePath = `${WordSize}/${WordWeight}`;
 
 interface WordsProps extends HTMLAttributes<HTMLElement> {
   /**
-   * @xxs: 8px
-   * @xs: 10px
+   * @xxs: 10px
+   * @xs: 12px
    * @sm: 14px
    * @base: 16px <- default
    * @lg: 18px
@@ -22,8 +22,8 @@ interface WordsProps extends HTMLAttributes<HTMLElement> {
 }
 
 const SIZE_CLASS: Record<WordSize, string> = {
-  xxs: "text-[8px]",
-  xs: "text-[10px]",
+  xxs: "text-[10px]",
+  xs: "text-[12px]",
   sm: "text-[14px]",
   base: "text-[16px]",
   lg: "text-[18px]",

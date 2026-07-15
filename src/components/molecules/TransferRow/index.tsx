@@ -52,10 +52,10 @@ function TransferLeg({ wallet, amount, direction }: TransferLegProps) {
       {wallet && (
         <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-ink-100 px-2 py-0.5 dark:bg-ink-800">
           <span
-            className="h-1.5 w-1.5 shrink-0 rounded-full"
+            className="size-2 shrink-0 rounded-full"
             style={{ backgroundColor: wallet.color }}
           />
-          <Words type="xxs/bold" as="span" className="text-ink-700 dark:text-ink-300">
+          <Words type="xs/bold" as="span" className="text-ink-700 dark:text-ink-300">
             {wallet.nameWallet}
           </Words>
         </span>
