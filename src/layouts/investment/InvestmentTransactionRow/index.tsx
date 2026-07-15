@@ -8,7 +8,6 @@ import {
 } from "react-icons/hi2";
 import { Words } from "@/components/atoms/Words";
 import { useCurrency } from "@/hooks/use-currency";
-import { useLanguage } from "@/hooks/use-language";
 import { resolveAccountLabel } from "@/utils/investment";
 import { cn } from "@/utils/cn";
 import type { Instrument } from "@/types/instrument.types";
@@ -27,16 +26,22 @@ export function InvestmentTransactionRow({
 }: InvestmentTransactionRowProps) {
   const { t } = useTranslation();
   const { format } = useCurrency();
-  const { language } = useLanguage();
 
+  const deletedSuffix = t("investment.deletedAccountSuffix");
   const sourceLabel = resolveAccountLabel(
     instruments,
     transaction.idInstrument,
     transaction.idInvestmentAccount,
+    deletedSuffix,
   );
   const destinationLabel =
     transaction.idInstrumentTo && transaction.idInvestmentAccountTo
-      ? resolveAccountLabel(instruments, transaction.idInstrumentTo, transaction.idInvestmentAccountTo)
+      ? resolveAccountLabel(
+          instruments,
+          transaction.idInstrumentTo,
+          transaction.idInvestmentAccountTo,
+          deletedSuffix,
+        )
       : null;
 
   const isPlNegative = transaction.type === "pl" && transaction.amount < 0;
@@ -59,14 +64,6 @@ export function InvestmentTransactionRow({
       : isPositive
         ? "bg-primary-50 text-primary-600 dark:bg-primary-500/10 dark:text-primary-400"
         : "bg-red-50 text-red-500 dark:bg-red-500/10 dark:text-red-400";
-
-  function formatDate(iso: string) {
-    return new Intl.DateTimeFormat(language, {
-      day: "numeric",
-      month: "short",
-      year: "numeric",
-    }).format(new Date(iso));
-  }
 
   const amountSign =
     transaction.type === "transfer"
@@ -95,7 +92,7 @@ export function InvestmentTransactionRow({
           {destinationLabel ? `${sourceLabel} → ${destinationLabel}` : sourceLabel}
         </Words>
         <Words type="xs/regular" className="text-ink-400 dark:text-ink-500">
-          {t(`investment.type.${transaction.type}`)} · {formatDate(transaction.date)}
+          {t(`investment.type.${transaction.type}`)}
           {transaction.note && ` · ${transaction.note}`}
         </Words>
       </div>

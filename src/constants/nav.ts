@@ -20,13 +20,13 @@ export interface NavItem {
 export const NAV_GROUPS: NavItem[][] = [
   [
     { labelKey: "nav.dashboard", path: ROUTES.DASHBOARD, icon: HiOutlineSquares2X2 },
-    { labelKey: "nav.investment", path: ROUTES.INVESTMENT, icon: HiOutlineChartPie },
     { labelKey: "nav.transactions", path: ROUTES.TRANSACTIONS, icon: HiOutlineArrowsRightLeft },
   ],
   [
     { labelKey: "nav.wallet", path: ROUTES.WALLET, icon: HiOutlineWallet },
     { labelKey: "nav.category", path: ROUTES.CATEGORIES, icon: HiOutlineTag },
   ],
+  [{ labelKey: "nav.investment", path: ROUTES.INVESTMENT, icon: HiOutlineChartPie }],
   [{ labelKey: "nav.reports", path: ROUTES.REPORTS, icon: HiOutlineDocumentText }],
 ];
 

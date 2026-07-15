@@ -290,6 +290,7 @@
     "profitLoss": "Untung/Rugi",
     "accountsLabel": "Akun Investasi",
     "noAccounts": "Belum ada akun investasi",
+    "deletedAccountSuffix": "(Dihapus)",
     "noHistory": "Belum ada riwayat transaksi investasi",
     "addAccount": "Tambah Akun",
     "addAccountTitle": "Tambah Akun Investasi",

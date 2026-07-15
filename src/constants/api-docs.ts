@@ -1449,6 +1449,7 @@ export const API_DOC_GROUPS: ApiDocGroup[] = [
                     nameInvestmentAccount: "Bibit",
                     investedAmount: 5000000,
                     currentValue: 5250000,
+                    isDeleted: false,
                   },
                 ],
               },
@@ -1572,6 +1573,7 @@ export const API_DOC_GROUPS: ApiDocGroup[] = [
               nameInvestmentAccount: "Bibit Adel",
               investedAmount: 0,
               currentValue: 0,
+              isDeleted: false,
             },
             isSuccess: true,
             status: 201,
@@ -1605,6 +1607,7 @@ export const API_DOC_GROUPS: ApiDocGroup[] = [
               nameInvestmentAccount: "Bibit Adel",
               investedAmount: 9000000,
               currentValue: 9500000,
+              isDeleted: false,
             },
             isSuccess: true,
             status: 200,
@@ -1634,10 +1637,19 @@ export const API_DOC_GROUPS: ApiDocGroup[] = [
           null,
           2,
         ),
+        // Soft-deletes (isDeleted: true) rather than actually removing the
+        // subdocument, so any existing investment-transaction ledger entry
+        // can keep resolving this account's name (shown with a "(Deleted)"
+        // suffix). Blocked entirely while currentValue is non-zero — the
+        // funds must be moved to another account first.
         errorExample: JSON.stringify(
           {
-            message: "Akun investasi tidak ditemukan",
-            data: { error: "Akun investasi tidak ditemukan" },
+            message:
+              "Akun ini masih memiliki nilai saat ini — pindahkan dana ke akun lain terlebih dahulu sebelum menghapus",
+            data: {
+              error:
+                "Akun ini masih memiliki nilai saat ini — pindahkan dana ke akun lain terlebih dahulu sebelum menghapus",
+            },
             isSuccess: false,
             status: 400,
           },

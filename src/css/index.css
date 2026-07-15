@@ -49,6 +49,49 @@ html {
   }
 }
 
+@keyframes sparkle-twinkle {
+  0%,
+  100% {
+    opacity: 0;
+    transform: scale(0.3) rotate(0deg);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1) rotate(20deg);
+  }
+}
+
+@utility animate-sparkle-twinkle {
+  animation: sparkle-twinkle 2s ease-in-out infinite;
+}
+
+@keyframes gold-shimmer-sweep {
+  0% {
+    background-position: -150% 0;
+  }
+  100% {
+    background-position: 250% 0;
+  }
+}
+
+@utility animate-gold-shimmer {
+  animation: gold-shimmer-sweep 5.5s linear infinite;
+}
+
+@keyframes gold-glow-pulse {
+  0%,
+  100% {
+    box-shadow: inset 0 0 8px 0px rgba(255, 209, 102, 0.25);
+  }
+  50% {
+    box-shadow: inset 0 0 18px 2px rgba(255, 209, 102, 0.55);
+  }
+}
+
+@utility animate-gold-glow-pulse {
+  animation: gold-glow-pulse 2.4s ease-in-out infinite;
+}
+
 body {
   margin: 0;
   font-family: "Plus Jakarta Sans", system-ui, "Segoe UI", Roboto, sans-serif;

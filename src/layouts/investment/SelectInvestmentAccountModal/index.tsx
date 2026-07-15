@@ -54,7 +54,9 @@ export function SelectInvestmentAccountModal({
           <div className="-mx-2 min-h-0 overflow-y-auto px-2">
             <div className="grid grid-cols-4 gap-3 sm:grid-cols-5">
               {instrument?.investmentAccounts
-                .filter((account) => account.idInvestmentAccount !== excludeAccountId)
+                .filter(
+                  (account) => !account.isDeleted && account.idInvestmentAccount !== excludeAccountId,
+                )
                 .map((account) => (
                 <button
                   key={account.idInvestmentAccount}

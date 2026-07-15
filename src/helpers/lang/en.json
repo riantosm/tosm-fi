@@ -290,6 +290,7 @@
     "profitLoss": "Profit/Loss",
     "accountsLabel": "Investment Accounts",
     "noAccounts": "No investment accounts yet",
+    "deletedAccountSuffix": "(Deleted)",
     "noHistory": "No investment transaction history yet",
     "addAccount": "Add Account",
     "addAccountTitle": "Add Investment Account",

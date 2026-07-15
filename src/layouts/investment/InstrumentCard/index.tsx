@@ -52,7 +52,9 @@ export function InstrumentCard({
         </Words>
         <div className="flex items-center justify-between gap-2">
           <Words type="xs/regular" className="text-ink-400 dark:text-ink-500">
-            {t("investment.accountsCount", { n: instrument.investmentAccounts.length })}
+            {t("investment.accountsCount", {
+              n: instrument.investmentAccounts.filter((account) => !account.isDeleted).length,
+            })}
           </Words>
           <Words
             type="xs/bold"

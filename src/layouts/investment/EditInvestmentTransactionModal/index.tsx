@@ -75,14 +75,21 @@ function EditInvestmentTransactionFields({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
 
+  const deletedSuffix = t("investment.deletedAccountSuffix");
   const sourceLabel = resolveAccountLabel(
     instruments,
     transaction.idInstrument,
     transaction.idInvestmentAccount,
+    deletedSuffix,
   );
   const destinationLabel =
     transaction.idInstrumentTo && transaction.idInvestmentAccountTo
-      ? resolveAccountLabel(instruments, transaction.idInstrumentTo, transaction.idInvestmentAccountTo)
+      ? resolveAccountLabel(
+          instruments,
+          transaction.idInstrumentTo,
+          transaction.idInvestmentAccountTo,
+          deletedSuffix,
+        )
       : null;
 
   function formatDateLabel(value: Date) {

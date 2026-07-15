@@ -50,6 +50,10 @@ export function InstrumentDetailPanel({
     instrument.investmentAccounts.find(
       (account) => account.idInvestmentAccount === selectedAccountId,
     ) ?? null;
+  const activeAccounts = useMemo(
+    () => instrument.investmentAccounts.filter((account) => !account.isDeleted),
+    [instrument],
+  );
 
   const totals = useMemo(
     () => (selectedAccount ? getAccountTotals(selectedAccount) : getInstrumentTotals(instrument)),
@@ -169,14 +173,14 @@ export function InstrumentDetailPanel({
           {t("investment.accountsLabel")}
         </Words>
 
-        {instrument.investmentAccounts.length === 0 && (
+        {activeAccounts.length === 0 && (
           <Words type="sm/regular" className="text-ink-400 dark:text-ink-500">
             {t("investment.noAccounts")}
           </Words>
         )}
 
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-4">
-          {instrument.investmentAccounts.map((account) => (
+          {activeAccounts.map((account) => (
             <InvestmentAccountCard
               key={account.idInvestmentAccount}
               account={account}

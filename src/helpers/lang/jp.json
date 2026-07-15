@@ -290,6 +290,7 @@
     "profitLoss": "損益",
     "accountsLabel": "投資口座",
     "noAccounts": "まだ投資口座がありません",
+    "deletedAccountSuffix": "（削除済み）",
     "noHistory": "まだ投資取引の履歴がありません",
     "addAccount": "口座を追加",
     "addAccountTitle": "投資口座を追加",

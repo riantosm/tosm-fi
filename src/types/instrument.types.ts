@@ -4,6 +4,9 @@ export interface InvestmentAccount {
   nameInvestmentAccount: string;
   investedAmount: number;
   currentValue: number;
+  // Soft-deleted (kept for historical investment-transaction labels) rather
+  // than actually removed — hidden from the active account grid/picker.
+  isDeleted: boolean;
 }
 
 export interface Instrument {
