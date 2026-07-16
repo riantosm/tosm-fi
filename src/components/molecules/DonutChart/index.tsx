@@ -20,6 +20,9 @@ interface DonutChartProps {
   onSliceClick?: (datum: DonutChartDatum) => void;
   /** Externally controlled highlighted slice (e.g. from hovering a legend row). */
   activeId?: string | null;
+  /** Suppresses the built-in center label/value overlay entirely, including on hover — for
+   * callers that render their own persistent center content instead. */
+  disableCenterOverlay?: boolean;
   className?: string;
 }
 
@@ -39,6 +42,7 @@ export function DonutChart({
   formatValue,
   onSliceClick,
   activeId = null,
+  disableCenterOverlay = false,
   className,
 }: DonutChartProps) {
   const [hoveredId, setHoveredId] = useState<string | null>(null);
@@ -125,7 +129,7 @@ export function DonutChart({
         </PieChart>
       </ResponsiveContainer>
 
-      {(displayLabel || displayValue) && (
+      {!disableCenterOverlay && (displayLabel || displayValue) && (
         <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center gap-0.5 px-4 text-center">
           {displayLabel && (
             <span className="line-clamp-1 text-xs text-ink-500 dark:text-ink-400">{displayLabel}</span>

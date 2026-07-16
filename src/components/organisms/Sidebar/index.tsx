@@ -58,7 +58,7 @@ export function Sidebar({ variant = "desktop", onClose }: SidebarProps) {
         <LanguageSwitcher />
       </div>
 
-      <div className="mt-4 shrink-0 rounded-2xl border border-ink-200 p-2 dark:border-ink-800">
+      <div className="mt-4 shrink-0 rounded-2xl border border-ink-200 p-2 dark:border-ink-800 sm:hidden">
         <UserMenu
           className="block"
           panelPosition="top"

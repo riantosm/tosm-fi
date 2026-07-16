@@ -1153,6 +1153,44 @@ export const API_DOC_GROUPS: ApiDocGroup[] = [
     titleKey: "apiDoc.groups.report",
     endpoints: [
       {
+        id: "report-dashboard-summary",
+        title: "Dashboard Summary",
+        method: "GET",
+        endpoint: "/reports/dashboard-summary?month=2026-07",
+        payload: [{ name: "month", type: "string (YYYY-MM)", required: false }],
+        successExample: JSON.stringify(
+          {
+            message: "Berhasil mengambil ringkasan dashboard",
+            isSuccess: true,
+            status: 200,
+            data: {
+              wallet: { totalBalance: 5_400_000, walletCount: 3 },
+              investment: { totalCurrentValue: 12_800_000, instrumentCount: 4 },
+              monthly: { income: 8_000_000, expense: 3_250_000, savings: 4_750_000 },
+              financialHealth: {
+                score: 59,
+                status: "good",
+                savingRate: 59,
+                isCashFlowPositive: true,
+                isExpenseStable: true,
+              },
+            },
+          },
+          null,
+          2,
+        ),
+        errorExample: JSON.stringify(
+          {
+            message: "Token tidak valid atau sudah kedaluwarsa",
+            isSuccess: false,
+            status: 401,
+            data: { error: "Token tidak valid atau sudah kedaluwarsa" },
+          },
+          null,
+          2,
+        ),
+      },
+      {
         id: "report-summary",
         title: "Report Summary",
         method: "GET",

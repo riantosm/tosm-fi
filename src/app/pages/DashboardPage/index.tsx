@@ -3,16 +3,18 @@ import { useTranslation } from "react-i18next";
 import { DashboardLayout } from "@/components/templates/DashboardLayout";
 import { Words } from "@/components/atoms/Words";
 import { WalletQuickSwitcher } from "@/layouts/dashboard/WalletQuickSwitcher";
+import { FinanceOverview } from "@/layouts/dashboard/FinanceOverview";
 import { AddTransactionFab } from "@/layouts/dashboard/AddTransactionFab";
 import { TransactionList } from "@/layouts/dashboard/TransactionList";
 import { ExpenseByCategoryChart } from "@/layouts/dashboard/ExpenseByCategoryChart";
 import { AddTransactionModal } from "@/layouts/transaction/AddTransactionModal";
 import { BalanceCorrectionModal } from "@/layouts/wallet/BalanceCorrectionModal";
-import { useAuth } from "@/hooks/use-auth";
 import { useCategories } from "@/hooks/use-categories";
 import { useWallets } from "@/hooks/use-wallets";
 import { useTransactions } from "@/hooks/use-transactions";
+import { useDashboardSummary } from "@/hooks/use-dashboard-summary";
 import { formatMonthParam, startOfMonth } from "@/utils/month";
+import { getGreetingKey } from "@/utils/greeting";
 import type { Transaction, TransactionListResult } from "@/types/transaction.types";
 import type { WalletAccount } from "@/types/wallet.types";
 
@@ -23,7 +25,6 @@ interface CorrectionState {
 
 export function DashboardPage() {
   const { t } = useTranslation();
-  const { user } = useAuth();
   const { categories, status: categoriesStatus, loadCategories } = useCategories();
   const { wallets, status: walletsStatus, loadWallets } = useWallets();
   // `transactions` is used only as a change-detection dependency below (the
@@ -31,6 +32,7 @@ export function DashboardPage() {
   // its contents are never rendered. Dashboard fetches its own month-scoped
   // data instead of reading the full unpaginated history.
   const { transactions, queryTransactions } = useTransactions();
+  const { summary: dashboardSummary, isLoading: isDashboardSummaryLoading } = useDashboardSummary();
 
   const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
   const [correctionState, setCorrectionState] = useState<CorrectionState | null>(null);
@@ -74,12 +76,14 @@ export function DashboardPage() {
       <div className="flex flex-col gap-6">
         <div>
           <Words as="h1" type="xl/bold" className="text-ink-900 dark:text-ink-50">
-            {t("dashboard.greeting", { name: user?.nameUser })}
+            {t(getGreetingKey())}
           </Words>
           <Words type="sm/regular" className="text-ink-500 dark:text-ink-400">
             {t("dashboard.subtitle")}
           </Words>
         </div>
+
+        <FinanceOverview summary={dashboardSummary} isLoading={isDashboardSummaryLoading} />
 
         <WalletQuickSwitcher
           onCorrectBalance={(wallet) => setCorrectionState({ wallet, transaction: null })}

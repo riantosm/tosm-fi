@@ -64,3 +64,20 @@ export interface TopSpendingItem {
 }
 
 export type ReportExportFormat = "pdf" | "excel" | "csv" | "print";
+
+export type FinancialHealthStatus = "excellent" | "good" | "fair" | "needsAttention";
+
+export interface FinancialHealth {
+  score: number;
+  status: FinancialHealthStatus;
+  savingRate: number;
+  isCashFlowPositive: boolean;
+  isExpenseStable: boolean;
+}
+
+export interface DashboardSummary {
+  wallet: { totalBalance: number; walletCount: number };
+  investment: { totalCurrentValue: number; instrumentCount: number };
+  monthly: { income: number; expense: number; savings: number };
+  financialHealth: FinancialHealth;
+}

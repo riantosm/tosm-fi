@@ -40,7 +40,7 @@ export function Topbar({ onOpenMenu }: TopbarProps) {
         >
           <IconSearch className="h-4 w-4" />
         </button>
-        <UserMenu className="hidden sm:block" nameClassName="hidden md:flex" panelAlign="end" />
+        <UserMenu className="hidden sm:block" panelAlign="end" />
       </div>
     </header>
   );
