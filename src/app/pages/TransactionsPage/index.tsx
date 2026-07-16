@@ -5,7 +5,10 @@ import { DashboardLayout } from "@/components/templates/DashboardLayout";
 import { IconLoader } from "@/components/atoms/IconLoader";
 import { Words } from "@/components/atoms/Words";
 import { MonthTabs } from "@/layouts/transaction/MonthTabs";
-import { TransactionFilterChips } from "@/layouts/transaction/TransactionFilterChips";
+import {
+  TransactionFilterChips,
+  type TransactionTypeFilter,
+} from "@/layouts/transaction/TransactionFilterChips";
 import {
   TransactionToolbar,
   type DateRangeFilter,
@@ -57,6 +60,12 @@ export function TransactionsPage() {
 
   const months = useMemo(() => generateMonthRange(new Date(), 24, 12), []);
   const [selectedMonth, setSelectedMonth] = useState(() => startOfMonth(new Date()));
+  // Lets other pages (e.g. MonthlySummaryCard's Pemasukan/Pengeluaran rows) deep-link here with
+  // a type already selected. Read once at mount via the lazy initializer — navigating here from
+  // elsewhere always mounts a fresh TransactionsPage instance, so this never goes stale.
+  const [typeFilter, setTypeFilter] = useState<TransactionTypeFilter>(
+    () => (location.state as { typeFilter?: TransactionTypeFilter } | null)?.typeFilter ?? "all",
+  );
   const [walletFilter, setWalletFilter] = useState("all");
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [subCategoryFilter, setSubCategoryFilter] = useState("all");
@@ -90,6 +99,7 @@ export function TransactionsPage() {
 
   const filterParams: Omit<TransactionListParams, "page" | "limit"> = {
     month: formatMonthParam(selectedMonth),
+    type: typeFilter !== "all" ? typeFilter : undefined,
     idWallet: walletFilter !== "all" ? walletFilter : undefined,
     idCategory: categoryFilter !== "all" ? categoryFilter : undefined,
     idSubCategory: subCategoryFilter !== "all" ? subCategoryFilter : undefined,
@@ -176,6 +186,7 @@ export function TransactionsPage() {
 
   const displaySortConfig = DISPLAY_SORT_CONFIG[sortOption];
   const hasActiveFilter =
+    typeFilter !== "all" ||
     walletFilter !== "all" ||
     categoryFilter !== "all" ||
     subCategoryFilter !== "all" ||
@@ -192,6 +203,8 @@ export function TransactionsPage() {
         <TransactionFilterChips
           wallets={wallets}
           categories={categories}
+          selectedType={typeFilter}
+          onSelectType={setTypeFilter}
           selectedWalletId={walletFilter}
           onSelectWallet={setWalletFilter}
           selectedCategoryId={categoryFilter}

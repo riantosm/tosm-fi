@@ -430,7 +430,7 @@
     "expense": "支出",
     "income": "収入",
     "transfer": "振替",
-    "titlePlaceholder": "タイトル（任意）",
+    "titlePlaceholder": "タイトル",
     "notesPlaceholder": "メモ（任意）",
     "selectCategoryPlaceholder": "カテゴリを選択",
     "selectCategoryTitle": "カテゴリを選択",

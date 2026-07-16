@@ -3,7 +3,11 @@ import { HiCheckCircle, HiOutlineExclamationCircle, HiOutlineShieldCheck } from 
 import { IconLoader } from "@/components/atoms/IconLoader";
 import { Words } from "@/components/atoms/Words";
 import { cn } from "@/utils/cn";
-import type { DashboardSummary, FinancialHealth, FinancialHealthStatus } from "@/types/report.types";
+import type {
+  DashboardSummary,
+  FinancialHealth,
+  FinancialHealthStatus,
+} from "@/types/report.types";
 
 interface FinancialHealthCardProps {
   summary: DashboardSummary | null;
@@ -103,7 +107,7 @@ export function FinancialHealthCard({ summary, isLoading }: FinancialHealthCardP
   return (
     <div className="flex h-full flex-col gap-4 rounded-2xl border border-ink-200 bg-white p-5 dark:border-ink-800 dark:bg-ink-900">
       <div className="flex items-center justify-between">
-        <Words type="sm/bold" className="text-ink-700 dark:text-ink-300">
+        <Words type="base/bold" className="text-ink-900 dark:text-ink-50">
           {t("dashboard.financialHealth")}
         </Words>
         <HiOutlineShieldCheck className="h-5 w-5 text-emerald-500" />
@@ -137,7 +141,11 @@ export function FinancialHealthCard({ summary, isLoading }: FinancialHealthCardP
           />
           <ChecklistItem
             isGood={financialHealth.isExpenseStable}
-            label={t(financialHealth.isExpenseStable ? "dashboard.expenseStable" : "dashboard.expenseUnstable")}
+            label={t(
+              financialHealth.isExpenseStable
+                ? "dashboard.expenseStable"
+                : "dashboard.expenseUnstable",
+            )}
           />
         </div>
 

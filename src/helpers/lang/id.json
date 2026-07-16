@@ -430,7 +430,7 @@
     "expense": "Pengeluaran",
     "income": "Pemasukan",
     "transfer": "Transfer",
-    "titlePlaceholder": "Judul (opsional)",
+    "titlePlaceholder": "Judul",
     "notesPlaceholder": "Catatan (opsional)",
     "selectCategoryPlaceholder": "Pilih Kategori",
     "selectCategoryTitle": "Pilih Kategori",

@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import {
   HiChevronRight,
-  HiOutlineArrowTrendingUp,
+  HiOutlineChartPie,
   HiOutlineEye,
   HiOutlineEyeSlash,
   HiOutlineWallet,
@@ -57,7 +57,11 @@ export function FinanceOverview({ summary, isLoading }: FinanceOverviewProps) {
               className="text-white/60 transition-colors hover:text-white"
               aria-label={t(isVisible ? "dashboard.hideAmount" : "dashboard.showAmount")}
             >
-              {isVisible ? <HiOutlineEye className="h-4 w-4" /> : <HiOutlineEyeSlash className="h-4 w-4" />}
+              {isVisible ? (
+                <HiOutlineEye className="h-4 w-4" />
+              ) : (
+                <HiOutlineEyeSlash className="h-4 w-4" />
+              )}
             </button>
           </div>
           <Words type="2xl/bold" className="relative mt-1 text-white">
@@ -96,7 +100,7 @@ export function FinanceOverview({ summary, isLoading }: FinanceOverviewProps) {
             >
               <div className="flex min-w-0 items-center gap-2.5">
                 <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-white/10">
-                  <HiOutlineArrowTrendingUp className="h-4.5 w-4.5 text-amber-300" />
+                  <HiOutlineChartPie className="h-4.5 w-4.5 text-amber-300" />
                 </div>
                 <div className="flex min-w-0 flex-col">
                   <Words type="xs/regular" className="text-white/60">
@@ -122,7 +126,7 @@ export function FinanceOverview({ summary, isLoading }: FinanceOverviewProps) {
         </div>
       </div>
 
-      <div className="lg:flex-1">
+      <div className="lg:flex-1 hidden sm:block">
         <AssetAllocationCard summary={summary} isLoading={isLoading} />
       </div>
     </div>

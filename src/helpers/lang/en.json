@@ -430,7 +430,7 @@
     "expense": "Expense",
     "income": "Income",
     "transfer": "Transfer",
-    "titlePlaceholder": "Title (optional)",
+    "titlePlaceholder": "Title",
     "notesPlaceholder": "Notes (optional)",
     "selectCategoryPlaceholder": "Select Category",
     "selectCategoryTitle": "Select Category",

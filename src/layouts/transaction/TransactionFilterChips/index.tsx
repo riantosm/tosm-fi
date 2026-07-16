@@ -4,12 +4,24 @@ import { useTranslation } from "react-i18next";
 import { Words } from "@/components/atoms/Words";
 import { resolveCategoryIcon } from "@/constants/category-icons";
 import type { Category } from "@/types/category.types";
+import type { TransactionType } from "@/types/transaction.types";
 import type { WalletAccount } from "@/types/wallet.types";
 import { cn } from "@/utils/cn";
+
+export type TransactionTypeFilter = TransactionType | "all";
+
+const TYPE_FILTERS: { value: TransactionTypeFilter; labelKey: string }[] = [
+  { value: "all", labelKey: "common.all" },
+  { value: "expense", labelKey: "transaction.expense" },
+  { value: "income", labelKey: "transaction.income" },
+  { value: "transfer", labelKey: "transaction.transfer" },
+];
 
 interface TransactionFilterChipsProps {
   wallets: WalletAccount[];
   categories: Category[];
+  selectedType: TransactionTypeFilter;
+  onSelectType: (type: TransactionTypeFilter) => void;
   selectedWalletId: string;
   onSelectWallet: (id: string) => void;
   selectedCategoryId: string;
@@ -52,6 +64,8 @@ function CategoryChip({ label, icon: Icon, color, isSelected, onClick }: Categor
 export function TransactionFilterChips({
   wallets,
   categories,
+  selectedType,
+  onSelectType,
   selectedWalletId,
   onSelectWallet,
   selectedCategoryId,
@@ -121,6 +135,17 @@ export function TransactionFilterChips({
             </button>
           );
         })}
+      </div>
+
+      <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-hide">
+        {TYPE_FILTERS.map((filter) => (
+          <CategoryChip
+            key={filter.value}
+            label={t(filter.labelKey)}
+            isSelected={selectedType === filter.value}
+            onClick={() => onSelectType(filter.value)}
+          />
+        ))}
       </div>
 
       <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-hide">

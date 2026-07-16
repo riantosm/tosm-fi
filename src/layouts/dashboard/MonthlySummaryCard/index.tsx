@@ -12,6 +12,8 @@ import { IconLoader } from "@/components/atoms/IconLoader";
 import { Words } from "@/components/atoms/Words";
 import { useCurrency } from "@/hooks/use-currency";
 import type { DashboardSummary } from "@/types/report.types";
+import { useNavigate } from "react-router-dom";
+import { ROUTES } from "@/constants/routes";
 
 interface MonthlySummaryCardProps {
   summary: DashboardSummary | null;
@@ -25,26 +27,30 @@ function SummaryRow({
   label,
   value,
   valueClassName,
+  onClick,
 }: {
   icon: ReactNode;
   iconClassName: string;
   label: string;
   value: string;
   valueClassName: string;
+  onClick: () => void;
 }) {
   return (
-    <div className="flex items-center gap-3">
-      <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full ${iconClassName}`}>
+    <button className="flex items-center gap-3 hover:bg-ink-800 rounded-lg p-2" onClick={onClick}>
+      <div
+        className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full ${iconClassName}`}
+      >
         {icon}
       </div>
-      <Words type="sm/regular" className="flex-1 text-ink-600 dark:text-ink-300">
+      <Words type="sm/regular" className="flex-1 text-ink-600 dark:text-ink-300 text-left">
         {label}
       </Words>
       <Words type="sm/bold" className={valueClassName}>
         {value}
       </Words>
       <HiChevronRight className="h-4 w-4 shrink-0 text-ink-300 dark:text-ink-600" />
-    </div>
+    </button>
   );
 }
 
@@ -64,9 +70,14 @@ function StatItem({ icon, label, value }: { icon: React.ReactNode; label: string
   );
 }
 
-export function MonthlySummaryCard({ summary, transactionCount, isLoading }: MonthlySummaryCardProps) {
+export function MonthlySummaryCard({
+  summary,
+  transactionCount,
+  isLoading,
+}: MonthlySummaryCardProps) {
   const { t } = useTranslation();
   const { format } = useCurrency();
+  const navigate = useNavigate();
 
   const income = summary?.monthly.income ?? 0;
   const expense = summary?.monthly.expense ?? 0;
@@ -74,19 +85,22 @@ export function MonthlySummaryCard({ summary, transactionCount, isLoading }: Mon
   const investmentInflow = summary?.monthly.investmentInflow ?? 0;
 
   return (
-    <div className="flex h-full flex-col gap-4 rounded-2xl border border-ink-200 bg-white p-5 dark:border-ink-800 dark:bg-ink-900">
-      <Words type="sm/bold" className="text-ink-700 dark:text-ink-300">
+    <div className="flex h-full flex-col gap-2 rounded-2xl border border-ink-200 bg-white p-5 dark:border-ink-800 dark:bg-ink-900">
+      <Words type="base/bold" className="text-ink-900 dark:text-ink-50">
         {t("dashboard.monthlySummaryTitle")}
       </Words>
 
-      <div className="relative flex flex-col gap-4">
-        <div className="flex flex-col gap-3">
+      <div className="relative flex flex-col gap-2">
+        <div className="flex flex-col gap-1">
           <SummaryRow
-            icon={<HiOutlineArrowDownCircle className="h-4.5 w-4.5 text-primary-600 dark:text-primary-400" />}
+            icon={
+              <HiOutlineArrowDownCircle className="h-4.5 w-4.5 text-primary-600 dark:text-primary-400" />
+            }
             iconClassName="bg-primary-100 dark:bg-primary-500/15"
             label={t("dashboard.income")}
             value={format(income)}
             valueClassName="text-primary-600 dark:text-primary-400"
+            onClick={() => navigate(ROUTES.TRANSACTIONS, { state: { typeFilter: "income" } })}
           />
           <SummaryRow
             icon={<HiOutlineArrowUpCircle className="h-4.5 w-4.5 text-red-600 dark:text-red-400" />}
@@ -94,6 +108,7 @@ export function MonthlySummaryCard({ summary, transactionCount, isLoading }: Mon
             label={t("dashboard.expense")}
             value={format(expense)}
             valueClassName="text-red-600 dark:text-red-400"
+            onClick={() => navigate(ROUTES.TRANSACTIONS, { state: { typeFilter: "expense" } })}
           />
           <SummaryRow
             icon={<HiOutlineChartPie className="h-4.5 w-4.5 text-amber-600 dark:text-amber-400" />}
@@ -101,10 +116,11 @@ export function MonthlySummaryCard({ summary, transactionCount, isLoading }: Mon
             label={t("nav.investment")}
             value={format(investmentInflow)}
             valueClassName="text-amber-600 dark:text-amber-400"
+            onClick={() => navigate(ROUTES.INVESTMENT)}
           />
         </div>
 
-        <div className="flex items-center rounded-xl bg-ink-50 py-2.5 dark:bg-ink-800/50">
+        <div className="flex items-center rounded-xl bg-ink-50 py-2.5 dark:bg-ink-800/50 px-4">
           <StatItem
             icon={<HiOutlineArrowsRightLeft className="h-4 w-4" />}
             label={t("dashboard.difference")}
