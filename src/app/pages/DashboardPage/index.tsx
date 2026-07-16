@@ -6,6 +6,7 @@ import { WalletQuickSwitcher } from "@/layouts/dashboard/WalletQuickSwitcher";
 import { FinanceOverview } from "@/layouts/dashboard/FinanceOverview";
 import { AddTransactionFab } from "@/layouts/dashboard/AddTransactionFab";
 import { TransactionList } from "@/layouts/dashboard/TransactionList";
+import { MonthlySummaryCard } from "@/layouts/dashboard/MonthlySummaryCard";
 import { ExpenseByCategoryChart } from "@/layouts/dashboard/ExpenseByCategoryChart";
 import { AddTransactionModal } from "@/layouts/transaction/AddTransactionModal";
 import { BalanceCorrectionModal } from "@/layouts/wallet/BalanceCorrectionModal";
@@ -90,7 +91,12 @@ export function DashboardPage() {
         />
 
         <div className="xl:flex-row flex-col flex w-full lg:items-start gap-8">
-          <div className="flex-1 w-full">
+          <div className="flex flex-1 w-full flex-col gap-6">
+            <MonthlySummaryCard
+              summary={dashboardSummary}
+              transactionCount={monthResult?.transactions.length ?? 0}
+              isLoading={isDashboardSummaryLoading || isMonthLoading}
+            />
             <ExpenseByCategoryChart summary={monthResult?.summary ?? null} isLoading={isMonthLoading} />
           </div>
           <div className="flex-1 w-full">
