@@ -7,6 +7,7 @@ import { FinanceOverview } from "@/layouts/dashboard/FinanceOverview";
 import { AddTransactionFab } from "@/layouts/dashboard/AddTransactionFab";
 import { TransactionList } from "@/layouts/dashboard/TransactionList";
 import { MonthlySummaryCard } from "@/layouts/dashboard/MonthlySummaryCard";
+import { FinancialHealthCard } from "@/layouts/dashboard/FinancialHealthCard";
 import { ExpenseByCategoryChart } from "@/layouts/dashboard/ExpenseByCategoryChart";
 import { AddTransactionModal } from "@/layouts/transaction/AddTransactionModal";
 import { BalanceCorrectionModal } from "@/layouts/wallet/BalanceCorrectionModal";
@@ -86,29 +87,41 @@ export function DashboardPage() {
 
         <FinanceOverview summary={dashboardSummary} isLoading={isDashboardSummaryLoading} />
 
-        <WalletQuickSwitcher
-          onCorrectBalance={(wallet) => setCorrectionState({ wallet, transaction: null })}
-        />
-
         <div className="xl:flex-row flex-col flex w-full lg:items-start gap-8">
           <div className="flex flex-1 w-full flex-col gap-6">
-            <MonthlySummaryCard
-              summary={dashboardSummary}
-              transactionCount={monthResult?.transactions.length ?? 0}
-              isLoading={isDashboardSummaryLoading || isMonthLoading}
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-stretch">
+              <div className="w-full sm:flex-1">
+                <MonthlySummaryCard
+                  summary={dashboardSummary}
+                  transactionCount={monthResult?.transactions.length ?? 0}
+                  isLoading={isDashboardSummaryLoading || isMonthLoading}
+                />
+              </div>
+              <div className="w-full sm:flex-1">
+                <FinancialHealthCard
+                  summary={dashboardSummary}
+                  isLoading={isDashboardSummaryLoading}
+                />
+              </div>
+            </div>
+            <ExpenseByCategoryChart
+              summary={monthResult?.summary ?? null}
+              isLoading={isMonthLoading}
             />
-            <ExpenseByCategoryChart summary={monthResult?.summary ?? null} isLoading={isMonthLoading} />
           </div>
-          <div className="flex-1 w-full">
+          <div className="flex-1 w-full overflow-hidden space-y-4">
+            <div className="w-full">
+              <WalletQuickSwitcher
+                onCorrectBalance={(wallet) => setCorrectionState({ wallet, transaction: null })}
+              />
+            </div>
             <TransactionList
               transactions={monthResult?.transactions ?? []}
               categories={categories}
               wallets={wallets}
               onEditTransaction={handleEditTransaction}
               isLoading={
-                isMonthLoading ||
-                walletsStatus !== "loaded" ||
-                categoriesStatus !== "loaded"
+                isMonthLoading || walletsStatus !== "loaded" || categoriesStatus !== "loaded"
               }
             />
           </div>

@@ -1,8 +1,9 @@
 import { useTranslation } from "react-i18next";
 import { HiCheckCircle, HiOutlineExclamationCircle, HiOutlineShieldCheck } from "react-icons/hi2";
+import { IconLoader } from "@/components/atoms/IconLoader";
 import { Words } from "@/components/atoms/Words";
 import { cn } from "@/utils/cn";
-import type { DashboardSummary, FinancialHealthStatus } from "@/types/report.types";
+import type { DashboardSummary, FinancialHealth, FinancialHealthStatus } from "@/types/report.types";
 
 interface FinancialHealthCardProps {
   summary: DashboardSummary | null;
@@ -85,26 +86,18 @@ function ChecklistItem({ isGood, label }: { isGood: boolean; label: string }) {
   );
 }
 
-function CardSkeleton() {
-  return (
-    <div className="flex h-full animate-pulse flex-col gap-4 rounded-2xl border border-ink-200 bg-white p-5 dark:border-ink-800 dark:bg-ink-900">
-      <div className="h-3 w-28 rounded bg-ink-100 dark:bg-ink-800" />
-      <div className="h-20 w-20 rounded-full bg-ink-100 dark:bg-ink-800" />
-      <div className="flex flex-col gap-2">
-        <div className="h-3 w-full rounded bg-ink-100 dark:bg-ink-800" />
-        <div className="h-3 w-full rounded bg-ink-100 dark:bg-ink-800" />
-        <div className="h-3 w-2/3 rounded bg-ink-100 dark:bg-ink-800" />
-      </div>
-    </div>
-  );
-}
+const EMPTY_FINANCIAL_HEALTH: FinancialHealth = {
+  score: 0,
+  status: "fair",
+  savingRate: 0,
+  isCashFlowPositive: false,
+  isExpenseStable: false,
+};
 
 export function FinancialHealthCard({ summary, isLoading }: FinancialHealthCardProps) {
   const { t } = useTranslation();
 
-  if (isLoading || !summary) return <CardSkeleton />;
-
-  const { financialHealth } = summary;
+  const financialHealth = summary?.financialHealth ?? EMPTY_FINANCIAL_HEALTH;
   const color = STATUS_COLOR[financialHealth.status];
 
   return (
@@ -116,35 +109,43 @@ export function FinancialHealthCard({ summary, isLoading }: FinancialHealthCardP
         <HiOutlineShieldCheck className="h-5 w-5 text-emerald-500" />
       </div>
 
-      <div className="flex items-center gap-4">
-        <ScoreGauge score={financialHealth.score} color={color} />
-        <div className="flex flex-col gap-0.5">
-          <Words type="sm/bold" style={{ color }}>
-            {t(STATUS_LABEL_KEY[financialHealth.status])}
-          </Words>
-          <Words type="xxs/regular" className="text-ink-500 dark:text-ink-400">
-            {t(STATUS_SUBTITLE_KEY[financialHealth.status])}
-          </Words>
+      <div className="relative flex flex-1 flex-col gap-4">
+        <div className="flex items-center gap-4">
+          <ScoreGauge score={financialHealth.score} color={color} />
+          <div className="flex flex-col gap-0.5">
+            <Words type="sm/bold" style={{ color }}>
+              {t(STATUS_LABEL_KEY[financialHealth.status])}
+            </Words>
+            <Words type="xxs/regular" className="text-ink-500 dark:text-ink-400">
+              {t(STATUS_SUBTITLE_KEY[financialHealth.status])}
+            </Words>
+          </div>
         </div>
-      </div>
 
-      <div className="flex flex-col gap-2">
-        <ChecklistItem
-          isGood={financialHealth.isCashFlowPositive}
-          label={t(
-            financialHealth.isCashFlowPositive
-              ? "dashboard.cashFlowPositive"
-              : "dashboard.cashFlowNegative",
-          )}
-        />
-        <ChecklistItem
-          isGood={financialHealth.savingRate >= 0}
-          label={t("dashboard.savingRateLabel", { rate: financialHealth.savingRate })}
-        />
-        <ChecklistItem
-          isGood={financialHealth.isExpenseStable}
-          label={t(financialHealth.isExpenseStable ? "dashboard.expenseStable" : "dashboard.expenseUnstable")}
-        />
+        <div className="flex flex-col gap-2">
+          <ChecklistItem
+            isGood={financialHealth.isCashFlowPositive}
+            label={t(
+              financialHealth.isCashFlowPositive
+                ? "dashboard.cashFlowPositive"
+                : "dashboard.cashFlowNegative",
+            )}
+          />
+          <ChecklistItem
+            isGood={financialHealth.savingRate >= 0}
+            label={t("dashboard.savingRateLabel", { rate: financialHealth.savingRate })}
+          />
+          <ChecklistItem
+            isGood={financialHealth.isExpenseStable}
+            label={t(financialHealth.isExpenseStable ? "dashboard.expenseStable" : "dashboard.expenseUnstable")}
+          />
+        </div>
+
+        {isLoading && (
+          <div className="absolute inset-0 flex items-center justify-center rounded-2xl bg-white/60 backdrop-blur-[2px] dark:bg-ink-950/60">
+            <IconLoader className="h-6 w-6 animate-spin text-primary-500" />
+          </div>
+        )}
       </div>
     </div>
   );

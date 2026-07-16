@@ -28,19 +28,29 @@ export function useDashboardSummary() {
   // the very first fetch flips isLoading — later ones (e.g. selecting a primary wallet, which
   // changes the `wallets` reference but none of the summary figures) refresh silently instead
   // of flashing the skeleton again.
+  //
+  // Debounced: wallets/instruments each settle via their own async load, so a fresh mount
+  // naturally produces a burst of reference changes (idle -> loading -> loaded, sometimes more
+  // than once — see WalletQuickSwitcher/DashboardPage each independently idle-checking the same
+  // slice) in quick succession. Without debouncing, every change in that burst would fire its
+  // own dashboard-summary request; this collapses the whole burst into a single fetch once
+  // things settle for 200ms.
   useEffect(() => {
     let cancelled = false;
-    if (!hasLoadedRef.current) setIsLoading(true);
+    const timeoutId = setTimeout(() => {
+      if (!hasLoadedRef.current) setIsLoading(true);
 
-    void reportService.fetchDashboardSummary().then((result) => {
-      if (cancelled) return;
-      setSummary(result);
-      setIsLoading(false);
-      hasLoadedRef.current = true;
-    });
+      void reportService.fetchDashboardSummary().then((result) => {
+        if (cancelled) return;
+        setSummary(result);
+        setIsLoading(false);
+        hasLoadedRef.current = true;
+      });
+    }, 200);
 
     return () => {
       cancelled = true;
+      clearTimeout(timeoutId);
     };
   }, [wallets, instruments, transactions]);
 

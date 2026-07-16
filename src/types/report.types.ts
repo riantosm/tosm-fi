@@ -78,6 +78,6 @@ export interface FinancialHealth {
 export interface DashboardSummary {
   wallet: { totalBalance: number; walletCount: number };
   investment: { totalCurrentValue: number; instrumentCount: number };
-  monthly: { income: number; expense: number; savings: number };
+  monthly: { income: number; expense: number; savings: number; investmentInflow: number };
   financialHealth: FinancialHealth;
 }

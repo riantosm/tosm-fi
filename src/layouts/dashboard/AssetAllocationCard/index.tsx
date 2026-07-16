@@ -1,5 +1,6 @@
 import { useTranslation } from "react-i18next";
 import { DonutChart } from "@/components/molecules/DonutChart";
+import { IconLoader } from "@/components/atoms/IconLoader";
 import { Words } from "@/components/atoms/Words";
 import type { DashboardSummary } from "@/types/report.types";
 
@@ -11,22 +12,11 @@ interface AssetAllocationCardProps {
 const INVESTMENT_COLOR = "#F59E0B";
 const CASH_COLOR = "#2DD4BF";
 
-function CardSkeleton() {
-  return (
-    <div className="flex h-full animate-pulse flex-col items-center gap-4 rounded-2xl border border-ink-200 bg-white p-5 dark:border-ink-800 dark:bg-ink-900">
-      <div className="h-3 w-24 self-start rounded bg-ink-100 dark:bg-ink-800" />
-      <div className="h-32 w-32 rounded-full bg-ink-100 dark:bg-ink-800" />
-    </div>
-  );
-}
-
 export function AssetAllocationCard({ summary, isLoading }: AssetAllocationCardProps) {
   const { t } = useTranslation();
 
-  if (isLoading || !summary) return <CardSkeleton />;
-
-  const investmentValue = summary.investment.totalCurrentValue;
-  const cashValue = summary.wallet.totalBalance;
+  const investmentValue = summary?.investment.totalCurrentValue ?? 0;
+  const cashValue = summary?.wallet.totalBalance ?? 0;
   const total = investmentValue + cashValue;
 
   const investmentPercent = total > 0 ? Math.round((investmentValue / total) * 100) : 0;
@@ -38,14 +28,14 @@ export function AssetAllocationCard({ summary, isLoading }: AssetAllocationCardP
         {t("dashboard.assetAllocation")}
       </Words>
 
-      {total <= 0 ? (
-        <div className="flex flex-1 flex-col items-center justify-center gap-1 rounded-2xl border border-dashed border-ink-200 py-6 dark:border-ink-800">
-          <Words type="xs/regular" className="text-ink-400 dark:text-ink-500">
-            {t("dashboard.noAllocationData")}
-          </Words>
-        </div>
-      ) : (
-        <div className="flex flex-1 items-center justify-center">
+      <div className="relative flex flex-1 items-center justify-center">
+        {total <= 0 ? (
+          <div className="flex w-full flex-col items-center justify-center gap-1 rounded-2xl border border-dashed border-ink-200 py-6 dark:border-ink-800">
+            <Words type="xs/regular" className="text-ink-400 dark:text-ink-500">
+              {t("dashboard.noAllocationData")}
+            </Words>
+          </div>
+        ) : (
           <div className="relative">
             <DonutChart
               data={[
@@ -65,8 +55,14 @@ export function AssetAllocationCard({ summary, isLoading }: AssetAllocationCardP
               </Words>
             </div>
           </div>
-        </div>
-      )}
+        )}
+
+        {isLoading && (
+          <div className="absolute inset-0 flex items-center justify-center rounded-2xl bg-white/60 backdrop-blur-[2px] dark:bg-ink-950/60">
+            <IconLoader className="h-6 w-6 animate-spin text-primary-500" />
+          </div>
+        )}
+      </div>
     </div>
   );
 }

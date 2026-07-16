@@ -1166,11 +1166,16 @@ export const API_DOC_GROUPS: ApiDocGroup[] = [
             data: {
               wallet: { totalBalance: 5_400_000, walletCount: 3 },
               investment: { totalCurrentValue: 12_800_000, instrumentCount: 4 },
-              monthly: { income: 8_000_000, expense: 3_250_000, savings: 4_750_000 },
+              monthly: {
+                income: 8_000_000,
+                expense: 3_250_000,
+                savings: 4_750_000,
+                investmentInflow: 1_500_000,
+              },
               financialHealth: {
-                score: 59,
-                status: "good",
-                savingRate: 59,
+                score: 19,
+                status: "needsAttention",
+                savingRate: 19,
                 isCashFlowPositive: true,
                 isExpenseStable: true,
               },
