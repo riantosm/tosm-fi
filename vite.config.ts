@@ -19,7 +19,7 @@ export default defineConfig({
         short_name: "TosmFi",
         description:
           "Tosm Finance (TosmFi) — kelola keuanganmu dengan tenang, satu dashboard untuk semua transaksi.",
-        theme_color: "#23ac82",
+        theme_color: "#09090b",
         background_color: "#09090b",
         display: "standalone",
         start_url: "/",
