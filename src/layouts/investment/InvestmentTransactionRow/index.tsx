@@ -76,7 +76,7 @@ export function InvestmentTransactionRow({
     <button
       type="button"
       onClick={onClick}
-      className="flex w-full items-start gap-3 rounded-xl px-2 py-3 text-left transition-colors hover:bg-ink-50 dark:hover:bg-ink-800"
+      className="flex w-full items-start gap-3 rounded-xl px-2 py-3 text-left transition-colors hover:bg-ink-100 dark:hover:bg-ink-800"
     >
       <div
         className={cn(

@@ -37,7 +37,10 @@ function SummaryRow({
   onClick: () => void;
 }) {
   return (
-    <button className="flex items-center gap-3 hover:bg-ink-800 rounded-lg p-2" onClick={onClick}>
+    <button
+      className="flex items-center gap-3 hover:bg-ink-100 dark:hover:bg-ink-800 rounded-lg p-2"
+      onClick={onClick}
+    >
       <div
         className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full ${iconClassName}`}
       >
