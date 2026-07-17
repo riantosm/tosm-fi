@@ -15,6 +15,12 @@
     "previous": "Sebelumnya",
     "next": "Berikutnya"
   },
+  "errorBoundary": {
+    "title": "Ups, terjadi kesalahan",
+    "description": "Halaman ini mengalami error yang tidak terduga. Coba lagi, atau muat ulang halaman jika masalah berlanjut.",
+    "retryButton": "Coba Lagi",
+    "reloadButton": "Muat Ulang"
+  },
   "auth": {
     "welcomeTitle": "Selamat datang kembali",
     "welcomeSubtitle": "Masuk untuk melanjutkan mengelola keuanganmu.",

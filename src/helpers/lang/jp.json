@@ -15,6 +15,12 @@
     "previous": "前へ",
     "next": "次へ"
   },
+  "errorBoundary": {
+    "title": "エラーが発生しました",
+    "description": "このページで予期しないエラーが発生しました。もう一度お試しいただくか、問題が続く場合はページを再読み込みしてください。",
+    "retryButton": "再試行",
+    "reloadButton": "再読み込み"
+  },
   "auth": {
     "welcomeTitle": "おかえりなさい",
     "welcomeSubtitle": "ログインして資産管理を続けましょう。",

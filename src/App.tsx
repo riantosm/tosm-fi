@@ -2,6 +2,7 @@ import { BrowserRouter } from "react-router-dom";
 import { Provider } from "react-redux";
 import { PersistGate } from "redux-persist/integration/react";
 import { AppRouter } from "@/app/AppRouter";
+import { ErrorBoundary } from "@/app/ErrorBoundary";
 import { IconLoader } from "@/components/atoms/IconLoader";
 import { ThemeProvider } from "@/hooks/use-theme";
 import { ConfirmDialogProvider } from "@/hooks/use-confirm-dialog";
@@ -22,7 +23,9 @@ function AppShell() {
 
   return (
     <BrowserRouter>
-      <AppRouter />
+      <ErrorBoundary>
+        <AppRouter />
+      </ErrorBoundary>
     </BrowserRouter>
   );
 }

@@ -15,6 +15,12 @@
     "previous": "Previous",
     "next": "Next"
   },
+  "errorBoundary": {
+    "title": "Oops, something went wrong",
+    "description": "This page ran into an unexpected error. Try again, or reload the page if the problem persists.",
+    "retryButton": "Try Again",
+    "reloadButton": "Reload"
+  },
   "auth": {
     "welcomeTitle": "Welcome back",
     "welcomeSubtitle": "Sign in to continue managing your finances.",
