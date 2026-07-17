@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { HiOutlineArrowsUpDown, HiOutlineCheck, HiOutlineMagnifyingGlass, HiOutlineXMark } from "react-icons/hi2";
 import { Words } from "@/components/atoms/Words";
+import { Tooltip } from "@/components/atoms/Tooltip";
 import {
   DateRangeFilterPopover,
   type DateRangeFilter,
@@ -93,33 +94,37 @@ export function TransactionToolbar({
             </button>
           </div>
         ) : (
-          <button
-            type="button"
-            onClick={() => setIsSearchOpen(true)}
-            aria-label={t("transaction.searchPlaceholder")}
-            className="flex h-9 w-9 shrink-0 items-center justify-center text-ink-500 dark:text-ink-400"
-          >
-            <HiOutlineMagnifyingGlass className="h-4 w-4" />
-          </button>
+          <Tooltip content={t("transaction.searchPlaceholder")}>
+            <button
+              type="button"
+              onClick={() => setIsSearchOpen(true)}
+              aria-label={t("transaction.searchPlaceholder")}
+              className="flex h-9 w-9 shrink-0 items-center justify-center text-ink-500 dark:text-ink-400"
+            >
+              <HiOutlineMagnifyingGlass className="h-4 w-4" />
+            </button>
+          </Tooltip>
         )}
       </div>
 
       <DateRangeFilterPopover dateRange={dateRange} onDateRangeChange={onDateRangeChange} />
 
       <div ref={sortRef} className="relative">
-        <button
-          type="button"
-          onClick={() => setIsSortOpen((prev) => !prev)}
-          aria-label={t("transaction.sortTitle")}
-          className={cn(
-            "relative flex h-9 w-9 shrink-0 items-center justify-center rounded-full transition-colors",
-            hasSortFilter
-              ? "bg-primary-100 text-primary-600 dark:bg-primary-500/20 dark:text-primary-400"
-              : "bg-ink-100 text-ink-500 hover:bg-ink-200 dark:bg-ink-800 dark:text-ink-400 dark:hover:bg-ink-700",
-          )}
-        >
-          <HiOutlineArrowsUpDown className="h-4 w-4" />
-        </button>
+        <Tooltip content={t("transaction.sortTitle")}>
+          <button
+            type="button"
+            onClick={() => setIsSortOpen((prev) => !prev)}
+            aria-label={t("transaction.sortTitle")}
+            className={cn(
+              "relative flex h-9 w-9 shrink-0 items-center justify-center rounded-full transition-colors",
+              hasSortFilter
+                ? "bg-primary-100 text-primary-600 dark:bg-primary-500/20 dark:text-primary-400"
+                : "bg-ink-100 text-ink-500 hover:bg-ink-200 dark:bg-ink-800 dark:text-ink-400 dark:hover:bg-ink-700",
+            )}
+          >
+            <HiOutlineArrowsUpDown className="h-4 w-4" />
+          </button>
+        </Tooltip>
 
         {isSortOpen && (
           <div className="absolute left-0 top-full z-20 mt-2 w-52 overflow-hidden rounded-2xl border border-ink-200 bg-white py-1 shadow-lg dark:border-ink-800 dark:bg-ink-900">

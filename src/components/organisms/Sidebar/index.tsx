@@ -1,6 +1,7 @@
 import { useTranslation } from "react-i18next";
 import { HiXMark } from "react-icons/hi2";
 import { Logo } from "@/components/atoms/Logo";
+import { Tooltip } from "@/components/atoms/Tooltip";
 import { NavLink } from "@/components/molecules/NavLink";
 import { LanguageSwitcher } from "@/components/organisms/LanguageSwitcher";
 import { UserMenu } from "@/components/organisms/UserMenu";
@@ -26,14 +27,16 @@ export function Sidebar({ variant = "desktop", onClose }: SidebarProps) {
       <div className="mb-2 flex shrink-0 items-center justify-between px-2">
         <Logo />
         {variant === "drawer" && (
-          <button
-            type="button"
-            onClick={onClose}
-            aria-label={t("common.close")}
-            className="flex h-8 w-8 items-center justify-center rounded-full text-ink-400 hover:bg-ink-100 dark:text-ink-500 dark:hover:bg-ink-800"
-          >
-            <HiXMark className="h-5 w-5" />
-          </button>
+          <Tooltip content={t("common.close")}>
+            <button
+              type="button"
+              onClick={onClose}
+              aria-label={t("common.close")}
+              className="flex h-8 w-8 items-center justify-center rounded-full text-ink-400 hover:bg-ink-100 dark:text-ink-500 dark:hover:bg-ink-800"
+            >
+              <HiXMark className="h-5 w-5" />
+            </button>
+          </Tooltip>
         )}
       </div>
 

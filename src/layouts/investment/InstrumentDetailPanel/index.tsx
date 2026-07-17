@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { HiOutlinePencil, HiOutlinePlus, HiXMark } from "react-icons/hi2";
 import { IconLoader } from "@/components/atoms/IconLoader";
 import { Words } from "@/components/atoms/Words";
+import { Tooltip } from "@/components/atoms/Tooltip";
 import { useCurrency } from "@/hooks/use-currency";
 import { InstrumentHistoryChart } from "@/layouts/investment/InstrumentHistoryChart";
 import { InvestmentAccountCard } from "@/layouts/investment/InvestmentAccountCard";
@@ -82,24 +83,27 @@ export function InstrumentDetailPanel({
                 })
               : t("investment.detailTitle", { name: instrument.nameInstrument })}
           </Words>
+          <Tooltip content={t("investment.editTitle")}>
+            <button
+              type="button"
+              onClick={onEdit}
+              aria-label={t("investment.editTitle")}
+              className="flex h-7 w-7 items-center justify-center rounded-md text-ink-400 transition-colors hover:bg-ink-100 hover:text-ink-600 dark:hover:bg-ink-800 dark:hover:text-ink-300"
+            >
+              <HiOutlinePencil className="h-4 w-4" />
+            </button>
+          </Tooltip>
+        </div>
+        <Tooltip content={t("common.close")}>
           <button
             type="button"
-            onClick={onEdit}
-            aria-label={t("investment.editTitle")}
-            title={t("investment.editTitle")}
-            className="flex h-7 w-7 items-center justify-center rounded-md text-ink-400 transition-colors hover:bg-ink-100 hover:text-ink-600 dark:hover:bg-ink-800 dark:hover:text-ink-300"
+            onClick={onClose}
+            aria-label={t("common.close")}
+            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-ink-400 transition-colors hover:bg-ink-100 hover:text-ink-600 dark:hover:bg-ink-800 dark:hover:text-ink-300"
           >
-            <HiOutlinePencil className="h-4 w-4" />
+            <HiXMark className="h-5 w-5" />
           </button>
-        </div>
-        <button
-          type="button"
-          onClick={onClose}
-          aria-label={t("common.close")}
-          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-ink-400 transition-colors hover:bg-ink-100 hover:text-ink-600 dark:hover:bg-ink-800 dark:hover:text-ink-300"
-        >
-          <HiXMark className="h-5 w-5" />
-        </button>
+        </Tooltip>
       </div>
 
       {history.length > 0 ? (
@@ -191,14 +195,16 @@ export function InstrumentDetailPanel({
               onProfitLoss={() => onProfitLossAccount(account)}
             />
           ))}
-          <button
-            type="button"
-            onClick={onAddAccount}
-            aria-label={t("investment.addAccount")}
-            className="flex min-h-[92px] items-center justify-center rounded-2xl border-2 border-dashed border-ink-200 text-ink-300 transition-colors hover:border-primary-400 hover:text-primary-500 dark:border-ink-700 dark:text-ink-600 dark:hover:border-primary-500 dark:hover:text-primary-400"
-          >
-            <HiOutlinePlus className="h-5 w-5" />
-          </button>
+          <Tooltip content={t("investment.addAccount")}>
+            <button
+              type="button"
+              onClick={onAddAccount}
+              aria-label={t("investment.addAccount")}
+              className="flex min-h-[92px] w-full items-center justify-center rounded-2xl border-2 border-dashed border-ink-200 text-ink-300 transition-colors hover:border-primary-400 hover:text-primary-500 dark:border-ink-700 dark:text-ink-600 dark:hover:border-primary-500 dark:hover:text-primary-400"
+            >
+              <HiOutlinePlus className="h-5 w-5" />
+            </button>
+          </Tooltip>
         </div>
 
         {selectedAccount && (

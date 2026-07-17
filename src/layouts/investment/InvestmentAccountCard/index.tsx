@@ -2,6 +2,7 @@ import { useTranslation } from "react-i18next";
 import { HiOutlineArrowTrendingUp, HiOutlineBanknotes, HiOutlinePencil } from "react-icons/hi2";
 import { Area, AreaChart, ResponsiveContainer } from "recharts";
 import { Words } from "@/components/atoms/Words";
+import { Tooltip } from "@/components/atoms/Tooltip";
 import { useCurrency } from "@/hooks/use-currency";
 import type { InvestmentAccount } from "@/types/instrument.types";
 import type { TimelinePoint } from "@/types/investment-transaction.types";
@@ -61,33 +62,36 @@ export function InvestmentAccountCard({
         </button>
 
         <div className="flex shrink-0 flex-col items-center gap-1 p-4 pl-0">
-          <button
-            type="button"
-            onClick={onEdit}
-            aria-label={t("investment.editAccountTitle")}
-            title={t("investment.editAccountTitle")}
-            className="flex h-7 w-7 items-center justify-center rounded-md text-ink-400 transition-colors hover:bg-ink-100 hover:text-ink-600 dark:hover:bg-ink-800 dark:hover:text-ink-300"
-          >
-            <HiOutlinePencil className="h-4 w-4" />
-          </button>
-          <button
-            type="button"
-            onClick={onWithdraw}
-            aria-label={t("investment.withdrawalTitle")}
-            title={t("investment.withdrawalTitle")}
-            className="flex h-7 w-7 items-center justify-center rounded-md text-ink-400 transition-colors hover:bg-ink-100 hover:text-ink-600 dark:hover:bg-ink-800 dark:hover:text-ink-300"
-          >
-            <HiOutlineBanknotes className="h-4 w-4" />
-          </button>
-          <button
-            type="button"
-            onClick={onProfitLoss}
-            aria-label={t("investment.profitLossTitle")}
-            title={t("investment.profitLossTitle")}
-            className="flex h-7 w-7 items-center justify-center rounded-md text-ink-400 transition-colors hover:bg-ink-100 hover:text-ink-600 dark:hover:bg-ink-800 dark:hover:text-ink-300"
-          >
-            <HiOutlineArrowTrendingUp className="h-4 w-4" />
-          </button>
+          <Tooltip content={t("investment.editAccountTitle")}>
+            <button
+              type="button"
+              onClick={onEdit}
+              aria-label={t("investment.editAccountTitle")}
+              className="flex h-7 w-7 items-center justify-center rounded-md text-ink-400 transition-colors hover:bg-ink-100 hover:text-ink-600 dark:hover:bg-ink-800 dark:hover:text-ink-300"
+            >
+              <HiOutlinePencil className="h-4 w-4" />
+            </button>
+          </Tooltip>
+          <Tooltip content={t("investment.withdrawalTitle")}>
+            <button
+              type="button"
+              onClick={onWithdraw}
+              aria-label={t("investment.withdrawalTitle")}
+              className="flex h-7 w-7 items-center justify-center rounded-md text-ink-400 transition-colors hover:bg-ink-100 hover:text-ink-600 dark:hover:bg-ink-800 dark:hover:text-ink-300"
+            >
+              <HiOutlineBanknotes className="h-4 w-4" />
+            </button>
+          </Tooltip>
+          <Tooltip content={t("investment.profitLossTitle")}>
+            <button
+              type="button"
+              onClick={onProfitLoss}
+              aria-label={t("investment.profitLossTitle")}
+              className="flex h-7 w-7 items-center justify-center rounded-md text-ink-400 transition-colors hover:bg-ink-100 hover:text-ink-600 dark:hover:bg-ink-800 dark:hover:text-ink-300"
+            >
+              <HiOutlineArrowTrendingUp className="h-4 w-4" />
+            </button>
+          </Tooltip>
         </div>
       </div>
 

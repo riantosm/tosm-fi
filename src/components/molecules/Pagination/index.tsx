@@ -1,6 +1,7 @@
 import { useTranslation } from "react-i18next";
 import { HiOutlineChevronLeft, HiOutlineChevronRight } from "react-icons/hi2";
 import { Words } from "@/components/atoms/Words";
+import { Tooltip } from "@/components/atoms/Tooltip";
 import { cn } from "@/utils/cn";
 
 interface PaginationProps {
@@ -60,15 +61,17 @@ export function Pagination({ page, totalPages, onPageChange }: PaginationProps) 
 
   return (
     <div className="flex items-center justify-center gap-1">
-      <button
-        type="button"
-        aria-label={t("common.previous")}
-        disabled={page <= 1}
-        onClick={() => onPageChange(page - 1)}
-        className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-ink-600 transition-colors hover:bg-ink-100 disabled:opacity-40 disabled:hover:bg-transparent dark:text-ink-300 dark:hover:bg-ink-800"
-      >
-        <HiOutlineChevronLeft className="h-4 w-4" />
-      </button>
+      <Tooltip content={t("common.previous")}>
+        <button
+          type="button"
+          aria-label={t("common.previous")}
+          disabled={page <= 1}
+          onClick={() => onPageChange(page - 1)}
+          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-ink-600 transition-colors hover:bg-ink-100 disabled:opacity-40 disabled:hover:bg-transparent dark:text-ink-300 dark:hover:bg-ink-800"
+        >
+          <HiOutlineChevronLeft className="h-4 w-4" />
+        </button>
+      </Tooltip>
 
       {pages.map((entry, index) =>
         entry === "ellipsis" ? (
@@ -86,15 +89,17 @@ export function Pagination({ page, totalPages, onPageChange }: PaginationProps) 
         ),
       )}
 
-      <button
-        type="button"
-        aria-label={t("common.next")}
-        disabled={page >= totalPages}
-        onClick={() => onPageChange(page + 1)}
-        className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-ink-600 transition-colors hover:bg-ink-100 disabled:opacity-40 disabled:hover:bg-transparent dark:text-ink-300 dark:hover:bg-ink-800"
-      >
-        <HiOutlineChevronRight className="h-4 w-4" />
-      </button>
+      <Tooltip content={t("common.next")}>
+        <button
+          type="button"
+          aria-label={t("common.next")}
+          disabled={page >= totalPages}
+          onClick={() => onPageChange(page + 1)}
+          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-ink-600 transition-colors hover:bg-ink-100 disabled:opacity-40 disabled:hover:bg-transparent dark:text-ink-300 dark:hover:bg-ink-800"
+        >
+          <HiOutlineChevronRight className="h-4 w-4" />
+        </button>
+      </Tooltip>
     </div>
   );
 }

@@ -4,6 +4,7 @@ import { HiOutlineMagnifyingGlass } from "react-icons/hi2";
 import { Input } from "@/components/atoms/Input";
 import { Modal } from "@/components/molecules/Modal";
 import { Words } from "@/components/atoms/Words";
+import { Tooltip } from "@/components/atoms/Tooltip";
 import { CATEGORY_ICON_GROUPS, resolveCategoryIcon } from "@/constants/category-icons";
 import { cn } from "@/utils/cn";
 
@@ -38,15 +39,17 @@ export function CategoryIconPicker({ value, onChange, color }: CategoryIconPicke
 
   return (
     <>
-      <button
-        type="button"
-        onClick={() => setIsOpen(true)}
-        aria-label={t("category.chooseIcon")}
-        className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full border-2 border-transparent transition-colors hover:border-primary-400"
-        style={{ backgroundColor: `${color}33` }}
-      >
-        {createElement(selectedIcon, { className: "h-7 w-7", style: { color } })}
-      </button>
+      <Tooltip content={t("category.chooseIcon")}>
+        <button
+          type="button"
+          onClick={() => setIsOpen(true)}
+          aria-label={t("category.chooseIcon")}
+          className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full border-2 border-transparent transition-colors hover:border-primary-400"
+          style={{ backgroundColor: `${color}33` }}
+        >
+          {createElement(selectedIcon, { className: "h-7 w-7", style: { color } })}
+        </button>
+      </Tooltip>
 
       <Modal isOpen={isOpen} onClose={close}>
         <div className="flex max-h-[75vh] flex-col gap-4">
@@ -82,24 +85,27 @@ export function CategoryIconPicker({ value, onChange, color }: CategoryIconPicke
                       const isActive = option.name === value;
 
                       return (
-                        <button
+                        <Tooltip
                           key={option.name}
-                          type="button"
-                          onClick={() => {
-                            onChange(option.name);
-                            close();
-                          }}
-                          aria-label={t(`category.iconNames.${option.labelKey}`)}
-                          title={t(`category.iconNames.${option.labelKey}`)}
-                          className={cn(
-                            "flex h-10 w-10 items-center justify-center rounded-lg transition-colors",
-                            isActive
-                              ? "bg-primary-50 text-primary-600 dark:bg-primary-500/10 dark:text-primary-400"
-                              : "text-ink-400 hover:bg-ink-100 dark:hover:bg-ink-800",
-                          )}
+                          content={t(`category.iconNames.${option.labelKey}`)}
                         >
-                          <Icon className="h-5 w-5" />
-                        </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              onChange(option.name);
+                              close();
+                            }}
+                            aria-label={t(`category.iconNames.${option.labelKey}`)}
+                            className={cn(
+                              "flex h-10 w-10 items-center justify-center rounded-lg transition-colors",
+                              isActive
+                                ? "bg-primary-50 text-primary-600 dark:bg-primary-500/10 dark:text-primary-400"
+                                : "text-ink-400 hover:bg-ink-100 dark:hover:bg-ink-800",
+                            )}
+                          >
+                            <Icon className="h-5 w-5" />
+                          </button>
+                        </Tooltip>
                       );
                     })}
                   </div>

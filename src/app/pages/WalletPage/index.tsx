@@ -4,6 +4,7 @@ import { HiOutlineArrowsUpDown } from "react-icons/hi2";
 import { DashboardLayout } from "@/components/templates/DashboardLayout";
 import { Words } from "@/components/atoms/Words";
 import { Button } from "@/components/atoms/Button";
+import { Tooltip } from "@/components/atoms/Tooltip";
 import { WalletCard } from "@/layouts/wallet/WalletCard";
 import { AddWalletCard } from "@/layouts/wallet/AddWalletCard";
 import { WalletFormModal } from "@/layouts/wallet/WalletFormModal";
@@ -187,15 +188,16 @@ export function WalletPage() {
             </div>
           ) : (
             <div className="flex shrink-0 items-center gap-3">
-              <button
-                type="button"
-                onClick={handleEnterReorder}
-                aria-label={t("wallet.toggleReorder")}
-                title={t("wallet.toggleReorder")}
-                className="flex h-9 w-9 items-center justify-center rounded-full border border-ink-200 text-ink-500 transition-colors hover:bg-ink-100 dark:border-ink-800 dark:text-ink-400 dark:hover:bg-ink-800"
-              >
-                <HiOutlineArrowsUpDown className="h-4 w-4" />
-              </button>
+              <Tooltip content={t("wallet.toggleReorder")}>
+                <button
+                  type="button"
+                  onClick={handleEnterReorder}
+                  aria-label={t("wallet.toggleReorder")}
+                  className="flex h-9 w-9 items-center justify-center rounded-full border border-ink-200 text-ink-500 transition-colors hover:bg-ink-100 dark:border-ink-800 dark:text-ink-400 dark:hover:bg-ink-800"
+                >
+                  <HiOutlineArrowsUpDown className="h-4 w-4" />
+                </button>
+              </Tooltip>
               <ViewModeToggle value={viewMode} onChange={setViewMode} />
             </div>
           )}

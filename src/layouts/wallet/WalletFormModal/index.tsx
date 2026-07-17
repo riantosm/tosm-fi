@@ -5,6 +5,7 @@ import { Modal } from "@/components/molecules/Modal";
 import { Button } from "@/components/atoms/Button";
 import { Input } from "@/components/atoms/Input";
 import { IconLoader } from "@/components/atoms/IconLoader";
+import { Tooltip } from "@/components/atoms/Tooltip";
 import { ModalCloseButton } from "@/components/atoms/ModalCloseButton";
 import { FormField } from "@/components/molecules/FormField";
 import { Words } from "@/components/atoms/Words";
@@ -100,36 +101,38 @@ function WalletFormFields({
 
         <div className="flex shrink-0 items-center gap-1">
           {wallet && !wallet.isPrimary && (
-            <button
-              type="button"
-              onClick={() => onSetPrimary?.(wallet.idWallet)}
-              disabled={isSettingPrimary}
-              aria-label={t("wallet.setPrimaryButton")}
-              title={t("wallet.setPrimaryButton")}
-              className="flex h-8 w-8 items-center justify-center rounded-md text-ink-400 transition-colors hover:bg-ink-100 hover:text-primary-600 disabled:opacity-60 dark:hover:bg-ink-800 dark:hover:text-primary-400"
-            >
-              {isSettingPrimary ? (
-                <IconLoader className="h-4 w-4 animate-spin" />
-              ) : (
-                <HiOutlineStar className="h-4 w-4" />
-              )}
-            </button>
+            <Tooltip content={t("wallet.setPrimaryButton")}>
+              <button
+                type="button"
+                onClick={() => onSetPrimary?.(wallet.idWallet)}
+                disabled={isSettingPrimary}
+                aria-label={t("wallet.setPrimaryButton")}
+                className="flex h-8 w-8 items-center justify-center rounded-md text-ink-400 transition-colors hover:bg-ink-100 hover:text-primary-600 disabled:opacity-60 dark:hover:bg-ink-800 dark:hover:text-primary-400"
+              >
+                {isSettingPrimary ? (
+                  <IconLoader className="h-4 w-4 animate-spin" />
+                ) : (
+                  <HiOutlineStar className="h-4 w-4" />
+                )}
+              </button>
+            </Tooltip>
           )}
           {wallet && (
-            <button
-              type="button"
-              onClick={() => onDelete?.(wallet.idWallet)}
-              disabled={isDeleting}
-              aria-label={t("wallet.deleteButton")}
-              title={t("wallet.deleteButton")}
-              className="flex h-8 w-8 items-center justify-center rounded-md text-ink-400 transition-colors hover:bg-red-50 hover:text-red-500 disabled:opacity-60 dark:hover:bg-red-500/10 dark:hover:text-red-400"
-            >
-              {isDeleting ? (
-                <IconLoader className="h-4 w-4 animate-spin" />
-              ) : (
-                <HiOutlineTrash className="h-4 w-4" />
-              )}
-            </button>
+            <Tooltip content={t("wallet.deleteButton")}>
+              <button
+                type="button"
+                onClick={() => onDelete?.(wallet.idWallet)}
+                disabled={isDeleting}
+                aria-label={t("wallet.deleteButton")}
+                className="flex h-8 w-8 items-center justify-center rounded-md text-ink-400 transition-colors hover:bg-red-50 hover:text-red-500 disabled:opacity-60 dark:hover:bg-red-500/10 dark:hover:text-red-400"
+              >
+                {isDeleting ? (
+                  <IconLoader className="h-4 w-4 animate-spin" />
+                ) : (
+                  <HiOutlineTrash className="h-4 w-4" />
+                )}
+              </button>
+            </Tooltip>
           )}
           <ModalCloseButton onClose={onClose} />
         </div>

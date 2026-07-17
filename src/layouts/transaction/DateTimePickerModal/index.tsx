@@ -5,6 +5,7 @@ import { Modal } from "@/components/molecules/Modal";
 import { Button } from "@/components/atoms/Button";
 import { Input } from "@/components/atoms/Input";
 import { Words } from "@/components/atoms/Words";
+import { Tooltip } from "@/components/atoms/Tooltip";
 import { ModalCloseButton } from "@/components/atoms/ModalCloseButton";
 import { useLanguage } from "@/hooks/use-language";
 import { cn } from "@/utils/cn";
@@ -143,25 +144,29 @@ export function DateTimePickerFields({
       </div>
 
       <div className="flex items-center justify-between">
-        <button
-          type="button"
-          onClick={() => goToMonth(-1)}
-          aria-label="Previous month"
-          className="flex h-8 w-8 items-center justify-center rounded-full text-ink-400 hover:bg-ink-100 dark:hover:bg-ink-800"
-        >
-          <HiOutlineChevronLeft className="h-4 w-4" />
-        </button>
+        <Tooltip content="Previous month">
+          <button
+            type="button"
+            onClick={() => goToMonth(-1)}
+            aria-label="Previous month"
+            className="flex h-8 w-8 items-center justify-center rounded-full text-ink-400 hover:bg-ink-100 dark:hover:bg-ink-800"
+          >
+            <HiOutlineChevronLeft className="h-4 w-4" />
+          </button>
+        </Tooltip>
         <Words type="sm/bold" className="text-ink-900 dark:text-ink-50">
           {formatMonthYear(viewDate, language)}
         </Words>
-        <button
-          type="button"
-          onClick={() => goToMonth(1)}
-          aria-label="Next month"
-          className="flex h-8 w-8 items-center justify-center rounded-full text-ink-400 hover:bg-ink-100 dark:hover:bg-ink-800"
-        >
-          <HiOutlineChevronRight className="h-4 w-4" />
-        </button>
+        <Tooltip content="Next month">
+          <button
+            type="button"
+            onClick={() => goToMonth(1)}
+            aria-label="Next month"
+            className="flex h-8 w-8 items-center justify-center rounded-full text-ink-400 hover:bg-ink-100 dark:hover:bg-ink-800"
+          >
+            <HiOutlineChevronRight className="h-4 w-4" />
+          </button>
+        </Tooltip>
       </div>
 
       <div className="grid grid-cols-7 gap-1">

@@ -1,6 +1,8 @@
 import { useLayoutEffect, useRef } from "react";
+import { useTranslation } from "react-i18next";
 import { HiOutlineChevronLeft, HiOutlineChevronRight } from "react-icons/hi2";
 import { Words } from "@/components/atoms/Words";
+import { Tooltip } from "@/components/atoms/Tooltip";
 import { useLanguage } from "@/hooks/use-language";
 import { isSameMonthAs } from "@/utils/month";
 import { cn } from "@/utils/cn";
@@ -20,6 +22,7 @@ function formatMonthLabel(date: Date, locale: string): string {
 }
 
 export function MonthTabs({ months, selected, onSelect }: MonthTabsProps) {
+  const { t } = useTranslation();
   const { language } = useLanguage();
   const containerRef = useRef<HTMLDivElement>(null);
   const selectedRef = useRef<HTMLButtonElement>(null);
@@ -49,14 +52,16 @@ export function MonthTabs({ months, selected, onSelect }: MonthTabsProps) {
 
   return (
     <div className="flex items-start gap-1">
-      <button
-        type="button"
-        onClick={() => scrollByAmount(-240)}
-        aria-label="Previous"
-        className="-mt-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-ink-100 text-ink-500 transition-colors hover:bg-ink-200 dark:bg-ink-800 dark:text-ink-400 dark:hover:bg-ink-700"
-      >
-        <HiOutlineChevronLeft className="h-4 w-4" />
-      </button>
+      <Tooltip content={t("common.previous")}>
+        <button
+          type="button"
+          onClick={() => scrollByAmount(-240)}
+          aria-label={t("common.previous")}
+          className="-mt-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-ink-100 text-ink-500 transition-colors hover:bg-ink-200 dark:bg-ink-800 dark:text-ink-400 dark:hover:bg-ink-700"
+        >
+          <HiOutlineChevronLeft className="h-4 w-4" />
+        </button>
+      </Tooltip>
 
       <div
         ref={containerRef}
@@ -94,14 +99,16 @@ export function MonthTabs({ months, selected, onSelect }: MonthTabsProps) {
         })}
       </div>
 
-      <button
-        type="button"
-        onClick={() => scrollByAmount(240)}
-        aria-label="Next"
-        className="-mt-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-ink-100 text-ink-500 transition-colors hover:bg-ink-200 dark:bg-ink-800 dark:text-ink-400 dark:hover:bg-ink-700"
-      >
-        <HiOutlineChevronRight className="h-4 w-4" />
-      </button>
+      <Tooltip content={t("common.next")}>
+        <button
+          type="button"
+          onClick={() => scrollByAmount(240)}
+          aria-label={t("common.next")}
+          className="-mt-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-ink-100 text-ink-500 transition-colors hover:bg-ink-200 dark:bg-ink-800 dark:text-ink-400 dark:hover:bg-ink-700"
+        >
+          <HiOutlineChevronRight className="h-4 w-4" />
+        </button>
+      </Tooltip>
     </div>
   );
 }

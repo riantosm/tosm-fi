@@ -6,6 +6,7 @@ import { Button } from "@/components/atoms/Button";
 import { Input } from "@/components/atoms/Input";
 import { Words } from "@/components/atoms/Words";
 import { IconLoader } from "@/components/atoms/IconLoader";
+import { Tooltip } from "@/components/atoms/Tooltip";
 import { ModalCloseButton } from "@/components/atoms/ModalCloseButton";
 import { ColorPicker } from "@/components/molecules/ColorPicker";
 import { CategoryIconPicker } from "@/layouts/category/CategoryIconPicker";
@@ -188,14 +189,16 @@ function CategoryFormFields({
                 <IconLoader className="h-3.5 w-3.5 animate-spin text-ink-400 dark:text-ink-500" />
               )}
             </div>
-            <button
-              type="button"
-              onClick={onAddSubCategory}
-              aria-label={t("category.addSubCategory")}
-              className="flex h-8 w-8 items-center justify-center rounded-md text-ink-400 transition-colors hover:bg-ink-100 hover:text-primary-600 dark:hover:bg-ink-800 dark:hover:text-primary-400"
-            >
-              <HiOutlinePlus className="h-4 w-4" />
-            </button>
+            <Tooltip content={t("category.addSubCategory")}>
+              <button
+                type="button"
+                onClick={onAddSubCategory}
+                aria-label={t("category.addSubCategory")}
+                className="flex h-8 w-8 items-center justify-center rounded-md text-ink-400 transition-colors hover:bg-ink-100 hover:text-primary-600 dark:hover:bg-ink-800 dark:hover:text-primary-400"
+              >
+                <HiOutlinePlus className="h-4 w-4" />
+              </button>
+            </Tooltip>
           </div>
 
           <div className="flex flex-col gap-2">
@@ -291,24 +294,28 @@ function SubCategoryListRow({
           </Words>
         </div>
       </button>
-      <button
-        type="button"
-        onClick={onDelete}
-        aria-label={t("wallet.deleteButton")}
-        className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-ink-400 transition-colors hover:bg-red-50 hover:text-red-500 dark:hover:bg-red-500/10 dark:hover:text-red-400"
-      >
-        <HiOutlineTrash className="h-4 w-4" />
-      </button>
-      <div
-        draggable={!disabled}
-        onDragStart={onDragStart}
-        onDragEnd={onDragEnd}
-        role="button"
-        aria-label={t("category.dragToReorder")}
-        className="flex h-8 w-8 shrink-0 cursor-grab items-center justify-center text-ink-300 active:cursor-grabbing dark:text-ink-600"
-      >
-        <HiOutlineBars3 className="h-4 w-4" />
-      </div>
+      <Tooltip content={t("wallet.deleteButton")}>
+        <button
+          type="button"
+          onClick={onDelete}
+          aria-label={t("wallet.deleteButton")}
+          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-ink-400 transition-colors hover:bg-red-50 hover:text-red-500 dark:hover:bg-red-500/10 dark:hover:text-red-400"
+        >
+          <HiOutlineTrash className="h-4 w-4" />
+        </button>
+      </Tooltip>
+      <Tooltip content={t("category.dragToReorder")}>
+        <div
+          draggable={!disabled}
+          onDragStart={onDragStart}
+          onDragEnd={onDragEnd}
+          role="button"
+          aria-label={t("category.dragToReorder")}
+          className="flex h-8 w-8 shrink-0 cursor-grab items-center justify-center text-ink-300 active:cursor-grabbing dark:text-ink-600"
+        >
+          <HiOutlineBars3 className="h-4 w-4" />
+        </div>
+      </Tooltip>
     </div>
   );
 }

@@ -4,6 +4,7 @@ import { HiOutlineArrowsUpDown, HiOutlinePlus } from "react-icons/hi2";
 import { DashboardLayout } from "@/components/templates/DashboardLayout";
 import { Words } from "@/components/atoms/Words";
 import { Button } from "@/components/atoms/Button";
+import { Tooltip } from "@/components/atoms/Tooltip";
 import { CategoryCard } from "@/layouts/category/CategoryCard";
 import { CategoryReorderItem } from "@/layouts/category/CategoryReorderItem";
 import { CategoryFormModal } from "@/layouts/category/CategoryFormModal";
@@ -261,15 +262,16 @@ export function CategoriesPage() {
             </div>
           ) : (
             <div className="flex shrink-0 items-center gap-2">
-              <button
-                type="button"
-                onClick={handleEnterReorder}
-                aria-label={t("category.toggleReorder")}
-                title={t("category.toggleReorder")}
-                className="flex h-9 w-9 items-center justify-center rounded-full border border-ink-200 text-ink-500 transition-colors hover:bg-ink-100 dark:border-ink-800 dark:text-ink-400 dark:hover:bg-ink-800"
-              >
-                <HiOutlineArrowsUpDown className="h-4 w-4" />
-              </button>
+              <Tooltip content={t("category.toggleReorder")}>
+                <button
+                  type="button"
+                  onClick={handleEnterReorder}
+                  aria-label={t("category.toggleReorder")}
+                  className="flex h-9 w-9 items-center justify-center rounded-full border border-ink-200 text-ink-500 transition-colors hover:bg-ink-100 dark:border-ink-800 dark:text-ink-400 dark:hover:bg-ink-800"
+                >
+                  <HiOutlineArrowsUpDown className="h-4 w-4" />
+                </button>
+              </Tooltip>
               <button
                 type="button"
                 onClick={() => openCreateCategoryModal("expense")}

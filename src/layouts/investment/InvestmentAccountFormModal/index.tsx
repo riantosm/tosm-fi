@@ -7,6 +7,7 @@ import { Input } from "@/components/atoms/Input";
 import { IconLoader } from "@/components/atoms/IconLoader";
 import { FormField } from "@/components/molecules/FormField";
 import { Words } from "@/components/atoms/Words";
+import { Tooltip } from "@/components/atoms/Tooltip";
 import { ModalCloseButton } from "@/components/atoms/ModalCloseButton";
 import type { InvestmentAccount, InvestmentAccountInput } from "@/types/instrument.types";
 
@@ -80,20 +81,21 @@ function InvestmentAccountFormFields({
 
         <div className="flex shrink-0 items-center gap-1">
           {account && (
-            <button
-              type="button"
-              onClick={() => onDelete?.(account.idInvestmentAccount)}
-              disabled={isDeleting}
-              aria-label={t("investment.deleteButton")}
-              title={t("investment.deleteButton")}
-              className="flex h-8 w-8 items-center justify-center rounded-md text-ink-400 transition-colors hover:bg-red-50 hover:text-red-500 disabled:opacity-60 dark:hover:bg-red-500/10 dark:hover:text-red-400"
-            >
-              {isDeleting ? (
-                <IconLoader className="h-4 w-4 animate-spin" />
-              ) : (
-                <HiOutlineTrash className="h-4 w-4" />
-              )}
-            </button>
+            <Tooltip content={t("investment.deleteButton")}>
+              <button
+                type="button"
+                onClick={() => onDelete?.(account.idInvestmentAccount)}
+                disabled={isDeleting}
+                aria-label={t("investment.deleteButton")}
+                className="flex h-8 w-8 items-center justify-center rounded-md text-ink-400 transition-colors hover:bg-red-50 hover:text-red-500 disabled:opacity-60 dark:hover:bg-red-500/10 dark:hover:text-red-400"
+              >
+                {isDeleting ? (
+                  <IconLoader className="h-4 w-4 animate-spin" />
+                ) : (
+                  <HiOutlineTrash className="h-4 w-4" />
+                )}
+              </button>
+            </Tooltip>
           )}
           <ModalCloseButton onClose={onClose} />
         </div>

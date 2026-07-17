@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { HiOutlineHashtag, HiXMark } from "react-icons/hi2";
 import { Words } from "@/components/atoms/Words";
+import { Tooltip } from "@/components/atoms/Tooltip";
 import { ColorWheel } from "@/components/atoms/ColorWheel";
 
 interface CustomColorPanelProps {
@@ -35,26 +36,30 @@ export function CustomColorPanel({ value, onChange, onClose }: CustomColorPanelP
           {t("common.customColor")}
         </Words>
         <div className="flex items-center gap-2">
-          <button
-            type="button"
-            onClick={toggleHexInput}
-            aria-label="Hex"
-            className="flex h-7 w-7 items-center justify-center rounded-md text-ink-400 hover:bg-ink-100 dark:hover:bg-ink-700"
-          >
-            <HiOutlineHashtag className="h-4 w-4" />
-          </button>
+          <Tooltip content="Hex">
+            <button
+              type="button"
+              onClick={toggleHexInput}
+              aria-label="Hex"
+              className="flex h-7 w-7 items-center justify-center rounded-md text-ink-400 hover:bg-ink-100 dark:hover:bg-ink-700"
+            >
+              <HiOutlineHashtag className="h-4 w-4" />
+            </button>
+          </Tooltip>
           <div
             className="h-7 w-7 shrink-0 rounded-full border border-ink-200 dark:border-ink-700"
             style={{ background: value }}
           />
-          <button
-            type="button"
-            onClick={onClose}
-            aria-label={t("common.close")}
-            className="flex h-7 w-7 items-center justify-center rounded-md text-ink-400 hover:bg-ink-100 dark:hover:bg-ink-700"
-          >
-            <HiXMark className="h-4 w-4" />
-          </button>
+          <Tooltip content={t("common.close")}>
+            <button
+              type="button"
+              onClick={onClose}
+              aria-label={t("common.close")}
+              className="flex h-7 w-7 items-center justify-center rounded-md text-ink-400 hover:bg-ink-100 dark:hover:bg-ink-700"
+            >
+              <HiXMark className="h-4 w-4" />
+            </button>
+          </Tooltip>
         </div>
       </div>
 

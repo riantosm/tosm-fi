@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { HiOutlineCalendarDays, HiOutlineChevronLeft } from "react-icons/hi2";
 import { Button } from "@/components/atoms/Button";
 import { Words } from "@/components/atoms/Words";
+import { Tooltip } from "@/components/atoms/Tooltip";
 import { DateTimePickerFields } from "@/layouts/transaction/DateTimePickerModal";
 import { useLanguage } from "@/hooks/use-language";
 import { cn } from "@/utils/cn";
@@ -93,22 +94,24 @@ export function DateRangeFilterPopover({
 
   return (
     <div ref={containerRef} className="relative">
-      <button
-        type="button"
-        onClick={togglePopover}
-        aria-label={t("transaction.dateFilterTitle")}
-        className={cn(
-          "relative flex h-9 w-9 shrink-0 items-center justify-center rounded-full transition-colors",
-          hasDateFilter
-            ? "bg-primary-100 text-primary-600 dark:bg-primary-500/20 dark:text-primary-400"
-            : "bg-ink-100 text-ink-500 hover:bg-ink-200 dark:bg-ink-800 dark:text-ink-400 dark:hover:bg-ink-700",
-        )}
-      >
-        <HiOutlineCalendarDays className="h-4 w-4" />
-        {hasDateFilter && (
-          <span className="absolute right-0.5 top-0.5 h-1.5 w-1.5 rounded-full bg-primary-500" />
-        )}
-      </button>
+      <Tooltip content={t("transaction.dateFilterTitle")}>
+        <button
+          type="button"
+          onClick={togglePopover}
+          aria-label={t("transaction.dateFilterTitle")}
+          className={cn(
+            "relative flex h-9 w-9 shrink-0 items-center justify-center rounded-full transition-colors",
+            hasDateFilter
+              ? "bg-primary-100 text-primary-600 dark:bg-primary-500/20 dark:text-primary-400"
+              : "bg-ink-100 text-ink-500 hover:bg-ink-200 dark:bg-ink-800 dark:text-ink-400 dark:hover:bg-ink-700",
+          )}
+        >
+          <HiOutlineCalendarDays className="h-4 w-4" />
+          {hasDateFilter && (
+            <span className="absolute right-0.5 top-0.5 h-1.5 w-1.5 rounded-full bg-primary-500" />
+          )}
+        </button>
+      </Tooltip>
 
       {isOpen && (
         <div className="absolute left-0 top-full z-20 mt-2 w-72 rounded-2xl border border-ink-200 bg-white p-4 shadow-lg dark:border-ink-800 dark:bg-ink-900">

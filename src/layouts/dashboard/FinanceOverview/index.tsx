@@ -10,6 +10,7 @@ import {
 } from "react-icons/hi2";
 import { IconLoader } from "@/components/atoms/IconLoader";
 import { Words } from "@/components/atoms/Words";
+import { Tooltip } from "@/components/atoms/Tooltip";
 import { illustrations } from "@/assets/images";
 import { useCurrency } from "@/hooks/use-currency";
 import { ROUTES } from "@/constants/routes";
@@ -51,18 +52,20 @@ export function FinanceOverview({ summary, isLoading }: FinanceOverviewProps) {
             <Words type="sm/regular" className="text-white/70">
               {t("dashboard.totalNetWorth")}
             </Words>
-            <button
-              type="button"
-              onClick={() => setIsVisible((prev) => !prev)}
-              className="text-white/60 transition-colors hover:text-white"
-              aria-label={t(isVisible ? "dashboard.hideAmount" : "dashboard.showAmount")}
-            >
-              {isVisible ? (
-                <HiOutlineEye className="h-4 w-4" />
-              ) : (
-                <HiOutlineEyeSlash className="h-4 w-4" />
-              )}
-            </button>
+            <Tooltip content={t(isVisible ? "dashboard.hideAmount" : "dashboard.showAmount")}>
+              <button
+                type="button"
+                onClick={() => setIsVisible((prev) => !prev)}
+                className="text-white/60 transition-colors hover:text-white"
+                aria-label={t(isVisible ? "dashboard.hideAmount" : "dashboard.showAmount")}
+              >
+                {isVisible ? (
+                  <HiOutlineEye className="h-4 w-4" />
+                ) : (
+                  <HiOutlineEyeSlash className="h-4 w-4" />
+                )}
+              </button>
+            </Tooltip>
           </div>
           <Words type="2xl/bold" className="relative mt-1 text-white">
             {displayAmount(walletTotalBalance + investmentTotalValue)}

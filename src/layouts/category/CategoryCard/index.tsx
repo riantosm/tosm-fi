@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { HiOutlinePlus, HiOutlineTrash } from "react-icons/hi2";
 import { IconLoader } from "@/components/atoms/IconLoader";
 import { Words } from "@/components/atoms/Words";
+import { Tooltip } from "@/components/atoms/Tooltip";
 import { resolveCategoryIcon } from "@/constants/category-icons";
 import { SubCategoryPill } from "@/layouts/category/SubCategoryPill";
 import type { Category, SubCategory } from "@/types/category.types";
@@ -60,19 +61,21 @@ export function CategoryCard({
           </div>
         </button>
 
-        <button
-          type="button"
-          onClick={onDelete}
-          disabled={isDeleting}
-          aria-label={t("wallet.deleteButton")}
-          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-ink-400 transition-colors hover:bg-red-50 hover:text-red-500 disabled:opacity-60 dark:hover:bg-red-500/10 dark:hover:text-red-400"
-        >
-          {isDeleting ? (
-            <IconLoader className="h-4 w-4 animate-spin" />
-          ) : (
-            <HiOutlineTrash className="h-4 w-4" />
-          )}
-        </button>
+        <Tooltip content={t("wallet.deleteButton")}>
+          <button
+            type="button"
+            onClick={onDelete}
+            disabled={isDeleting}
+            aria-label={t("wallet.deleteButton")}
+            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-ink-400 transition-colors hover:bg-red-50 hover:text-red-500 disabled:opacity-60 dark:hover:bg-red-500/10 dark:hover:text-red-400"
+          >
+            {isDeleting ? (
+              <IconLoader className="h-4 w-4 animate-spin" />
+            ) : (
+              <HiOutlineTrash className="h-4 w-4" />
+            )}
+          </button>
+        </Tooltip>
       </div>
 
       <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
@@ -84,14 +87,16 @@ export function CategoryCard({
             onClick={() => onEditSubCategory(sub)}
           />
         ))}
-        <button
-          type="button"
-          onClick={onAddSubCategory}
-          aria-label={t("category.addSubCategory")}
-          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border-2 border-dashed border-ink-200 text-ink-300 transition-colors hover:border-primary-400 hover:text-primary-500 dark:border-ink-700 dark:text-ink-600 dark:hover:border-primary-500 dark:hover:text-primary-400"
-        >
-          <HiOutlinePlus className="h-4 w-4" />
-        </button>
+        <Tooltip content={t("category.addSubCategory")}>
+          <button
+            type="button"
+            onClick={onAddSubCategory}
+            aria-label={t("category.addSubCategory")}
+            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border-2 border-dashed border-ink-200 text-ink-300 transition-colors hover:border-primary-400 hover:text-primary-500 dark:border-ink-700 dark:text-ink-600 dark:hover:border-primary-500 dark:hover:text-primary-400"
+          >
+            <HiOutlinePlus className="h-4 w-4" />
+          </button>
+        </Tooltip>
       </div>
     </div>
   );

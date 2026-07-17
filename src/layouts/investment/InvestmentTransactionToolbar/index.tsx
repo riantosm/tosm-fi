@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { HiOutlineMagnifyingGlass, HiOutlineXMark } from "react-icons/hi2";
 import { Words } from "@/components/atoms/Words";
+import { Tooltip } from "@/components/atoms/Tooltip";
 import { cn } from "@/utils/cn";
 import type { Instrument } from "@/types/instrument.types";
 import type { InvestmentTransactionType } from "@/types/investment-transaction.types";
@@ -63,14 +64,16 @@ export function InvestmentTransactionToolbar({
               </button>
             </div>
           ) : (
-            <button
-              type="button"
-              onClick={() => setIsSearchOpen(true)}
-              aria-label={t("investment.searchPlaceholder")}
-              className="flex h-9 w-9 shrink-0 items-center justify-center text-ink-500 dark:text-ink-400"
-            >
-              <HiOutlineMagnifyingGlass className="h-4 w-4" />
-            </button>
+            <Tooltip content={t("investment.searchPlaceholder")}>
+              <button
+                type="button"
+                onClick={() => setIsSearchOpen(true)}
+                aria-label={t("investment.searchPlaceholder")}
+                className="flex h-9 w-9 shrink-0 items-center justify-center text-ink-500 dark:text-ink-400"
+              >
+                <HiOutlineMagnifyingGlass className="h-4 w-4" />
+              </button>
+            </Tooltip>
           )}
         </div>
 

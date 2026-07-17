@@ -9,6 +9,7 @@ import {
 import { DashboardLayout } from "@/components/templates/DashboardLayout";
 import { IconLoader } from "@/components/atoms/IconLoader";
 import { Words } from "@/components/atoms/Words";
+import { Tooltip } from "@/components/atoms/Tooltip";
 import { NetWorthChart } from "@/layouts/investment/NetWorthChart";
 import { InstrumentFilterChips } from "@/layouts/investment/InstrumentFilterChips";
 import { InstrumentCard } from "@/layouts/investment/InstrumentCard";
@@ -523,22 +524,26 @@ export function InvestmentPage() {
                   {t("investment.instrumentLabel")}
                 </Words>
                 <div className="flex shrink-0 items-center gap-1">
-                  <button
-                    type="button"
-                    onClick={() => scrollByAmount(-240)}
-                    aria-label={t("common.back")}
-                    className="flex h-8 w-8 items-center justify-center rounded-full border border-ink-200 text-ink-500 transition-colors hover:bg-ink-100 dark:border-ink-800 dark:text-ink-400 dark:hover:bg-ink-800"
-                  >
-                    <HiChevronLeft className="h-4 w-4" />
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => scrollByAmount(240)}
-                    aria-label={t("common.confirm")}
-                    className="flex h-8 w-8 items-center justify-center rounded-full border border-ink-200 text-ink-500 transition-colors hover:bg-ink-100 dark:border-ink-800 dark:text-ink-400 dark:hover:bg-ink-800"
-                  >
-                    <HiChevronRight className="h-4 w-4" />
-                  </button>
+                  <Tooltip content={t("common.previous")}>
+                    <button
+                      type="button"
+                      onClick={() => scrollByAmount(-240)}
+                      aria-label={t("common.previous")}
+                      className="flex h-8 w-8 items-center justify-center rounded-full border border-ink-200 text-ink-500 transition-colors hover:bg-ink-100 dark:border-ink-800 dark:text-ink-400 dark:hover:bg-ink-800"
+                    >
+                      <HiChevronLeft className="h-4 w-4" />
+                    </button>
+                  </Tooltip>
+                  <Tooltip content={t("common.next")}>
+                    <button
+                      type="button"
+                      onClick={() => scrollByAmount(240)}
+                      aria-label={t("common.next")}
+                      className="flex h-8 w-8 items-center justify-center rounded-full border border-ink-200 text-ink-500 transition-colors hover:bg-ink-100 dark:border-ink-800 dark:text-ink-400 dark:hover:bg-ink-800"
+                    >
+                      <HiChevronRight className="h-4 w-4" />
+                    </button>
+                  </Tooltip>
                 </div>
               </div>
 
