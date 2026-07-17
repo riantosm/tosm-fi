@@ -14,6 +14,19 @@ interface ErrorBoundaryImplState {
   error: Error | null;
 }
 
+// A lazy-loaded route's chunk can 404 when the tab was left open across a
+// deploy that changed asset hashes. One silent reload per tab session fixes
+// this (the fresh index.html points at the new chunk); if it still fails
+// after that, it's a real crash, not a stale cache, so fall through to the
+// normal fallback UI instead of reloading forever.
+const CHUNK_RELOAD_KEY = "tosmfi:chunk-reload-attempted";
+
+function isStaleChunkError(error: Error): boolean {
+  return /failed to fetch dynamically imported module|error loading dynamically imported module|importing a module script failed/i.test(
+    error.message,
+  );
+}
+
 // A single long-lived instance (never remounted) — only its `error` state
 // toggles. Remounting the whole Suspense/Routes tree on every navigation
 // (e.g. via a `key={pathname}` on this component) would force every route's
@@ -33,6 +46,11 @@ class ErrorBoundaryImpl extends Component<ErrorBoundaryImplProps, ErrorBoundaryI
       stack: error.stack,
       componentStack: errorInfo.componentStack,
     });
+
+    if (isStaleChunkError(error) && !sessionStorage.getItem(CHUNK_RELOAD_KEY)) {
+      sessionStorage.setItem(CHUNK_RELOAD_KEY, "1");
+      window.location.reload();
+    }
   }
 
   componentDidUpdate(prevProps: ErrorBoundaryImplProps) {
