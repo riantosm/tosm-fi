@@ -34,6 +34,13 @@ interface CorrectionState {
   transaction: Transaction | null;
 }
 
+interface TransactionsPageLocationState {
+  focusSearch?: boolean;
+  typeFilter?: TransactionTypeFilter;
+  categoryFilter?: string;
+  subCategoryFilter?: string;
+}
+
 interface DisplaySortConfig {
   dateGroupOrder: "desc" | "asc";
   sortWithinDay: "chronological" | "amountDesc" | "amountAsc";
@@ -53,22 +60,24 @@ export function TransactionsPage() {
   const { wallets, status: walletsStatus, loadWallets } = useWallets();
   const { transactions, queryTransactions } = useTransactions();
 
-  const shouldFocusSearch = Boolean(
-    (location.state as { focusSearch?: boolean } | null)?.focusSearch,
-  );
+  const locationState = location.state as TransactionsPageLocationState | null;
+  const shouldFocusSearch = Boolean(locationState?.focusSearch);
   const focusSearchToken = shouldFocusSearch ? location.key : "";
 
   const months = useMemo(() => generateMonthRange(new Date(), 24, 12), []);
   const [selectedMonth, setSelectedMonth] = useState(() => startOfMonth(new Date()));
-  // Lets other pages (e.g. MonthlySummaryCard's Pemasukan/Pengeluaran rows) deep-link here with
-  // a type already selected. Read once at mount via the lazy initializer — navigating here from
-  // elsewhere always mounts a fresh TransactionsPage instance, so this never goes stale.
+  // Lets other pages (e.g. MonthlySummaryCard's Pemasukan/Pengeluaran rows, or the dashboard's
+  // category breakdown chart) deep-link here with a type/category/subcategory already selected.
+  // Read once at mount via the lazy initializer — navigating here from elsewhere always mounts a
+  // fresh TransactionsPage instance, so this never goes stale.
   const [typeFilter, setTypeFilter] = useState<TransactionTypeFilter>(
-    () => (location.state as { typeFilter?: TransactionTypeFilter } | null)?.typeFilter ?? "all",
+    () => locationState?.typeFilter ?? "all",
   );
   const [walletFilter, setWalletFilter] = useState("all");
-  const [categoryFilter, setCategoryFilter] = useState("all");
-  const [subCategoryFilter, setSubCategoryFilter] = useState("all");
+  const [categoryFilter, setCategoryFilter] = useState(() => locationState?.categoryFilter ?? "all");
+  const [subCategoryFilter, setSubCategoryFilter] = useState(
+    () => locationState?.subCategoryFilter ?? "all",
+  );
   const [searchQuery, setSearchQuery] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [dateRange, setDateRange] = useState<DateRangeFilter>({ from: "", to: "" });

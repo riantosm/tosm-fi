@@ -1,9 +1,9 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import { DashboardLayout } from "@/components/templates/DashboardLayout";
 import { Words } from "@/components/atoms/Words";
-import { Pagination } from "@/components/molecules/Pagination";
+import { IconLoader } from "@/components/atoms/IconLoader";
 import { WalletQuickSwitcher } from "@/layouts/dashboard/WalletQuickSwitcher";
 import { FinanceOverview } from "@/layouts/dashboard/FinanceOverview";
 import { AddTransactionFab } from "@/layouts/dashboard/AddTransactionFab";
@@ -20,7 +20,7 @@ import { useDashboardSummary } from "@/hooks/use-dashboard-summary";
 import { formatMonthParam, startOfMonth } from "@/utils/month";
 import { getGreetingKey } from "@/utils/greeting";
 import { ROUTES } from "@/constants/routes";
-import type { Transaction, TransactionListResult } from "@/types/transaction.types";
+import type { Transaction, TransactionSummary } from "@/types/transaction.types";
 import type { WalletAccount } from "@/types/wallet.types";
 
 const MONTH_LIST_PAGE_SIZE = 10;
@@ -44,9 +44,14 @@ export function DashboardPage() {
 
   const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
   const [correctionState, setCorrectionState] = useState<CorrectionState | null>(null);
-  const [monthResult, setMonthResult] = useState<TransactionListResult | null>(null);
-  const [isMonthLoading, setIsMonthLoading] = useState(true);
+
+  const [displayedTransactions, setDisplayedTransactions] = useState<Transaction[]>([]);
+  const [monthTotal, setMonthTotal] = useState(0);
+  const [monthSummary, setMonthSummary] = useState<TransactionSummary | null>(null);
+  const [completedQueryKey, setCompletedQueryKey] = useState<string | null>(null);
   const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(0);
+  const sentinelRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     if (categoriesStatus === "idle") void loadCategories();
@@ -57,33 +62,65 @@ export function DashboardPage() {
   }, [walletsStatus, loadWallets]);
 
   // Reset back to page 1 whenever the global `transactions` array reference
-  // changes — i.e. after any create/edit/delete anywhere in the app — so the
-  // list can't get stuck on a now out-of-range page. Done during render so
-  // the query effect below only ever sees the final page.
+  // changes — i.e. after any create/edit/delete anywhere in the app (the
+  // slice is only used as that change signal here) — so the accumulated
+  // infinite-scroll list can't go stale or duplicated. refreshToken is baked
+  // into queryKey so a mutation refetches even when already on page 1. Done
+  // during render so the query effect below only ever sees the final page/token.
+  const [refreshToken, setRefreshToken] = useState(0);
   const [prevTransactions, setPrevTransactions] = useState(transactions);
   if (prevTransactions !== transactions) {
     setPrevTransactions(transactions);
     setPage(1);
+    setRefreshToken((token) => token + 1);
   }
+
+  const queryParams = {
+    month: formatMonthParam(startOfMonth(new Date())),
+    page,
+    limit: MONTH_LIST_PAGE_SIZE,
+  };
+  const queryKey = JSON.stringify({ ...queryParams, refreshToken });
+  const isQueryLoading = page === 1 && completedQueryKey !== queryKey;
+  const isLoadingMore = page > 1 && completedQueryKey !== queryKey;
+  const hasMore = page < totalPages;
 
   useEffect(() => {
     let cancelled = false;
-    setIsMonthLoading(true);
 
-    void queryTransactions({
-      month: formatMonthParam(startOfMonth(new Date())),
-      page,
-      limit: MONTH_LIST_PAGE_SIZE,
-    }).then((result) => {
+    void queryTransactions(queryParams).then((result) => {
       if (cancelled) return;
-      setMonthResult(result);
-      setIsMonthLoading(false);
+      setDisplayedTransactions((prev) =>
+        page === 1 ? result.transactions : [...prev, ...result.transactions],
+      );
+      setTotalPages(result.totalPages ?? 0);
+      setMonthTotal(result.total ?? 0);
+      setMonthSummary(result.summary);
+      setCompletedQueryKey(queryKey);
     });
 
     return () => {
       cancelled = true;
     };
-  }, [queryTransactions, transactions, page]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [queryKey, queryTransactions]);
+
+  // Infinite scroll: advance the page once the sentinel at the bottom of the
+  // list comes into view, instead of a numbered-page Pagination widget.
+  useEffect(() => {
+    if (!hasMore || isLoadingMore) return;
+    const el = sentinelRef.current;
+    if (!el) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0]?.isIntersecting) setPage((prev) => prev + 1);
+      },
+      { rootMargin: "200px" },
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [hasMore, isLoadingMore]);
 
   function handleEditTransaction(transaction: Transaction) {
     if (transaction.type === "correction") {
@@ -114,8 +151,8 @@ export function DashboardPage() {
               <div className="w-full sm:flex-1">
                 <MonthlySummaryCard
                   summary={dashboardSummary}
-                  transactionCount={monthResult?.total ?? 0}
-                  isLoading={isDashboardSummaryLoading || isMonthLoading}
+                  transactionCount={monthTotal}
+                  isLoading={isDashboardSummaryLoading || isQueryLoading}
                 />
               </div>
               <div className="w-full sm:flex-1">
@@ -125,10 +162,7 @@ export function DashboardPage() {
                 />
               </div>
             </div>
-            <ExpenseByCategoryChart
-              summary={monthResult?.summary ?? null}
-              isLoading={isMonthLoading}
-            />
+            <ExpenseByCategoryChart summary={monthSummary} isLoading={isQueryLoading} />
           </div>
           <div className="flex-1 w-full overflow-hidden space-y-4">
             <div className="w-full">
@@ -137,7 +171,7 @@ export function DashboardPage() {
               />
             </div>
             <TransactionList
-              transactions={monthResult?.transactions ?? []}
+              transactions={displayedTransactions}
               categories={categories}
               wallets={wallets}
               onEditTransaction={handleEditTransaction}
@@ -151,15 +185,15 @@ export function DashboardPage() {
                 </button>
               }
               isLoading={
-                isMonthLoading || walletsStatus !== "loaded" || categoriesStatus !== "loaded"
+                isQueryLoading || walletsStatus !== "loaded" || categoriesStatus !== "loaded"
               }
             />
 
-            <Pagination
-              page={page}
-              totalPages={monthResult?.totalPages ?? 0}
-              onPageChange={setPage}
-            />
+            {hasMore && (
+              <div ref={sentinelRef} className="flex justify-center py-4">
+                {isLoadingMore && <IconLoader className="h-5 w-5 animate-spin text-primary-500" />}
+              </div>
+            )}
           </div>
         </div>
       </div>

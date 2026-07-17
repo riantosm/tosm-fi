@@ -49,7 +49,18 @@ export function Tooltip({ content, children, side = "top", wrapperClassName }: T
     const fitsAbove = triggerRect.top >= bubbleRect.height + VIEWPORT_MARGIN * 2;
     const fitsBelow =
       window.innerHeight - triggerRect.bottom >= bubbleRect.height + VIEWPORT_MARGIN * 2;
-    const resolvedSide = side === "top" ? (fitsAbove ? "top" : fitsBelow ? "bottom" : "top") : fitsBelow ? "bottom" : fitsAbove ? "top" : "bottom";
+    const resolvedSide =
+      side === "top"
+        ? fitsAbove
+          ? "top"
+          : fitsBelow
+            ? "bottom"
+            : "top"
+        : fitsBelow
+          ? "bottom"
+          : fitsAbove
+            ? "top"
+            : "bottom";
 
     const top =
       resolvedSide === "top"
@@ -87,7 +98,7 @@ export function Tooltip({ content, children, side = "top", wrapperClassName }: T
               left: position?.left ?? 0,
               visibility: position ? "visible" : "hidden",
             }}
-            className="pointer-events-none z-50 whitespace-nowrap rounded-lg bg-ink-900 px-2.5 py-1.5 text-[12px] font-bold text-white shadow-lg dark:bg-ink-100 dark:text-ink-900"
+            className="pointer-events-none z-50 whitespace-nowrap rounded-lg dark:bg-ink-900 px-2.5 py-1.5 text-[12px] font-bold dark:text-white shadow-lg bg-white text-ink-900 border border-ink-200 dark:border-ink-800"
           >
             {content}
           </div>,

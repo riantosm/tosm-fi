@@ -68,6 +68,15 @@ function formatTimeLabel(date: Date, locale: string): string {
   }
 }
 
+function shuffle<T>(items: T[]): T[] {
+  const result = [...items];
+  for (let i = result.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [result[i], result[j]] = [result[j], result[i]];
+  }
+  return result;
+}
+
 export function AddTransactionModal({ isOpen, transaction, onClose }: AddTransactionModalProps) {
   return (
     <Modal isOpen={isOpen} onClose={onClose} size="2xl">
@@ -140,12 +149,17 @@ function AddTransactionFields({
 
   const quickPicks = useMemo(() => {
     if (type === "transfer") return [];
-    return categories
+
+    if (category) {
+      return category.subCategories.map((sub) => ({ sub, category }));
+    }
+
+    const allSubCategories = categories
       .filter((item) => item.type === type)
-      .flatMap((item) => item.subCategories.map((sub) => ({ sub, category: item })))
-      .sort((a, b) => b.sub.transactionCount - a.sub.transactionCount)
-      .slice(0, 6);
-  }, [categories, type]);
+      .flatMap((item) => item.subCategories.map((sub) => ({ sub, category: item })));
+
+    return shuffle(allSubCategories).slice(0, 6);
+  }, [categories, type, category]);
 
   const CategoryIcon = category ? resolveCategoryIcon(category.icon) : HiOutlineTag;
 
@@ -435,8 +449,8 @@ function AddTransactionFields({
                     style={category ? { backgroundColor: `${category.color}40` } : undefined}
                   >
                     {createElement(CategoryIcon, {
-                      className: "h-6 w-6",
-                      style: { color: category?.color },
+                      className: cn("h-6 w-6", !category && "text-ink-400 dark:text-ink-500"),
+                      style: category ? { color: category.color } : undefined,
                     })}
                   </div>
                   <div className="flex min-w-0 flex-col">
@@ -470,21 +484,42 @@ function AddTransactionFields({
 
             {quickPicks.length > 0 && (
               <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
-                {quickPicks.map(({ sub, category: parent }) => (
-                  <button
-                    key={sub.idSubCategory}
-                    type="button"
-                    onClick={() => handleQuickPick(parent, sub)}
-                    className="flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full border border-ink-200 px-3 py-1.5 text-ink-600 transition-colors hover:bg-ink-50 dark:border-ink-700 dark:text-ink-300 dark:hover:bg-ink-800"
-                  >
-                    <Words type="xs/regular" as="span">
-                      {sub.nameSubCategory}
-                    </Words>
-                    <Words type="xs/regular" as="span" className="text-ink-400 dark:text-ink-500">
-                      《{parent.nameCategory}》
-                    </Words>
-                  </button>
-                ))}
+                {quickPicks.map(({ sub, category: parent }) => {
+                  const isSelected = sub.idSubCategory === subCategoryId;
+
+                  return (
+                    <button
+                      key={sub.idSubCategory}
+                      type="button"
+                      onClick={() => handleQuickPick(parent, sub)}
+                      className={cn(
+                        "flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full border px-3 py-1.5 transition-colors",
+                        isSelected
+                          ? "border-transparent"
+                          : "border-ink-200 text-ink-600 hover:bg-ink-50 dark:border-ink-700 dark:text-ink-300 dark:hover:bg-ink-800",
+                      )}
+                      style={
+                        isSelected
+                          ? { backgroundColor: `${parent.color}26`, color: parent.color }
+                          : undefined
+                      }
+                    >
+                      <Words type="xs/regular" as="span">
+                        {sub.nameSubCategory}
+                      </Words>
+                      {!category && (
+                        <Words
+                          type="xs/regular"
+                          as="span"
+                          className={isSelected ? undefined : "text-ink-400 dark:text-ink-500"}
+                          style={isSelected ? { color: parent.color, opacity: 0.7 } : undefined}
+                        >
+                          《{parent.nameCategory}》
+                        </Words>
+                      )}
+                    </button>
+                  );
+                })}
               </div>
             )}
 

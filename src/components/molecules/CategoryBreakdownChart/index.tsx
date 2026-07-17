@@ -7,7 +7,7 @@ import { DonutChart, type DonutChartDatum } from "@/components/molecules/DonutCh
 import { resolveCategoryIcon } from "@/constants/category-icons";
 import { useCurrency } from "@/hooks/use-currency";
 import { cn } from "@/utils/cn";
-import type { CategorySlice as ChartSlice } from "@/utils/category-breakdown";
+import { OTHER_SUB_CATEGORY_ID, type CategorySlice as ChartSlice } from "@/utils/category-breakdown";
 
 interface CategoryBreakdownChartProps {
   /** Already-aggregated slices — from the API summary (Dashboard) or
@@ -18,6 +18,13 @@ interface CategoryBreakdownChartProps {
   periodLabel: string;
   headerAction?: ReactNode;
   isLoading?: boolean;
+  /** When provided, subcategory rows become clickable. */
+  onSelectSubCategory?: (subSlice: ChartSlice, categorySlice: ChartSlice) => void;
+  /** When provided, a category row is clickable directly instead of expanding —
+   * used when the category has no subcategories to drill into, and for the
+   * "Other" bucket inside an expanded category (it has no real subcategory id
+   * to navigate with, only the parent category). */
+  onSelectCategory?: (categorySlice: ChartSlice) => void;
 }
 
 interface SliceRowProps {
@@ -106,6 +113,8 @@ interface CategoryRowProps {
   onToggle: () => void;
   onHoverSlice: (id: string | null) => void;
   formatAmount: (value: number) => string;
+  onSelectSubCategory?: (subSlice: ChartSlice, categorySlice: ChartSlice) => void;
+  onSelectCategory?: (categorySlice: ChartSlice) => void;
 }
 
 function CategoryRow({
@@ -116,14 +125,24 @@ function CategoryRow({
   onToggle,
   onHoverSlice,
   formatAmount,
+  onSelectSubCategory,
+  onSelectCategory,
 }: CategoryRowProps) {
+  const hasSubCategories = (slice.subSlices?.length ?? 0) > 0;
+
   return (
     <div className={cn("flex flex-col transition-opacity duration-300", isDimmed && "opacity-40")}>
       <SliceRow
         slice={slice}
         formatAmount={formatAmount}
-        onClick={onToggle}
-        isExpanded={isExpanded}
+        onClick={
+          hasSubCategories
+            ? onToggle
+            : onSelectCategory
+              ? () => onSelectCategory(slice)
+              : undefined
+        }
+        isExpanded={hasSubCategories ? isExpanded : undefined}
         onHoverChange={(isHovering) => onHoverSlice(isHovering ? slice.id : null)}
       />
 
@@ -140,6 +159,15 @@ function CategoryRow({
                 key={sub.id}
                 slice={sub}
                 formatAmount={formatAmount}
+                onClick={
+                  sub.id !== OTHER_SUB_CATEGORY_ID
+                    ? onSelectSubCategory
+                      ? () => onSelectSubCategory(sub, slice)
+                      : undefined
+                    : onSelectCategory
+                      ? () => onSelectCategory(slice)
+                      : undefined
+                }
                 onHoverChange={(isHovering) => onHoverSlice(isHovering ? sub.id : null)}
                 isSubCategory
               />
@@ -157,6 +185,8 @@ export function CategoryBreakdownChart({
   periodLabel,
   headerAction,
   isLoading = false,
+  onSelectSubCategory,
+  onSelectCategory,
 }: CategoryBreakdownChartProps) {
   const { t } = useTranslation();
   const { format } = useCurrency();
@@ -180,6 +210,17 @@ export function CategoryBreakdownChart({
 
   function handleToggle(idCategory: string) {
     setExpandedCategoryId((prev) => (prev === idCategory ? null : idCategory));
+  }
+
+  function handleOverviewSliceClick(idCategory: string) {
+    const clicked = overviewSlices.find((item) => item.id === idCategory);
+    if (!clicked) return;
+
+    if ((clicked.subSlices?.length ?? 0) > 0) {
+      handleToggle(idCategory);
+    } else {
+      onSelectCategory?.(clicked);
+    }
   }
 
   return (
@@ -224,7 +265,7 @@ export function CategoryBreakdownChart({
               centerValue={format(activeTotal)}
               formatValue={format}
               activeId={hoveredSliceId}
-              onSliceClick={!expandedCategory ? (datum) => handleToggle(datum.id) : undefined}
+              onSliceClick={!expandedCategory ? (datum) => handleOverviewSliceClick(datum.id) : undefined}
             />
 
             <div className="flex w-full min-w-0 flex-1 flex-col gap-1">
@@ -238,6 +279,8 @@ export function CategoryBreakdownChart({
                   onToggle={() => handleToggle(slice.id)}
                   onHoverSlice={setHoveredSliceId}
                   formatAmount={format}
+                  onSelectSubCategory={onSelectSubCategory}
+                  onSelectCategory={onSelectCategory}
                 />
               ))}
             </div>
