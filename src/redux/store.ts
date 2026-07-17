@@ -9,6 +9,7 @@ import {
 import {
   authenticationSlice,
   categorySlice,
+  clientErrorSlice,
   instrumentSlice,
   investmentTransactionSlice,
   settingsSlice,
@@ -37,6 +38,9 @@ const reducer = combineReducers({
   userApproval: userApprovalSlice,
   instrument: instrumentSlice,
   investmentTransaction: investmentTransactionSlice,
+  // Not persisted, same reasoning as userApproval — an admin-only view of
+  // every user's reported crashes, always refetched fresh.
+  clientError: clientErrorSlice,
 });
 
 // Persisted `status: "loaded"` would otherwise make every consumer's

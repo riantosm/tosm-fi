@@ -154,6 +154,10 @@
       "title": "Permintaan Pengguna",
       "description": "Tinjau dan aktifkan pendaftaran pengguna baru"
     },
+    "errorLog": {
+      "title": "Log Error",
+      "description": "Lihat error yang dilaporkan aplikasi"
+    },
     "apiDoc": {
       "title": "Backend API",
       "description": "Dokumentasi endpoint untuk pengembangan backend"
@@ -171,6 +175,12 @@
     "statusActive": "Aktif",
     "activateButton": "Aktifkan",
     "activateSuccess": "Pengguna berhasil diaktifkan",
+    "genericError": "Terjadi kesalahan, coba lagi."
+  },
+  "errorLog": {
+    "title": "Log Error",
+    "subtitle": "Error yang dilaporkan aplikasi, dari semua pengguna.",
+    "empty": "Belum ada error yang dilaporkan",
     "genericError": "Terjadi kesalahan, coba lagi."
   },
   "settingsDanger": {
@@ -192,6 +202,7 @@
       "category": "Kategori",
       "transaction": "Transaksi",
       "account": "Akun",
+      "clientError": "Log Error",
       "settings": "Pengaturan",
       "investment": "Investasi",
       "investmentTransaction": "Transaksi Investasi",

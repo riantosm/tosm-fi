@@ -154,6 +154,10 @@
       "title": "ユーザー申請",
       "description": "新規ユーザー登録を確認して有効化する"
     },
+    "errorLog": {
+      "title": "エラーログ",
+      "description": "アプリが報告したエラーを確認する"
+    },
     "apiDoc": {
       "title": "バックエンドAPI",
       "description": "バックエンド開発用のエンドポイントドキュメント"
@@ -171,6 +175,12 @@
     "statusActive": "有効",
     "activateButton": "有効化",
     "activateSuccess": "ユーザーを有効化しました",
+    "genericError": "エラーが発生しました。もう一度お試しください。"
+  },
+  "errorLog": {
+    "title": "エラーログ",
+    "subtitle": "すべてのユーザーからアプリが報告したエラーです。",
+    "empty": "まだ報告されたエラーはありません",
     "genericError": "エラーが発生しました。もう一度お試しください。"
   },
   "settingsDanger": {
@@ -192,6 +202,7 @@
       "category": "カテゴリ",
       "transaction": "取引",
       "account": "アカウント",
+      "clientError": "エラーログ",
       "settings": "設定",
       "investment": "投資",
       "investmentTransaction": "投資取引",

@@ -1503,6 +1503,91 @@ export const API_DOC_GROUPS: ApiDocGroup[] = [
     ],
   },
   {
+    key: "clientError",
+    titleKey: "apiDoc.groups.clientError",
+    endpoints: [
+      {
+        id: "report-client-error",
+        title: "Report Client Error",
+        method: "POST",
+        endpoint: "/errors",
+        payload: [
+          { name: "source", type: '"render" | "window.onerror" | "unhandledrejection"', required: true },
+          { name: "message", type: "string", required: true },
+          { name: "stack", type: "string", required: false },
+          { name: "path", type: "string", required: false },
+          { name: "userAgent", type: "string", required: false },
+          { name: "extra", type: "object", required: false },
+        ],
+        successExample: JSON.stringify(
+          {
+            message: "Error berhasil dicatat",
+            data: {
+              idClientError: "6a5c1a2f9e1d4c0012ab34cd",
+              idUser: "6a54775fb2c4f567c96e74f4",
+              source: "render",
+              message: "Cannot read properties of undefined (reading 'map')",
+              path: "/dashboard",
+              createdAt: "2026-07-17T03:12:44.000Z",
+            },
+            isSuccess: true,
+            status: 201,
+          },
+          null,
+          2,
+        ),
+        errorExample: JSON.stringify(
+          {
+            message: "source dan message wajib diisi",
+            data: { error: "source dan message wajib diisi" },
+            isSuccess: false,
+            status: 400,
+          },
+          null,
+          2,
+        ),
+      },
+      {
+        id: "list-client-errors",
+        title: "List Client Errors",
+        method: "GET",
+        endpoint: "/errors",
+        payload: [],
+        successExample: JSON.stringify(
+          {
+            message: "Berhasil mengambil daftar error",
+            data: [
+              {
+                idClientError: "6a5c1a2f9e1d4c0012ab34cd",
+                idUser: "6a54775fb2c4f567c96e74f4",
+                source: "render",
+                message: "Cannot read properties of undefined (reading 'map')",
+                stack: "Error: Cannot read properties of undefined (reading 'map')\n    at DashboardPage ...",
+                path: "/dashboard",
+                userAgent: "Mozilla/5.0 ...",
+                createdAt: "2026-07-17T03:12:44.000Z",
+              },
+            ],
+            isSuccess: true,
+            status: 200,
+          },
+          null,
+          2,
+        ),
+        errorExample: JSON.stringify(
+          {
+            message: "Forbidden: admin only",
+            data: {},
+            isSuccess: false,
+            status: 403,
+          },
+          null,
+          2,
+        ),
+      },
+    ],
+  },
+  {
     key: "settings",
     titleKey: "apiDoc.groups.settings",
     endpoints: [

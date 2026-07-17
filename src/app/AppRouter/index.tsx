@@ -45,6 +45,11 @@ const SettingsUserApprovalPage = lazy(() =>
     default: m.SettingsUserApprovalPage,
   })),
 );
+const SettingsErrorLogPage = lazy(() =>
+  import("@/app/pages/SettingsErrorLogPage").then((m) => ({
+    default: m.SettingsErrorLogPage,
+  })),
+);
 
 function RouteFallback() {
   return (
@@ -146,6 +151,14 @@ export function AppRouter() {
           element={
             <ProtectedRoute>
               <SettingsUserApprovalPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path={ROUTES.SETTINGS_ERROR_LOG}
+          element={
+            <ProtectedRoute>
+              <SettingsErrorLogPage />
             </ProtectedRoute>
           }
         />

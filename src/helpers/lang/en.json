@@ -154,6 +154,10 @@
       "title": "User Requests",
       "description": "Review and activate new user registrations"
     },
+    "errorLog": {
+      "title": "Error Log",
+      "description": "View crashes reported by the app"
+    },
     "apiDoc": {
       "title": "Backend API",
       "description": "Endpoint documentation for backend development"
@@ -171,6 +175,12 @@
     "statusActive": "Active",
     "activateButton": "Activate",
     "activateSuccess": "User activated successfully",
+    "genericError": "Something went wrong, please try again."
+  },
+  "errorLog": {
+    "title": "Error Log",
+    "subtitle": "Crashes reported by the app, across every user.",
+    "empty": "No errors reported yet",
     "genericError": "Something went wrong, please try again."
   },
   "settingsDanger": {
@@ -192,6 +202,7 @@
       "category": "Category",
       "transaction": "Transaction",
       "account": "Account",
+      "clientError": "Error Log",
       "settings": "Settings",
       "investment": "Investment",
       "investmentTransaction": "Investment Transaction",

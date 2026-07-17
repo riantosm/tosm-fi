@@ -2,6 +2,7 @@ import type { IconType } from "react-icons";
 import {
   HiOutlineBanknotes,
   HiOutlineCodeBracketSquare,
+  HiOutlineExclamationTriangle,
   HiOutlineUserGroup,
 } from "react-icons/hi2";
 import { ROUTES } from "@/constants/routes";
@@ -22,6 +23,14 @@ export const SETTINGS_MENU_ITEMS: SettingsMenuItem[] = [
     descriptionKey: "settingsMenu.userApproval.description",
     path: ROUTES.SETTINGS_USER_APPROVAL,
     icon: HiOutlineUserGroup,
+    adminOnly: true,
+  },
+  {
+    key: "error-log",
+    titleKey: "settingsMenu.errorLog.title",
+    descriptionKey: "settingsMenu.errorLog.description",
+    path: ROUTES.SETTINGS_ERROR_LOG,
+    icon: HiOutlineExclamationTriangle,
     adminOnly: true,
   },
   {

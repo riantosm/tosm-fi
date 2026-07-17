@@ -12,4 +12,5 @@ export const ROUTES = {
   SETTINGS_API_DOC: "/settings/api-doc",
   SETTINGS_CURRENCY: "/settings/currency",
   SETTINGS_USER_APPROVAL: "/settings/user-approval",
+  SETTINGS_ERROR_LOG: "/settings/error-log",
 } as const;
