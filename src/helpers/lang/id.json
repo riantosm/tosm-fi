@@ -291,7 +291,9 @@
       "transport": "Transportasi",
       "hobby": "Hobi",
       "paymentOther": "Pembayaran Lainnya",
-      "investment": "Investasi"
+      "investment": "Investasi",
+      "health": "Kesehatan & Perawatan",
+      "social": "Sosial & Donasi"
     },
     "iconNames": {
       "tag": "Umum",
@@ -356,7 +358,23 @@
       "job": "Gaji",
       "business": "Usaha",
       "bonus": "Bonus Kerja",
-      "exchange": "Tukar Mata Uang"
+      "exchange": "Tukar Mata Uang",
+      "office": "Kantor",
+      "health": "Kesehatan",
+      "spa": "Salon/Spa",
+      "skincare": "Perawatan Kulit",
+      "pet": "Hewan Peliharaan",
+      "social": "Sosial",
+      "donation": "Donasi",
+      "vegetable": "Sayuran",
+      "produce": "Buah & Sayur",
+      "electronics": "Elektronik",
+      "mobileData": "Paket Data",
+      "billiard": "Biliar",
+      "vape": "Vape",
+      "subscription": "Langganan",
+      "train": "Kereta",
+      "carWash": "Cuci Kendaraan"
     },
     "dragToReorder": "Seret untuk mengurutkan",
     "toggleReorder": "Urutkan kategori",

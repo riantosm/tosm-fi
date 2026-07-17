@@ -291,7 +291,9 @@
       "transport": "Transportation",
       "hobby": "Hobby",
       "paymentOther": "Other Payments",
-      "investment": "Investment"
+      "investment": "Investment",
+      "health": "Health & Care",
+      "social": "Social & Donation"
     },
     "iconNames": {
       "tag": "General",
@@ -356,7 +358,23 @@
       "job": "Salary",
       "business": "Business",
       "bonus": "Work Bonus",
-      "exchange": "Currency Exchange"
+      "exchange": "Currency Exchange",
+      "office": "Office",
+      "health": "Health",
+      "spa": "Salon/Spa",
+      "skincare": "Skincare",
+      "pet": "Pet",
+      "social": "Social",
+      "donation": "Donation",
+      "vegetable": "Vegetables",
+      "produce": "Fruits & Vegetables",
+      "electronics": "Electronics",
+      "mobileData": "Mobile Data",
+      "billiard": "Billiards",
+      "vape": "Vape",
+      "subscription": "Subscription",
+      "train": "Train",
+      "carWash": "Car Wash"
     },
     "dragToReorder": "Drag to reorder",
     "toggleReorder": "Reorder categories",

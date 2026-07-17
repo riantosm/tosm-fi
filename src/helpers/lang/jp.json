@@ -291,7 +291,9 @@
       "transport": "交通",
       "hobby": "趣味",
       "paymentOther": "その他の支払い",
-      "investment": "投資"
+      "investment": "投資",
+      "health": "健康・ケア",
+      "social": "社交・寄付"
     },
     "iconNames": {
       "tag": "一般",
@@ -356,7 +358,23 @@
       "job": "給料",
       "business": "事業",
       "bonus": "仕事のボーナス",
-      "exchange": "両替"
+      "exchange": "両替",
+      "office": "オフィス",
+      "health": "健康",
+      "spa": "サロン/スパ",
+      "skincare": "スキンケア",
+      "pet": "ペット",
+      "social": "交流",
+      "donation": "寄付",
+      "vegetable": "野菜",
+      "produce": "果物・野菜",
+      "electronics": "電化製品",
+      "mobileData": "モバイルデータ",
+      "billiard": "ビリヤード",
+      "vape": "電子タバコ",
+      "subscription": "サブスクリプション",
+      "train": "電車",
+      "carWash": "洗車"
     },
     "dragToReorder": "ドラッグして並べ替え",
     "toggleReorder": "カテゴリの並べ替え",
