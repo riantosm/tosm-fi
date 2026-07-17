@@ -181,6 +181,17 @@
     "title": "エラーログ",
     "subtitle": "すべてのユーザーからアプリが報告したエラーです。",
     "empty": "まだ報告されたエラーはありません",
+    "emptyFiltered": "このフィルターに一致するエラーはありません",
+    "searchPlaceholder": "エラーメッセージを検索...",
+    "newBadge": "新規",
+    "environment": {
+      "development": "Development",
+      "production": "Production"
+    },
+    "deleteButton": "削除",
+    "deleteConfirmTitle": "このエラーログを削除しますか?",
+    "deleteConfirmDescription": "このエラーログは完全に削除されます。この操作は取り消せません。",
+    "deleteConfirmAction": "削除",
     "genericError": "エラーが発生しました。もう一度お試しください。"
   },
   "settingsDanger": {

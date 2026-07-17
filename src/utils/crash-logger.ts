@@ -15,6 +15,9 @@ export function logCrash(source: string, details: Record<string, unknown>) {
   void clientErrorService
     .reportError({
       source,
+      // Vite's own build-mode flag — reflects the frontend bundle that was
+      // actually running when the crash happened, not the backend's NODE_ENV.
+      environment: import.meta.env.DEV ? "development" : "production",
       message: typeof message === "string" ? message : "Unknown error",
       stack: typeof stack === "string" ? stack : undefined,
       path,

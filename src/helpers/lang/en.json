@@ -181,6 +181,17 @@
     "title": "Error Log",
     "subtitle": "Crashes reported by the app, across every user.",
     "empty": "No errors reported yet",
+    "emptyFiltered": "No errors match this filter",
+    "searchPlaceholder": "Search error message...",
+    "newBadge": "New",
+    "environment": {
+      "development": "Development",
+      "production": "Production"
+    },
+    "deleteButton": "Delete",
+    "deleteConfirmTitle": "Delete this error log?",
+    "deleteConfirmDescription": "This error log will be permanently deleted. This action cannot be undone.",
+    "deleteConfirmAction": "Delete",
     "genericError": "Something went wrong, please try again."
   },
   "settingsDanger": {

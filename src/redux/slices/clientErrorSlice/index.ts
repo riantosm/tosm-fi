@@ -24,8 +24,12 @@ export const clientErrorSlice = createSlice({
       state.errors = action.payload;
       state.status = "loaded";
     },
+    removeClientError: (state, action: PayloadAction<string>) => {
+      state.errors = state.errors.filter((error) => error.idClientError !== action.payload);
+    },
   },
 });
 
-export const { setClientErrorsLoading, setClientErrors } = clientErrorSlice.actions;
+export const { setClientErrorsLoading, setClientErrors, removeClientError } =
+  clientErrorSlice.actions;
 export default clientErrorSlice.reducer;

@@ -1513,6 +1513,7 @@ export const API_DOC_GROUPS: ApiDocGroup[] = [
         endpoint: "/errors",
         payload: [
           { name: "source", type: '"render" | "window.onerror" | "unhandledrejection"', required: true },
+          { name: "environment", type: '"development" | "production"', required: true },
           { name: "message", type: "string", required: true },
           { name: "stack", type: "string", required: false },
           { name: "path", type: "string", required: false },
@@ -1526,8 +1527,10 @@ export const API_DOC_GROUPS: ApiDocGroup[] = [
               idClientError: "6a5c1a2f9e1d4c0012ab34cd",
               idUser: "6a54775fb2c4f567c96e74f4",
               source: "render",
+              environment: "development",
               message: "Cannot read properties of undefined (reading 'map')",
               path: "/dashboard",
+              isRead: false,
               createdAt: "2026-07-17T03:12:44.000Z",
             },
             isSuccess: true,
@@ -1538,8 +1541,8 @@ export const API_DOC_GROUPS: ApiDocGroup[] = [
         ),
         errorExample: JSON.stringify(
           {
-            message: "source dan message wajib diisi",
-            data: { error: "source dan message wajib diisi" },
+            message: "source, environment, dan message wajib diisi",
+            data: { error: "source, environment, dan message wajib diisi" },
             isSuccess: false,
             status: 400,
           },
@@ -1551,8 +1554,12 @@ export const API_DOC_GROUPS: ApiDocGroup[] = [
         id: "list-client-errors",
         title: "List Client Errors",
         method: "GET",
-        endpoint: "/errors",
-        payload: [],
+        endpoint: "/errors?search=&environment=&source=",
+        payload: [
+          { name: "search", type: "string", required: false },
+          { name: "environment", type: '"development" | "production"', required: false },
+          { name: "source", type: "string", required: false },
+        ],
         successExample: JSON.stringify(
           {
             message: "Berhasil mengambil daftar error",
@@ -1560,11 +1567,14 @@ export const API_DOC_GROUPS: ApiDocGroup[] = [
               {
                 idClientError: "6a5c1a2f9e1d4c0012ab34cd",
                 idUser: "6a54775fb2c4f567c96e74f4",
+                username: "riantosm",
                 source: "render",
+                environment: "development",
                 message: "Cannot read properties of undefined (reading 'map')",
                 stack: "Error: Cannot read properties of undefined (reading 'map')\n    at DashboardPage ...",
                 path: "/dashboard",
                 userAgent: "Mozilla/5.0 ...",
+                isRead: false,
                 createdAt: "2026-07-17T03:12:44.000Z",
               },
             ],
@@ -1580,6 +1590,33 @@ export const API_DOC_GROUPS: ApiDocGroup[] = [
             data: {},
             isSuccess: false,
             status: 403,
+          },
+          null,
+          2,
+        ),
+      },
+      {
+        id: "delete-client-error",
+        title: "Delete Client Error",
+        method: "DELETE",
+        endpoint: "/errors/:idClientError",
+        payload: [],
+        successExample: JSON.stringify(
+          {
+            message: "Error berhasil dihapus",
+            data: {},
+            isSuccess: true,
+            status: 200,
+          },
+          null,
+          2,
+        ),
+        errorExample: JSON.stringify(
+          {
+            message: "Error tidak ditemukan",
+            data: { error: "Error tidak ditemukan" },
+            isSuccess: false,
+            status: 400,
           },
           null,
           2,

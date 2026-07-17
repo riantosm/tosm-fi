@@ -181,6 +181,17 @@
     "title": "Log Error",
     "subtitle": "Error yang dilaporkan aplikasi, dari semua pengguna.",
     "empty": "Belum ada error yang dilaporkan",
+    "emptyFiltered": "Tidak ada error yang cocok dengan filter ini",
+    "searchPlaceholder": "Cari pesan error...",
+    "newBadge": "Baru",
+    "environment": {
+      "development": "Development",
+      "production": "Production"
+    },
+    "deleteButton": "Hapus",
+    "deleteConfirmTitle": "Hapus log error ini?",
+    "deleteConfirmDescription": "Log error ini akan dihapus permanen. Tindakan ini tidak bisa dibatalkan.",
+    "deleteConfirmAction": "Hapus",
     "genericError": "Terjadi kesalahan, coba lagi."
   },
   "settingsDanger": {
