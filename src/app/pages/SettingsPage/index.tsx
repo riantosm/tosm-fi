@@ -30,8 +30,12 @@ export function SettingsPage() {
     });
     if (!confirmed) return;
 
-    resetData();
-    showToast(t("settingsDanger.resetSuccess"), "success");
+    try {
+      await resetData();
+      showToast(t("settingsDanger.resetSuccess"), "success");
+    } catch (error) {
+      showToast(error instanceof Error ? error.message : t("settingsDanger.resetError"), "error");
+    }
   }
 
   return (

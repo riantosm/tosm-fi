@@ -169,12 +169,13 @@
   },
   "settingsDanger": {
     "title": "Zona Berbahaya",
-    "description": "Hanya untuk testing — menghapus semua wallet, kategori, dan transaksi yang tersimpan di browser ini.",
+    "description": "Hanya untuk testing — menghapus semua wallet, kategori, transaksi, dan investasi milikmu secara permanen dari server.",
     "resetButton": "Reset Data",
     "resetConfirmTitle": "Reset semua data?",
-    "resetConfirmDescription": "Semua wallet, kategori, dan transaksi akan dihapus permanen dari browser ini. Tindakan ini tidak bisa dibatalkan.",
+    "resetConfirmDescription": "Semua wallet, kategori, transaksi, dan investasi akan dihapus permanen dari server. Tindakan ini tidak bisa dibatalkan.",
     "resetConfirmAction": "Reset",
-    "resetSuccess": "Data berhasil direset"
+    "resetSuccess": "Data berhasil direset",
+    "resetError": "Gagal mereset data, coba lagi."
   },
   "apiDoc": {
     "title": "Dokumentasi Backend API",
@@ -184,6 +185,7 @@
       "wallet": "Wallet",
       "category": "Kategori",
       "transaction": "Transaksi",
+      "account": "Akun",
       "settings": "Pengaturan",
       "investment": "Investasi",
       "investmentTransaction": "Transaksi Investasi",

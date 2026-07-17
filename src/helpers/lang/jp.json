@@ -169,12 +169,13 @@
   },
   "settingsDanger": {
     "title": "危険な操作",
-    "description": "テスト用の機能です — このブラウザに保存されているウォレット、カテゴリ、取引がすべて削除されます。",
+    "description": "テスト用の機能です — サーバー上のウォレット、カテゴリ、取引、投資がすべて完全に削除されます。",
     "resetButton": "データをリセット",
     "resetConfirmTitle": "すべてのデータをリセットしますか?",
-    "resetConfirmDescription": "このブラウザに保存されているウォレット、カテゴリ、取引がすべて完全に削除されます。この操作は取り消せません。",
+    "resetConfirmDescription": "サーバー上のウォレット、カテゴリ、取引、投資がすべて完全に削除されます。この操作は取り消せません。",
     "resetConfirmAction": "リセット",
-    "resetSuccess": "データをリセットしました"
+    "resetSuccess": "データをリセットしました",
+    "resetError": "データのリセットに失敗しました。もう一度お試しください。"
   },
   "apiDoc": {
     "title": "バックエンドAPIドキュメント",
@@ -184,6 +185,7 @@
       "wallet": "ウォレット",
       "category": "カテゴリ",
       "transaction": "取引",
+      "account": "アカウント",
       "settings": "設定",
       "investment": "投資",
       "investmentTransaction": "投資取引",

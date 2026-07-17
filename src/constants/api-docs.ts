@@ -1470,6 +1470,39 @@ export const API_DOC_GROUPS: ApiDocGroup[] = [
     ],
   },
   {
+    key: "account",
+    titleKey: "apiDoc.groups.account",
+    endpoints: [
+      {
+        id: "reset-account-data",
+        title: "Reset Account Data",
+        method: "DELETE",
+        endpoint: "/account/data",
+        payload: [],
+        successExample: JSON.stringify(
+          {
+            message: "Semua data berhasil dihapus",
+            data: {},
+            isSuccess: true,
+            status: 200,
+          },
+          null,
+          2,
+        ),
+        errorExample: JSON.stringify(
+          {
+            message: "Unauthorized",
+            data: {},
+            isSuccess: false,
+            status: 401,
+          },
+          null,
+          2,
+        ),
+      },
+    ],
+  },
+  {
     key: "settings",
     titleKey: "apiDoc.groups.settings",
     endpoints: [

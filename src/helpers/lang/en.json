@@ -169,12 +169,13 @@
   },
   "settingsDanger": {
     "title": "Danger Zone",
-    "description": "For testing only — clears all wallets, categories, and transactions stored in this browser.",
+    "description": "For testing only — permanently deletes all your wallets, categories, transactions, and investments from the server.",
     "resetButton": "Reset Data",
     "resetConfirmTitle": "Reset all data?",
-    "resetConfirmDescription": "All wallets, categories, and transactions will be permanently deleted from this browser. This action cannot be undone.",
+    "resetConfirmDescription": "All wallets, categories, transactions, and investments will be permanently deleted from the server. This action cannot be undone.",
     "resetConfirmAction": "Reset",
-    "resetSuccess": "Data has been reset"
+    "resetSuccess": "Data has been reset",
+    "resetError": "Failed to reset data, please try again."
   },
   "apiDoc": {
     "title": "Backend API Documentation",
@@ -184,6 +185,7 @@
       "wallet": "Wallet",
       "category": "Category",
       "transaction": "Transaction",
+      "account": "Account",
       "settings": "Settings",
       "investment": "Investment",
       "investmentTransaction": "Investment Transaction",
