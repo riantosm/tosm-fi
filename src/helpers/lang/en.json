@@ -11,7 +11,9 @@
     "comingSoon": "Soon",
     "underConstruction": "This page is under construction.",
     "customColor": "Custom Color",
-    "all": "All"
+    "all": "All",
+    "previous": "Previous",
+    "next": "Next"
   },
   "auth": {
     "welcomeTitle": "Welcome back",
@@ -102,7 +104,8 @@
     "totalOfCategory": "Total {{category}}",
     "otherSubCategory": "Other",
     "recentTransactions": "This Month's Transactions",
-    "noTransactions": "No transactions yet"
+    "noTransactions": "No transactions yet",
+    "viewAll": "View All"
   },
   "topbar": {
     "search": "Search",
@@ -235,6 +238,8 @@
     "expense": "Expense",
     "addCategory": "Add Category",
     "noCategories": "No categories yet",
+    "categoryCountLabel": "{{count}} Categories",
+    "subCategoryCountLabel": "{{count}} Subcategories",
     "addTitle": "Add Category",
     "editTitle": "Edit Category",
     "nameLabel": "Name",

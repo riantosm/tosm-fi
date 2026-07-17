@@ -57,11 +57,19 @@ export function resolveReportPeriod(
 ): ResolvedReportPeriod {
   let from: Date;
   let to: Date;
+  // Presets with a well-defined calendar-previous period (month/year) compute it explicitly
+  // below, since months and years vary in length — shifting back by the current period's day
+  // count (the generic fallback further down) would misalign, e.g. a 30-day June "previous
+  // period" would only reach back 30 days into 31-day May, silently dropping May 1st.
+  let previousFrom: Date | undefined;
+  let previousTo: Date | undefined;
 
   if (preset.startsWith("month:")) {
     const [year, month] = preset.slice("month:".length).split("-").map(Number);
     from = new Date(year, month - 1, 1);
     to = new Date(year, month, 0);
+    previousFrom = new Date(year, month - 2, 1);
+    previousTo = new Date(year, month - 1, 0);
   } else switch (preset) {
     case "today":
       from = startOfDay(referenceDate);
@@ -74,6 +82,8 @@ export function resolveReportPeriod(
     case "year":
       from = startOfYear(referenceDate);
       to = endOfYear(referenceDate);
+      previousFrom = new Date(referenceDate.getFullYear() - 1, 0, 1);
+      previousTo = new Date(referenceDate.getFullYear() - 1, 11, 31);
       break;
     case "custom":
       from = custom ? parseIsoDateLocal(custom.dateFrom) : startOfMonth(referenceDate);
@@ -83,14 +93,21 @@ export function resolveReportPeriod(
     default:
       from = startOfMonth(referenceDate);
       to = new Date(referenceDate.getFullYear(), referenceDate.getMonth() + 1, 0);
+      previousFrom = new Date(referenceDate.getFullYear(), referenceDate.getMonth() - 1, 1);
+      previousTo = new Date(referenceDate.getFullYear(), referenceDate.getMonth(), 0);
       break;
   }
 
   if (to.getTime() < from.getTime()) [from, to] = [to, from];
 
-  const spanDays = daysBetweenInclusive(from, to);
-  const previousTo = addDays(from, -1);
-  const previousFrom = addDays(previousTo, -(spanDays - 1));
+  // Fallback for presets without a calendar-previous concept (today/week have a constant span
+  // so this is already exact for them; custom is an arbitrary user-picked range where "shift by
+  // the same span" is the only generally-defined notion of "previous period").
+  if (!previousFrom || !previousTo) {
+    const spanDays = daysBetweenInclusive(from, to);
+    previousTo = addDays(from, -1);
+    previousFrom = addDays(previousTo, -(spanDays - 1));
+  }
 
   return {
     dateFrom: toIsoDateString(from),

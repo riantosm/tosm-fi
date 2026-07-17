@@ -13,6 +13,7 @@ import { useWallets } from "@/hooks/use-wallets";
 import { useConfirmDialog } from "@/hooks/use-confirm-dialog";
 import { useWalletViewMode } from "@/hooks/use-wallet-view-mode";
 import { useToast } from "@/hooks/use-toast";
+import { useCurrency } from "@/hooks/use-currency";
 import type { WalletAccount, WalletInput } from "@/types/wallet.types";
 
 function moveItem(list: WalletAccount[], draggedId: string, targetId: string): WalletAccount[] {
@@ -41,6 +42,9 @@ export function WalletPage() {
   const { confirm } = useConfirmDialog();
   const { viewMode, setViewMode } = useWalletViewMode();
   const { showToast } = useToast();
+  const { format } = useCurrency();
+
+  const totalBalance = wallets.reduce((sum, wallet) => sum + wallet.balance, 0);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingWallet, setEditingWallet] = useState<WalletAccount | null>(null);
@@ -147,10 +151,26 @@ export function WalletPage() {
   return (
     <DashboardLayout>
       <div className="flex flex-col gap-6">
-        <div className="flex items-center justify-between gap-2">
-          <Words as="h1" type="2xl/bold" className="text-ink-900 dark:text-ink-50">
-            {t("nav.wallet")}
-          </Words>
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <div className="flex flex-wrap items-center gap-2">
+            <Words as="h1" type="2xl/bold" className="text-ink-900 dark:text-ink-50">
+              {t("nav.wallet")}
+            </Words>
+            <span className="shrink-0 rounded-full bg-ink-100 px-3 py-1.5 dark:bg-ink-800">
+              <Words
+                type="xs/bold"
+                as="span"
+                className="text-ink-600 dark:text-ink-300 flex items-center"
+              >
+                {t("dashboard.walletCountLabel", { count: wallets.length })}
+              </Words>
+            </span>
+            <span className="shrink-0 rounded-full bg-gradient-to-bl from-primary-400 to-primary-900 px-3 py-1.5">
+              <Words type="xs/bold" as="span" className="text-white flex items-center">
+                {format(totalBalance)}
+              </Words>
+            </span>
+          </div>
 
           {isReordering ? (
             <div className="flex shrink-0 items-center gap-2">
@@ -198,13 +218,15 @@ export function WalletPage() {
         ) : (
           <div
             className={
-              viewMode === "grid"
-                ? "grid grid-cols-2 gap-4 xl:grid-cols-3"
-                : "flex flex-col gap-3"
+              viewMode === "grid" ? "grid grid-cols-2 gap-4 xl:grid-cols-3" : "flex flex-col gap-3"
             }
           >
             {wallets.map((wallet) => (
-              <WalletCard key={wallet.idWallet} wallet={wallet} onClick={() => openEditModal(wallet)} />
+              <WalletCard
+                key={wallet.idWallet}
+                wallet={wallet}
+                onClick={() => openEditModal(wallet)}
+              />
             ))}
             <AddWalletCard onClick={openCreateModal} />
           </div>

@@ -12,7 +12,13 @@ import { useCategories } from "@/hooks/use-categories";
 import { useConfirmDialog } from "@/hooks/use-confirm-dialog";
 import { useToast } from "@/hooks/use-toast";
 import { moveItem } from "@/utils/reorder";
-import type { Category, CategoryInput, CategoryType, SubCategory, SubCategoryInput } from "@/types/category.types";
+import type {
+  Category,
+  CategoryInput,
+  CategoryType,
+  SubCategory,
+  SubCategoryInput,
+} from "@/types/category.types";
 
 interface CategoryModalState {
   categoryId: string | null;
@@ -42,6 +48,11 @@ export function CategoriesPage() {
   const { confirm } = useConfirmDialog();
   const { showToast } = useToast();
 
+  const subCategoryCount = categories.reduce(
+    (sum, category) => sum + category.subCategories.length,
+    0,
+  );
+
   const [categoryModalState, setCategoryModalState] = useState<CategoryModalState | null>(null);
   const [subCategoryModalState, setSubCategoryModalState] = useState<SubCategoryModalState | null>(
     null,
@@ -63,14 +74,12 @@ export function CategoriesPage() {
   }, [status, loadCategories]);
 
   const editingCategory = categoryModalState?.categoryId
-    ? (categories.find((category) => category.idCategory === categoryModalState.categoryId) ??
-      null)
+    ? (categories.find((category) => category.idCategory === categoryModalState.categoryId) ?? null)
     : null;
 
   const subCategoryParentCategory = subCategoryModalState
-    ? (categories.find(
-        (category) => category.idCategory === subCategoryModalState.categoryId,
-      ) ?? null)
+    ? (categories.find((category) => category.idCategory === subCategoryModalState.categoryId) ??
+      null)
     : null;
 
   const editingSubCategory = subCategoryModalState?.subCategoryId
@@ -224,10 +233,18 @@ export function CategoriesPage() {
   return (
     <DashboardLayout>
       <div className="flex flex-col gap-8">
-        <div className="flex items-center justify-between gap-2">
-          <Words as="h1" type="2xl/bold" className="text-ink-900 dark:text-ink-50">
-            {t("nav.category")}
-          </Words>
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <div className="flex flex-wrap items-center gap-2">
+            <Words as="h1" type="2xl/bold" className="text-ink-900 dark:text-ink-50">
+              {t("nav.category")}
+            </Words>
+            <span className="shrink-0 rounded-full bg-ink-100 px-3 py-1.5 dark:bg-ink-800">
+              <Words type="xs/bold" as="span" className="text-ink-600 dark:text-ink-300 flex items-center">
+                {t("category.categoryCountLabel", { count: categories.length })} ·{" "}
+                {t("category.subCategoryCountLabel", { count: subCategoryCount })}
+              </Words>
+            </span>
+          </div>
 
           {isReordering ? (
             <div className="flex shrink-0 items-center gap-2">
@@ -324,7 +341,8 @@ export function CategoriesPage() {
         onDeleteSubCategory={(sub) => void handleDeleteSubCategory(sub)}
         isReorderingSubCategories={isReorderingSubCategories}
         onReorderSubCategories={(orderedIds) => {
-          if (editingCategory) void handleReorderSubCategories(editingCategory.idCategory, orderedIds);
+          if (editingCategory)
+            void handleReorderSubCategories(editingCategory.idCategory, orderedIds);
         }}
       />
 

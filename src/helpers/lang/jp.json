@@ -11,7 +11,9 @@
     "comingSoon": "近日公開",
     "underConstruction": "このページは現在開発中です。",
     "customColor": "カスタムカラー",
-    "all": "すべて"
+    "all": "すべて",
+    "previous": "前へ",
+    "next": "次へ"
   },
   "auth": {
     "welcomeTitle": "おかえりなさい",
@@ -102,7 +104,8 @@
     "totalOfCategory": "{{category}}の合計",
     "otherSubCategory": "その他",
     "recentTransactions": "今月の取引",
-    "noTransactions": "まだ取引がありません"
+    "noTransactions": "まだ取引がありません",
+    "viewAll": "すべて見る"
   },
   "topbar": {
     "search": "検索",
@@ -235,6 +238,8 @@
     "expense": "支出",
     "addCategory": "カテゴリを追加",
     "noCategories": "カテゴリがまだありません",
+    "categoryCountLabel": "{{count}} カテゴリ",
+    "subCategoryCountLabel": "{{count}} サブカテゴリ",
     "addTitle": "カテゴリを追加",
     "editTitle": "カテゴリを編集",
     "nameLabel": "名前",

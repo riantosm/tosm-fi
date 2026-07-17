@@ -15,6 +15,7 @@ const TYPE_FILTERS: { value: TransactionTypeFilter; labelKey: string }[] = [
   { value: "expense", labelKey: "transaction.expense" },
   { value: "income", labelKey: "transaction.income" },
   { value: "transfer", labelKey: "transaction.transfer" },
+  { value: "correction", labelKey: "transaction.balanceCorrection" },
 ];
 
 interface TransactionFilterChipsProps {

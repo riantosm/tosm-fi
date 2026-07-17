@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { IconLoader } from "@/components/atoms/IconLoader";
 import { Words } from "@/components/atoms/Words";
@@ -16,6 +16,7 @@ interface TransactionListProps {
   wallets: WalletAccount[];
   onEditTransaction: (transaction: Transaction) => void;
   title?: string;
+  headerAction?: ReactNode;
   emptyMessage?: string;
   dateGroupOrder?: "desc" | "asc";
   sortWithinDay?: "chronological" | "amountDesc" | "amountAsc";
@@ -100,6 +101,7 @@ export function TransactionList({
   wallets,
   onEditTransaction,
   title,
+  headerAction,
   emptyMessage,
   dateGroupOrder = "desc",
   sortWithinDay = "chronological",
@@ -136,10 +138,15 @@ export function TransactionList({
 
   return (
     <div className="flex flex-col gap-3">
-      {resolvedTitle && (
-        <Words as="h2" type="lg/bold" className="text-ink-900 dark:text-ink-100">
-          {resolvedTitle}
-        </Words>
+      {(resolvedTitle || headerAction) && (
+        <div className="flex items-center justify-between gap-3">
+          {resolvedTitle && (
+            <Words as="h2" type="lg/bold" className="text-ink-900 dark:text-ink-100">
+              {resolvedTitle}
+            </Words>
+          )}
+          {headerAction}
+        </div>
       )}
 
       <div className="relative">

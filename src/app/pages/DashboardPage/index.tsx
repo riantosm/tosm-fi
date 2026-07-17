@@ -1,7 +1,9 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { useNavigate } from "react-router-dom";
 import { DashboardLayout } from "@/components/templates/DashboardLayout";
 import { Words } from "@/components/atoms/Words";
+import { Pagination } from "@/components/molecules/Pagination";
 import { WalletQuickSwitcher } from "@/layouts/dashboard/WalletQuickSwitcher";
 import { FinanceOverview } from "@/layouts/dashboard/FinanceOverview";
 import { AddTransactionFab } from "@/layouts/dashboard/AddTransactionFab";
@@ -17,8 +19,11 @@ import { useTransactions } from "@/hooks/use-transactions";
 import { useDashboardSummary } from "@/hooks/use-dashboard-summary";
 import { formatMonthParam, startOfMonth } from "@/utils/month";
 import { getGreetingKey } from "@/utils/greeting";
+import { ROUTES } from "@/constants/routes";
 import type { Transaction, TransactionListResult } from "@/types/transaction.types";
 import type { WalletAccount } from "@/types/wallet.types";
+
+const MONTH_LIST_PAGE_SIZE = 10;
 
 interface CorrectionState {
   wallet: WalletAccount;
@@ -27,6 +32,7 @@ interface CorrectionState {
 
 export function DashboardPage() {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const { categories, status: categoriesStatus, loadCategories } = useCategories();
   const { wallets, status: walletsStatus, loadWallets } = useWallets();
   // `transactions` is used only as a change-detection dependency below (the
@@ -40,6 +46,7 @@ export function DashboardPage() {
   const [correctionState, setCorrectionState] = useState<CorrectionState | null>(null);
   const [monthResult, setMonthResult] = useState<TransactionListResult | null>(null);
   const [isMonthLoading, setIsMonthLoading] = useState(true);
+  const [page, setPage] = useState(1);
 
   useEffect(() => {
     if (categoriesStatus === "idle") void loadCategories();
@@ -49,11 +56,25 @@ export function DashboardPage() {
     if (walletsStatus === "idle") void loadWallets();
   }, [walletsStatus, loadWallets]);
 
+  // Reset back to page 1 whenever the global `transactions` array reference
+  // changes — i.e. after any create/edit/delete anywhere in the app — so the
+  // list can't get stuck on a now out-of-range page. Done during render so
+  // the query effect below only ever sees the final page.
+  const [prevTransactions, setPrevTransactions] = useState(transactions);
+  if (prevTransactions !== transactions) {
+    setPrevTransactions(transactions);
+    setPage(1);
+  }
+
   useEffect(() => {
     let cancelled = false;
     setIsMonthLoading(true);
 
-    void queryTransactions({ month: formatMonthParam(startOfMonth(new Date())) }).then((result) => {
+    void queryTransactions({
+      month: formatMonthParam(startOfMonth(new Date())),
+      page,
+      limit: MONTH_LIST_PAGE_SIZE,
+    }).then((result) => {
       if (cancelled) return;
       setMonthResult(result);
       setIsMonthLoading(false);
@@ -62,7 +83,7 @@ export function DashboardPage() {
     return () => {
       cancelled = true;
     };
-  }, [queryTransactions, transactions]);
+  }, [queryTransactions, transactions, page]);
 
   function handleEditTransaction(transaction: Transaction) {
     if (transaction.type === "correction") {
@@ -93,7 +114,7 @@ export function DashboardPage() {
               <div className="w-full sm:flex-1">
                 <MonthlySummaryCard
                   summary={dashboardSummary}
-                  transactionCount={monthResult?.transactions.length ?? 0}
+                  transactionCount={monthResult?.total ?? 0}
                   isLoading={isDashboardSummaryLoading || isMonthLoading}
                 />
               </div>
@@ -120,9 +141,24 @@ export function DashboardPage() {
               categories={categories}
               wallets={wallets}
               onEditTransaction={handleEditTransaction}
+              headerAction={
+                <button
+                  type="button"
+                  onClick={() => navigate(ROUTES.TRANSACTIONS)}
+                  className="text-[13px] font-bold text-primary-600 hover:underline dark:text-primary-400"
+                >
+                  {t("dashboard.viewAll")}
+                </button>
+              }
               isLoading={
                 isMonthLoading || walletsStatus !== "loaded" || categoriesStatus !== "loaded"
               }
+            />
+
+            <Pagination
+              page={page}
+              totalPages={monthResult?.totalPages ?? 0}
+              onPageChange={setPage}
             />
           </div>
         </div>

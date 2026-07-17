@@ -1,4 +1,4 @@
-import { createElement, useState } from "react";
+import { createElement, useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { HiOutlineChevronDown, HiOutlineTag } from "react-icons/hi2";
 import { IconLoader } from "@/components/atoms/IconLoader";
@@ -16,6 +16,7 @@ interface CategoryBreakdownChartProps {
   slices: ChartSlice[];
   title: string;
   periodLabel: string;
+  headerAction?: ReactNode;
   isLoading?: boolean;
 }
 
@@ -154,6 +155,7 @@ export function CategoryBreakdownChart({
   slices,
   title,
   periodLabel,
+  headerAction,
   isLoading = false,
 }: CategoryBreakdownChartProps) {
   const { t } = useTranslation();
@@ -186,15 +188,18 @@ export function CategoryBreakdownChart({
         <Words type="base/bold" className="text-ink-900 dark:text-ink-50">
           {title}
         </Words>
-        <span className="shrink-0 rounded-full bg-ink-100 px-3 py-1.5 dark:bg-ink-800">
-          <Words
-            type="xs/bold"
-            as="span"
-            className="text-ink-600 dark:text-ink-300 flex items-center justify-center"
-          >
-            {periodLabel}
-          </Words>
-        </span>
+        <div className="flex shrink-0 items-center gap-2">
+          {headerAction}
+          <span className="shrink-0 rounded-full bg-ink-100 px-3 py-1.5 dark:bg-ink-800">
+            <Words
+              type="xs/bold"
+              as="span"
+              className="text-ink-600 dark:text-ink-300 flex items-center justify-center"
+            >
+              {periodLabel}
+            </Words>
+          </span>
+        </div>
       </div>
 
       <div className="relative">

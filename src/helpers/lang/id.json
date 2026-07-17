@@ -11,7 +11,9 @@
     "comingSoon": "Segera",
     "underConstruction": "Halaman ini sedang dalam pengembangan.",
     "customColor": "Warna Kustom",
-    "all": "Semua"
+    "all": "Semua",
+    "previous": "Sebelumnya",
+    "next": "Berikutnya"
   },
   "auth": {
     "welcomeTitle": "Selamat datang kembali",
@@ -102,7 +104,8 @@
     "totalOfCategory": "Total {{category}}",
     "otherSubCategory": "Lainnya",
     "recentTransactions": "Transaksi Bulan Ini",
-    "noTransactions": "Belum ada transaksi"
+    "noTransactions": "Belum ada transaksi",
+    "viewAll": "Selengkapnya"
   },
   "topbar": {
     "search": "Cari",
@@ -235,6 +238,8 @@
     "expense": "Pengeluaran",
     "addCategory": "Tambah Kategori",
     "noCategories": "Belum ada kategori",
+    "categoryCountLabel": "{{count}} Kategori",
+    "subCategoryCountLabel": "{{count}} Sub Kategori",
     "addTitle": "Tambah Kategori",
     "editTitle": "Edit Kategori",
     "nameLabel": "Nama",
