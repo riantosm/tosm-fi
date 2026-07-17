@@ -9,11 +9,16 @@ export function useFirstInvestmentDate(): string | null {
   useEffect(() => {
     let cancelled = false;
 
-    void queryInvestmentTransactions({ sort: "dateAsc", page: 1, limit: 1 }).then((result) => {
-      if (cancelled) return;
-      const firstDate = result.investmentTransactions[0]?.date;
-      setFirstInvestmentDate(firstDate ? firstDate.slice(0, 10) : null);
-    });
+    void queryInvestmentTransactions({ sort: "dateAsc", page: 1, limit: 1 })
+      .then((result) => {
+        if (cancelled) return;
+        const firstDate = result.investmentTransactions[0]?.date;
+        setFirstInvestmentDate(firstDate ? firstDate.slice(0, 10) : null);
+      })
+      .catch((error) => {
+        if (cancelled) return;
+        console.error("Failed to load first investment date", error);
+      });
 
     return () => {
       cancelled = true;

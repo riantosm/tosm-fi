@@ -4,51 +4,80 @@ import { IconLoader } from "@/components/atoms/IconLoader";
 import { ProtectedRoute } from "@/app/ProtectedRoute";
 import { ROUTES } from "@/constants/routes";
 
+// A lazy chunk fetch can fail from a plain transient network blip, not just a
+// stale deploy — retrying the same import a couple of times recovers from
+// that without the disruption of a full page reload (which is still the
+// ErrorBoundary's fallback if the chunk genuinely no longer exists).
+function retryImport<T>(factory: () => Promise<T>, retriesLeft = 2, delayMs = 800): Promise<T> {
+  return factory().catch((error) => {
+    if (retriesLeft <= 0) throw error;
+    return new Promise<void>((resolve) => setTimeout(resolve, delayMs)).then(() =>
+      retryImport(factory, retriesLeft - 1, delayMs),
+    );
+  });
+}
+
 const LoginPage = lazy(() =>
-  import("@/app/pages/LoginPage").then((m) => ({ default: m.LoginPage })),
+  retryImport(() => import("@/app/pages/LoginPage").then((m) => ({ default: m.LoginPage }))),
 );
 const RegisterPage = lazy(() =>
-  import("@/app/pages/RegisterPage").then((m) => ({ default: m.RegisterPage })),
+  retryImport(() => import("@/app/pages/RegisterPage").then((m) => ({ default: m.RegisterPage }))),
 );
 const DashboardPage = lazy(() =>
-  import("@/app/pages/DashboardPage").then((m) => ({ default: m.DashboardPage })),
+  retryImport(() => import("@/app/pages/DashboardPage").then((m) => ({ default: m.DashboardPage }))),
 );
 const TransactionsPage = lazy(() =>
-  import("@/app/pages/TransactionsPage").then((m) => ({ default: m.TransactionsPage })),
+  retryImport(() =>
+    import("@/app/pages/TransactionsPage").then((m) => ({ default: m.TransactionsPage })),
+  ),
 );
 const WalletPage = lazy(() =>
-  import("@/app/pages/WalletPage").then((m) => ({ default: m.WalletPage })),
+  retryImport(() => import("@/app/pages/WalletPage").then((m) => ({ default: m.WalletPage }))),
 );
 const CategoriesPage = lazy(() =>
-  import("@/app/pages/CategoriesPage").then((m) => ({ default: m.CategoriesPage })),
+  retryImport(() =>
+    import("@/app/pages/CategoriesPage").then((m) => ({ default: m.CategoriesPage })),
+  ),
 );
 const InvestmentPage = lazy(() =>
-  import("@/app/pages/InvestmentPage").then((m) => ({ default: m.InvestmentPage })),
+  retryImport(() =>
+    import("@/app/pages/InvestmentPage").then((m) => ({ default: m.InvestmentPage })),
+  ),
 );
 const ReportsPage = lazy(() =>
-  import("@/app/pages/ReportsPage").then((m) => ({ default: m.ReportsPage })),
+  retryImport(() => import("@/app/pages/ReportsPage").then((m) => ({ default: m.ReportsPage }))),
 );
 const EditProfilePage = lazy(() =>
-  import("@/app/pages/EditProfilePage").then((m) => ({ default: m.EditProfilePage })),
+  retryImport(() =>
+    import("@/app/pages/EditProfilePage").then((m) => ({ default: m.EditProfilePage })),
+  ),
 );
 const SettingsPage = lazy(() =>
-  import("@/app/pages/SettingsPage").then((m) => ({ default: m.SettingsPage })),
+  retryImport(() => import("@/app/pages/SettingsPage").then((m) => ({ default: m.SettingsPage }))),
 );
 const SettingsApiDocPage = lazy(() =>
-  import("@/app/pages/SettingsApiDocPage").then((m) => ({ default: m.SettingsApiDocPage })),
+  retryImport(() =>
+    import("@/app/pages/SettingsApiDocPage").then((m) => ({ default: m.SettingsApiDocPage })),
+  ),
 );
 const SettingsCurrencyPage = lazy(() =>
-  import("@/app/pages/SettingsCurrencyPage").then((m) => ({ default: m.SettingsCurrencyPage })),
+  retryImport(() =>
+    import("@/app/pages/SettingsCurrencyPage").then((m) => ({ default: m.SettingsCurrencyPage })),
+  ),
 );
 const SettingsUserApprovalPage = lazy(() =>
-  import("@/app/pages/SettingsUserApprovalPage").then((m) => ({
-    default: m.SettingsUserApprovalPage,
-  })),
+  retryImport(() =>
+    import("@/app/pages/SettingsUserApprovalPage").then((m) => ({
+      default: m.SettingsUserApprovalPage,
+    })),
+  ),
 );
 const SettingsErrorLogPage = lazy(() =>
-  import("@/app/pages/SettingsErrorLogPage").then((m) => ({
-    default: m.SettingsErrorLogPage,
-  })),
+  retryImport(() =>
+    import("@/app/pages/SettingsErrorLogPage").then((m) => ({
+      default: m.SettingsErrorLogPage,
+    })),
+  ),
 );
 
 function RouteFallback() {

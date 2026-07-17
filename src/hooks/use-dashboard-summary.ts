@@ -40,12 +40,20 @@ export function useDashboardSummary() {
     const timeoutId = setTimeout(() => {
       if (!hasLoadedRef.current) setIsLoading(true);
 
-      void reportService.fetchDashboardSummary().then((result) => {
-        if (cancelled) return;
-        setSummary(result);
-        setIsLoading(false);
-        hasLoadedRef.current = true;
-      });
+      void reportService
+        .fetchDashboardSummary()
+        .then((result) => {
+          if (cancelled) return;
+          setSummary(result);
+          setIsLoading(false);
+          hasLoadedRef.current = true;
+        })
+        .catch((error) => {
+          if (cancelled) return;
+          console.error("Failed to load dashboard summary", error);
+          setIsLoading(false);
+          hasLoadedRef.current = true;
+        });
     }, 200);
 
     return () => {

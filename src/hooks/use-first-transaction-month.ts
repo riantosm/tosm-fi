@@ -9,11 +9,16 @@ export function useFirstTransactionMonth(): string | null {
   useEffect(() => {
     let cancelled = false;
 
-    void queryTransactions({ sort: "dateAsc", page: 1, limit: 1 }).then((result) => {
-      if (cancelled) return;
-      const firstDate = result.transactions[0]?.date;
-      setFirstTransactionMonth(firstDate ? firstDate.slice(0, 7) : null);
-    });
+    void queryTransactions({ sort: "dateAsc", page: 1, limit: 1 })
+      .then((result) => {
+        if (cancelled) return;
+        const firstDate = result.transactions[0]?.date;
+        setFirstTransactionMonth(firstDate ? firstDate.slice(0, 7) : null);
+      })
+      .catch((error) => {
+        if (cancelled) return;
+        console.error("Failed to load first transaction month", error);
+      });
 
     return () => {
       cancelled = true;

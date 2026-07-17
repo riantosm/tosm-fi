@@ -59,10 +59,15 @@ export function useReports(period: ReportPeriodFilter, monthlyTrendMetric: Month
   useEffect(() => {
     let cancelled = false;
 
-    void queryTransactions({ dateFrom: resolvedPeriod.dateFrom, dateTo: resolvedPeriod.dateTo }).then((result) => {
-      if (cancelled) return;
-      setPeriodTransactions(result.transactions);
-    });
+    void queryTransactions({ dateFrom: resolvedPeriod.dateFrom, dateTo: resolvedPeriod.dateTo })
+      .then((result) => {
+        if (cancelled) return;
+        setPeriodTransactions(result.transactions);
+      })
+      .catch((error) => {
+        if (cancelled) return;
+        console.error("Failed to load period transactions", error);
+      });
 
     return () => {
       cancelled = true;
@@ -120,6 +125,11 @@ export function useReports(period: ReportPeriodFilter, monthlyTrendMetric: Month
         setSummary(result.summary);
         setCategoryBreakdown(result.categoryBreakdown);
         setSummaryCompletedKey(summaryRequestKey);
+      })
+      .catch((error) => {
+        if (cancelled) return;
+        console.error("Failed to load report summary", error);
+        setSummaryCompletedKey(summaryRequestKey);
       });
 
     return () => {
@@ -134,11 +144,18 @@ export function useReports(period: ReportPeriodFilter, monthlyTrendMetric: Month
   useEffect(() => {
     let cancelled = false;
 
-    void reportService.fetchCashFlow(resolvedPeriod.dateFrom, resolvedPeriod.dateTo, language).then((result) => {
-      if (cancelled) return;
-      setCashFlow(result);
-      setCashFlowCompletedKey(cashFlowRequestKey);
-    });
+    void reportService
+      .fetchCashFlow(resolvedPeriod.dateFrom, resolvedPeriod.dateTo, language)
+      .then((result) => {
+        if (cancelled) return;
+        setCashFlow(result);
+        setCashFlowCompletedKey(cashFlowRequestKey);
+      })
+      .catch((error) => {
+        if (cancelled) return;
+        console.error("Failed to load cash flow", error);
+        setCashFlowCompletedKey(cashFlowRequestKey);
+      });
 
     return () => {
       cancelled = true;
@@ -154,11 +171,18 @@ export function useReports(period: ReportPeriodFilter, monthlyTrendMetric: Month
   useEffect(() => {
     let cancelled = false;
 
-    void reportService.fetchMonthlyTrend(MONTHLY_TREND_MONTHS, language).then((result) => {
-      if (cancelled) return;
-      setMonthlyTrendRaw(result);
-      setMonthlyTrendCompletedKey(monthlyTrendRequestKey);
-    });
+    void reportService
+      .fetchMonthlyTrend(MONTHLY_TREND_MONTHS, language)
+      .then((result) => {
+        if (cancelled) return;
+        setMonthlyTrendRaw(result);
+        setMonthlyTrendCompletedKey(monthlyTrendRequestKey);
+      })
+      .catch((error) => {
+        if (cancelled) return;
+        console.error("Failed to load monthly trend", error);
+        setMonthlyTrendCompletedKey(monthlyTrendRequestKey);
+      });
 
     return () => {
       cancelled = true;
@@ -172,11 +196,18 @@ export function useReports(period: ReportPeriodFilter, monthlyTrendMetric: Month
   useEffect(() => {
     let cancelled = false;
 
-    void reportService.fetchWalletUsage(resolvedPeriod.dateFrom, resolvedPeriod.dateTo).then((result) => {
-      if (cancelled) return;
-      setWalletUsage(result);
-      setWalletUsageCompletedKey(walletUsageRequestKey);
-    });
+    void reportService
+      .fetchWalletUsage(resolvedPeriod.dateFrom, resolvedPeriod.dateTo)
+      .then((result) => {
+        if (cancelled) return;
+        setWalletUsage(result);
+        setWalletUsageCompletedKey(walletUsageRequestKey);
+      })
+      .catch((error) => {
+        if (cancelled) return;
+        console.error("Failed to load wallet usage", error);
+        setWalletUsageCompletedKey(walletUsageRequestKey);
+      });
 
     return () => {
       cancelled = true;
@@ -195,6 +226,11 @@ export function useReports(period: ReportPeriodFilter, monthlyTrendMetric: Month
       .then((result) => {
         if (cancelled) return;
         setTopSpending(result);
+        setTopSpendingCompletedKey(topSpendingRequestKey);
+      })
+      .catch((error) => {
+        if (cancelled) return;
+        console.error("Failed to load top spending", error);
         setTopSpendingCompletedKey(topSpendingRequestKey);
       });
 

@@ -29,6 +29,11 @@ export function useNetWorthTimeline(
         if (cancelled) return;
         setData(result);
         setCompletedKey(requestKey);
+      })
+      .catch((error) => {
+        if (cancelled) return;
+        console.error("Failed to load net worth timeline", error);
+        setCompletedKey(requestKey);
       });
 
     return () => {
