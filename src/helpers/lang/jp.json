@@ -458,6 +458,8 @@
     "transferSameWalletError": "送金元と送金先は別のウォレットにしてください",
     "createSuccess": "取引を追加しました",
     "updateSuccess": "取引を更新しました",
+    "duplicateButton": "複製",
+    "duplicateSuccess": "取引を複製しました",
     "deleteButton": "削除",
     "deleteConfirmTitle": "この取引を削除しますか?",
     "deleteConfirmDescription": "ウォレット残高は元に戻ります。この操作は取り消せません。",

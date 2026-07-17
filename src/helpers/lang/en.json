@@ -458,6 +458,8 @@
     "transferSameWalletError": "From and to wallets must be different",
     "createSuccess": "Transaction added successfully",
     "updateSuccess": "Transaction updated successfully",
+    "duplicateButton": "Duplicate",
+    "duplicateSuccess": "Transaction duplicated successfully",
     "deleteButton": "Delete",
     "deleteConfirmTitle": "Delete this transaction?",
     "deleteConfirmDescription": "The wallet balance will be reverted. This action cannot be undone.",

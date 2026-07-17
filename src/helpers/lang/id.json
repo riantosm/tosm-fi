@@ -458,6 +458,8 @@
     "transferSameWalletError": "Dompet asal dan tujuan harus berbeda",
     "createSuccess": "Transaksi berhasil ditambahkan",
     "updateSuccess": "Transaksi berhasil diperbarui",
+    "duplicateButton": "Duplikasi",
+    "duplicateSuccess": "Transaksi berhasil diduplikasi",
     "deleteButton": "Hapus",
     "deleteConfirmTitle": "Hapus transaksi ini?",
     "deleteConfirmDescription": "Saldo wallet akan dikembalikan. Tindakan ini tidak bisa dibatalkan.",

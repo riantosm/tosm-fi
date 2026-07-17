@@ -4,6 +4,7 @@ import {
   HiOutlineArrowsRightLeft,
   HiOutlineCalendarDays,
   HiOutlineClock,
+  HiOutlineDocumentDuplicate,
   HiOutlineTag,
   HiOutlineTrash,
 } from "react-icons/hi2";
@@ -107,6 +108,7 @@ function AddTransactionFields({
   const [date, setDate] = useState(() => (transaction ? new Date(transaction.date) : new Date()));
   const [isSaving, setIsSaving] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isDuplicating, setIsDuplicating] = useState(false);
 
   const [isInvestment, setIsInvestment] = useState(false);
   const [investmentInstrumentId, setInvestmentInstrumentId] = useState<string | null>(null);
@@ -170,22 +172,20 @@ function AddTransactionFields({
     setSubCategoryId(pickedSub.idSubCategory);
   }
 
-  async function handleSave() {
+  function buildInput(): TransactionInput | null {
     if (amount <= 0) {
       showToast(t("transaction.amountRequiredError"), "error");
-      return;
+      return null;
     }
-
-    let input: TransactionInput;
 
     if (type === "transfer") {
       if (!walletFromId || !walletToId) {
         showToast(t("transaction.transferWalletRequiredError"), "error");
-        return;
+        return null;
       }
       if (walletFromId === walletToId) {
         showToast(t("transaction.transferSameWalletError"), "error");
-        return;
+        return null;
       }
       const fromWallet = wallets.find((item) => item.idWallet === walletFromId);
       const toWallet = wallets.find((item) => item.idWallet === walletToId);
@@ -197,7 +197,7 @@ function AddTransactionFields({
             })
           : t("transaction.transfer");
 
-      input = {
+      return {
         type: "transfer",
         idWallet: null,
         idCategory: null,
@@ -209,38 +209,43 @@ function AddTransactionFields({
         amount,
         date: date.toISOString(),
       };
-    } else {
-      if (!category) {
-        showToast(t("transaction.categoryRequiredError"), "error");
-        return;
-      }
-      if (!selectedWalletId) {
-        showToast(t("transaction.walletRequiredError"), "error");
-        return;
-      }
-      if (
-        type === "expense" &&
-        !transaction &&
-        isInvestment &&
-        (!investmentInstrumentId || !investmentAccountId)
-      ) {
-        showToast(t("investment.selectAccountRequiredError"), "error");
-        return;
-      }
-
-      input = {
-        type,
-        idWallet: selectedWalletId,
-        idCategory: category.idCategory,
-        idSubCategory: subCategory?.idSubCategory ?? null,
-        idWalletFrom: null,
-        idWalletTo: null,
-        title: title.trim(),
-        notes: notes.trim(),
-        amount,
-        date: date.toISOString(),
-      };
     }
+
+    if (!category) {
+      showToast(t("transaction.categoryRequiredError"), "error");
+      return null;
+    }
+    if (!selectedWalletId) {
+      showToast(t("transaction.walletRequiredError"), "error");
+      return null;
+    }
+    if (
+      type === "expense" &&
+      !transaction &&
+      isInvestment &&
+      (!investmentInstrumentId || !investmentAccountId)
+    ) {
+      showToast(t("investment.selectAccountRequiredError"), "error");
+      return null;
+    }
+
+    return {
+      type,
+      idWallet: selectedWalletId,
+      idCategory: category.idCategory,
+      idSubCategory: subCategory?.idSubCategory ?? null,
+      idWalletFrom: null,
+      idWalletTo: null,
+      title: title.trim(),
+      notes: notes.trim(),
+      amount,
+      date: date.toISOString(),
+    };
+  }
+
+  async function handleSave() {
+    const input = buildInput();
+    if (!input) return;
 
     setIsSaving(true);
     try {
@@ -278,6 +283,22 @@ function AddTransactionFields({
     }
   }
 
+  async function handleDuplicate() {
+    const input = buildInput();
+    if (!input) return;
+
+    setIsDuplicating(true);
+    try {
+      await createTransaction(input);
+      showToast(t("transaction.duplicateSuccess"), "success");
+      onClose();
+    } catch (error) {
+      showToast(error instanceof Error ? error.message : t("transaction.genericError"), "error");
+    } finally {
+      setIsDuplicating(false);
+    }
+  }
+
   async function handleDelete() {
     if (!transaction) return;
     const confirmed = await confirm({
@@ -310,15 +331,27 @@ function AddTransactionFields({
           </Words>
           <div className="flex shrink-0 items-center gap-1">
             {transaction && (
-              <button
-                type="button"
-                onClick={() => void handleDelete()}
-                disabled={isDeleting}
-                aria-label={t("transaction.deleteButton")}
-                className="flex h-9 w-9 items-center justify-center rounded-full text-ink-400 transition-colors hover:bg-red-50 hover:text-red-500 disabled:opacity-60 dark:hover:bg-red-500/10 dark:hover:text-red-400"
-              >
-                <HiOutlineTrash className="h-4 w-4" />
-              </button>
+              <>
+                <button
+                  type="button"
+                  onClick={() => void handleDuplicate()}
+                  disabled={isDuplicating}
+                  aria-label={t("transaction.duplicateButton")}
+                  title={t("transaction.duplicateButton")}
+                  className="flex h-9 w-9 items-center justify-center rounded-full text-ink-400 transition-colors hover:bg-ink-100 hover:text-ink-600 disabled:opacity-60 dark:hover:bg-ink-800 dark:hover:text-ink-200"
+                >
+                  <HiOutlineDocumentDuplicate className="h-4 w-4" />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => void handleDelete()}
+                  disabled={isDeleting}
+                  aria-label={t("transaction.deleteButton")}
+                  className="flex h-9 w-9 items-center justify-center rounded-full text-ink-400 transition-colors hover:bg-red-50 hover:text-red-500 disabled:opacity-60 dark:hover:bg-red-500/10 dark:hover:text-red-400"
+                >
+                  <HiOutlineTrash className="h-4 w-4" />
+                </button>
+              </>
             )}
             <ModalCloseButton onClose={onClose} />
           </div>
