@@ -610,7 +610,11 @@ function AddTransactionFields({
           </div>
         </div>
 
-        <Button onClick={() => void handleSave()} isLoading={isSaving} className="w-full">
+        <Button
+          onClick={() => void handleSave()}
+          isLoading={isSaving || isDuplicating || isDeleting}
+          className="w-full"
+        >
           <Words type="sm/bold" as="span">
             {t("transaction.save")}
           </Words>

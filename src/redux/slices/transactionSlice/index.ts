@@ -24,7 +24,15 @@ export const transactionSlice = createSlice({
       const index = state.transactions.findIndex(
         (item) => item.idTransaction === action.payload.idTransaction,
       );
-      if (index !== -1) state.transactions[index] = action.payload;
+      if (index !== -1) {
+        state.transactions[index] = action.payload;
+      } else {
+        // Not every edited transaction was fetched into this slice (it's only ever
+        // fed by mutations, never seeded from the server) — push it anyway so the
+        // array reference still changes and TransactionsPage's mutation-signal
+        // check (`transactions !== prevTransactions`) picks up the edit.
+        state.transactions.push(action.payload);
+      }
     },
     removeTransaction: (state, action: PayloadAction<string>) => {
       state.transactions = state.transactions.filter(
