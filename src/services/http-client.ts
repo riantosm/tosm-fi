@@ -14,6 +14,14 @@ httpClient.interceptors.request.use((config) => {
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
+  // Every date-scoped GET (transactions, reports, investment-transactions) needs to know the
+  // client's local timezone to interpret "month"/"dateFrom"/"dateTo" as local calendar
+  // boundaries rather than UTC ones — see tosm-fi-be's src/utils/timezone.ts. Attached here
+  // rather than per-service-call so no endpoint can forget it, same reasoning as the
+  // Authorization header above.
+  if (config.method === "get") {
+    config.params = { ...config.params, tzOffsetMinutes: new Date().getTimezoneOffset() };
+  }
   return config;
 });
 
