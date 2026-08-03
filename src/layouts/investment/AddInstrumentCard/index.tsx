@@ -1,16 +1,25 @@
 import { useTranslation } from "react-i18next";
 import { HiOutlinePlus } from "react-icons/hi2";
 import { Tooltip } from "@/components/atoms/Tooltip";
+import { cn } from "@/utils/cn";
 
 interface AddInstrumentCardProps {
   onClick: () => void;
+  /** "carousel" (default): fixed width for a horizontal scroll row. "grid": fills its grid cell. */
+  layout?: "carousel" | "grid";
 }
 
-export function AddInstrumentCard({ onClick }: AddInstrumentCardProps) {
+export function AddInstrumentCard({ onClick, layout = "carousel" }: AddInstrumentCardProps) {
   const { t } = useTranslation();
 
   return (
-    <Tooltip content={t("investment.addTitle")} wrapperClassName="w-56 shrink-0">
+    <Tooltip
+      content={t("investment.addTitle")}
+      wrapperClassName={cn(
+        "transition-all duration-300 ease-in-out",
+        layout === "grid" ? "w-full" : "w-56 shrink-0",
+      )}
+    >
       <button
         type="button"
         onClick={onClick}

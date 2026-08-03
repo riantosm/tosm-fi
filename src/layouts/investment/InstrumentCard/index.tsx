@@ -13,6 +13,8 @@ interface InstrumentCardProps {
   sparkline: TimelinePoint[];
   isSelected: boolean;
   onClick: () => void;
+  /** "carousel" (default): fixed width for a horizontal scroll row. "grid": fills its grid cell. */
+  layout?: "carousel" | "grid";
 }
 
 export function InstrumentCard({
@@ -20,6 +22,7 @@ export function InstrumentCard({
   sparkline,
   isSelected,
   onClick,
+  layout = "carousel",
 }: InstrumentCardProps) {
   const { t } = useTranslation();
   const { format } = useCurrency();
@@ -33,7 +36,8 @@ export function InstrumentCard({
       type="button"
       onClick={onClick}
       className={cn(
-        "relative flex w-56 shrink-0 flex-col overflow-hidden rounded-2xl border bg-white p-4 text-left transition-colors dark:bg-ink-900",
+        "relative flex flex-col overflow-hidden rounded-2xl border bg-white p-4 text-left transition-all duration-300 ease-in-out dark:bg-ink-900",
+        layout === "grid" ? "w-full" : "w-56 shrink-0",
         isSelected ? "" : "border-ink-200 hover:border-ink-300 dark:border-ink-800 dark:hover:border-ink-700",
       )}
       style={isSelected ? { borderColor: instrument.color } : undefined}

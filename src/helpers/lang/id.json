@@ -387,6 +387,12 @@
     "genericError": "Terjadi kesalahan, coba lagi.",
     "totalValue": "Total Nilai Investasi",
     "instrumentLabel": "Instrumen Investasi",
+    "toggleInstrumentView": "Ubah tampilan instrumen menjadi grid atau carousel",
+    "sortTitle": "Urutkan",
+    "sortOptions": {
+      "amount": "Nilai Investasi",
+      "percentChange": "Kenaikan %"
+    },
     "addInstrument": "Tambah Instrumen Investasi",
     "noInstruments": "Belum ada instrumen investasi",
     "noInstrumentsHint": "Tambahkan instrumen investasi pertamamu, misalnya Reksadana atau Emas.",

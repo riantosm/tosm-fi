@@ -387,6 +387,12 @@
     "genericError": "エラーが発生しました。もう一度お試しください。",
     "totalValue": "総投資額",
     "instrumentLabel": "投資商品",
+    "toggleInstrumentView": "商品のグリッド/カルーセル表示を切り替え",
+    "sortTitle": "並び替え",
+    "sortOptions": {
+      "amount": "投資額",
+      "percentChange": "変動率"
+    },
     "addInstrument": "投資商品を追加",
     "noInstruments": "まだ投資商品がありません",
     "noInstrumentsHint": "最初の投資商品を追加しましょう。例：投資信託、金など。",

@@ -387,6 +387,12 @@
     "genericError": "Something went wrong, please try again.",
     "totalValue": "Total Investment Value",
     "instrumentLabel": "Investment Instrument",
+    "toggleInstrumentView": "Toggle instrument grid or carousel view",
+    "sortTitle": "Sort",
+    "sortOptions": {
+      "amount": "Investment Value",
+      "percentChange": "% Change"
+    },
     "addInstrument": "Add Investment Instrument",
     "noInstruments": "No investment instruments yet",
     "noInstrumentsHint": "Add your first investment instrument, e.g. Mutual Fund or Gold.",

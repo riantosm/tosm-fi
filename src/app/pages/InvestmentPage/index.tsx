@@ -10,10 +10,16 @@ import { DashboardLayout } from "@/components/templates/DashboardLayout";
 import { IconLoader } from "@/components/atoms/IconLoader";
 import { Words } from "@/components/atoms/Words";
 import { Tooltip } from "@/components/atoms/Tooltip";
+import { AnimatedHeight } from "@/components/atoms/AnimatedHeight";
 import { NetWorthChart } from "@/layouts/investment/NetWorthChart";
 import { InstrumentFilterChips } from "@/layouts/investment/InstrumentFilterChips";
 import { InstrumentCard } from "@/layouts/investment/InstrumentCard";
 import { AddInstrumentCard } from "@/layouts/investment/AddInstrumentCard";
+import { InstrumentViewModeToggle } from "@/layouts/investment/InstrumentViewModeToggle";
+import {
+  InstrumentSortDropdown,
+  type InstrumentSortOption,
+} from "@/layouts/investment/InstrumentSortDropdown";
 import { InstrumentFormModal } from "@/layouts/investment/InstrumentFormModal";
 import { InstrumentDetailPanel } from "@/layouts/investment/InstrumentDetailPanel";
 import { InvestmentAccountFormModal } from "@/layouts/investment/InvestmentAccountFormModal";
@@ -24,13 +30,15 @@ import { InvestmentTransactionToolbar } from "@/layouts/investment/InvestmentTra
 import { InvestmentTransactionList } from "@/layouts/investment/InvestmentTransactionList";
 import { EditInvestmentTransactionModal } from "@/layouts/investment/EditInvestmentTransactionModal";
 import { useInstruments } from "@/hooks/use-instruments";
+import { useInstrumentViewMode } from "@/hooks/use-instrument-view-mode";
 import { useInvestmentTransactions } from "@/hooks/use-investment-transactions";
 import { useFirstInvestmentDate } from "@/hooks/use-first-investment-date";
 import { useNetWorthTimeline } from "@/hooks/use-net-worth-timeline";
 import { useConfirmDialog } from "@/hooks/use-confirm-dialog";
 import { useToast } from "@/hooks/use-toast";
-import { getPortfolioTotals } from "@/utils/investment";
+import { getInstrumentTotals, getPortfolioTotals } from "@/utils/investment";
 import { resolveNetWorthPeriod, type NetWorthPeriodPreset } from "@/utils/net-worth-period";
+import { cn } from "@/utils/cn";
 import type {
   Instrument,
   InstrumentInput,
@@ -78,6 +86,9 @@ export function InvestmentPage() {
   const { showToast } = useToast();
 
   const scrollRef = useRef<HTMLDivElement>(null);
+  const { viewMode: instrumentViewMode, setViewMode: setInstrumentViewMode } =
+    useInstrumentViewMode();
+  const [instrumentSortOption, setInstrumentSortOption] = useState<InstrumentSortOption>("amount");
   const [selectedInstrumentIds, setSelectedInstrumentIds] = useState<string[]>([]);
   const [selectedInstrumentId, setSelectedInstrumentId] = useState<string | null>(null);
   const [selectedAccountId, setSelectedAccountId] = useState<string | null>(null);
@@ -234,6 +245,17 @@ export function InvestmentPage() {
     () => getPortfolioTotals(visibleInstruments),
     [visibleInstruments],
   );
+
+  // Cards are always shown highest-first, whichever metric is chosen.
+  const sortedInstruments = useMemo(() => {
+    return [...visibleInstruments].sort((a, b) => {
+      const totalsA = getInstrumentTotals(a);
+      const totalsB = getInstrumentTotals(b);
+      return instrumentSortOption === "amount"
+        ? totalsB.currentValue - totalsA.currentValue
+        : totalsB.profitLossPercent - totalsA.profitLossPercent;
+    });
+  }, [visibleInstruments, instrumentSortOption]);
 
   const firstInvestmentDate = useFirstInvestmentDate();
   const resolvedNetWorthPeriod = useMemo(
@@ -524,37 +546,63 @@ export function InvestmentPage() {
                   {t("investment.instrumentLabel")}
                 </Words>
                 <div className="flex shrink-0 items-center gap-1">
-                  <Tooltip content={t("common.previous")}>
-                    <button
-                      type="button"
-                      onClick={() => scrollByAmount(-240)}
-                      aria-label={t("common.previous")}
-                      className="flex h-8 w-8 items-center justify-center rounded-full border border-ink-200 text-ink-500 transition-colors hover:bg-ink-100 dark:border-ink-800 dark:text-ink-400 dark:hover:bg-ink-800"
-                    >
-                      <HiChevronLeft className="h-4 w-4" />
-                    </button>
-                  </Tooltip>
-                  <Tooltip content={t("common.next")}>
-                    <button
-                      type="button"
-                      onClick={() => scrollByAmount(240)}
-                      aria-label={t("common.next")}
-                      className="flex h-8 w-8 items-center justify-center rounded-full border border-ink-200 text-ink-500 transition-colors hover:bg-ink-100 dark:border-ink-800 dark:text-ink-400 dark:hover:bg-ink-800"
-                    >
-                      <HiChevronRight className="h-4 w-4" />
-                    </button>
-                  </Tooltip>
+                  <div
+                    className={cn(
+                      "flex items-center gap-1 overflow-hidden transition-all duration-300 ease-in-out",
+                      instrumentViewMode === "grid"
+                        ? "w-0 opacity-0 pointer-events-none"
+                        : "w-[68px] opacity-100",
+                    )}
+                  >
+                    <Tooltip content={t("common.previous")}>
+                      <button
+                        type="button"
+                        onClick={() => scrollByAmount(-240)}
+                        aria-label={t("common.previous")}
+                        className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-ink-200 text-ink-500 transition-colors hover:bg-ink-100 dark:border-ink-800 dark:text-ink-400 dark:hover:bg-ink-800"
+                      >
+                        <HiChevronLeft className="h-4 w-4" />
+                      </button>
+                    </Tooltip>
+                    <Tooltip content={t("common.next")}>
+                      <button
+                        type="button"
+                        onClick={() => scrollByAmount(240)}
+                        aria-label={t("common.next")}
+                        className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-ink-200 text-ink-500 transition-colors hover:bg-ink-100 dark:border-ink-800 dark:text-ink-400 dark:hover:bg-ink-800"
+                      >
+                        <HiChevronRight className="h-4 w-4" />
+                      </button>
+                    </Tooltip>
+                  </div>
+                  <InstrumentSortDropdown
+                    value={instrumentSortOption}
+                    onChange={setInstrumentSortOption}
+                  />
+                  <InstrumentViewModeToggle
+                    value={instrumentViewMode}
+                    onChange={setInstrumentViewMode}
+                  />
                 </div>
               </div>
 
-              <div className="relative">
-                <div ref={scrollRef} className="flex gap-3 overflow-x-auto pb-1 scrollbar-hide">
-                  {visibleInstruments.map((instrument) => (
+              <AnimatedHeight className="relative">
+                <div
+                  ref={scrollRef}
+                  className={cn(
+                    "gap-3 pb-1 transition-all duration-300 ease-in-out",
+                    instrumentViewMode === "grid"
+                      ? "grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5"
+                      : "flex overflow-x-auto scrollbar-hide",
+                  )}
+                >
+                  {sortedInstruments.map((instrument) => (
                     <InstrumentCard
                       key={instrument.idInstrument}
                       instrument={instrument}
                       sparkline={timelines.instruments[instrument.idInstrument] ?? []}
                       isSelected={instrument.idInstrument === selectedInstrumentId}
+                      layout={instrumentViewMode}
                       onClick={() => {
                         if (instrument.idInstrument === selectedInstrumentId) {
                           selectInstrument(null);
@@ -564,7 +612,7 @@ export function InvestmentPage() {
                       }}
                     />
                   ))}
-                  <AddInstrumentCard onClick={openCreateInstrumentModal} />
+                  <AddInstrumentCard onClick={openCreateInstrumentModal} layout={instrumentViewMode} />
                 </div>
 
                 {(isLoading || isTimelinesLoading) && (
@@ -572,7 +620,7 @@ export function InvestmentPage() {
                     <IconLoader className="h-6 w-6 animate-spin text-primary-500" />
                   </div>
                 )}
-              </div>
+              </AnimatedHeight>
             </div>
 
             {selectedInstrument && (
