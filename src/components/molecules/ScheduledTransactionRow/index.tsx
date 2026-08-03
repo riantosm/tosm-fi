@@ -55,7 +55,7 @@ export function ScheduledTransactionRow({
             <Words type="sm/bold" className="truncate text-ink-900 dark:text-ink-50">
               {title}
             </Words>
-            <span className="shrink-0 rounded-full bg-ink-100 px-1.5 py-0.5 dark:bg-ink-800">
+            <span className="shrink-0 rounded-full bg-ink-100 px-1.5 py-0.5 dark:bg-ink-800 flex">
               <Words type="xxs/bold" as="span" className="text-ink-500 dark:text-ink-400">
                 {t("schedule.scheduledBadge")}
               </Words>
@@ -105,7 +105,9 @@ export function ScheduledTransactionRow({
           as="span"
           className={cn(
             "whitespace-nowrap opacity-70",
-            isPositive ? "text-primary-600 dark:text-primary-400" : "text-red-500 dark:text-red-400",
+            isPositive
+              ? "text-primary-600 dark:text-primary-400"
+              : "text-red-500 dark:text-red-400",
           )}
         >
           {format(occurrence.amount)}
