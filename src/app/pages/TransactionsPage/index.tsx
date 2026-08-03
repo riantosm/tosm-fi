@@ -19,10 +19,14 @@ import { TransactionList } from "@/layouts/dashboard/TransactionList";
 import { AddTransactionFab } from "@/layouts/dashboard/AddTransactionFab";
 import { AddTransactionModal } from "@/layouts/transaction/AddTransactionModal";
 import { BalanceCorrectionModal } from "@/layouts/wallet/BalanceCorrectionModal";
+import { PayOccurrenceModal } from "@/layouts/schedule/PayOccurrenceModal";
 import { useCategories } from "@/hooks/use-categories";
 import { useWallets } from "@/hooks/use-wallets";
 import { useTransactions } from "@/hooks/use-transactions";
+import { useScheduleOccurrences } from "@/hooks/use-schedule-occurrences";
+import { useScheduleOccurrenceActions } from "@/hooks/use-schedule-occurrence-actions";
 import { formatMonthParam, generateMonthRange, startOfMonth } from "@/utils/month";
+import { filterOccurrencesForView } from "@/utils/schedule-occurrence-filter";
 import type { Transaction, TransactionListParams, TransactionSummary } from "@/types/transaction.types";
 import type { WalletAccount } from "@/types/wallet.types";
 
@@ -59,6 +63,9 @@ export function TransactionsPage() {
   const { categories, status: categoriesStatus, loadCategories } = useCategories();
   const { wallets, status: walletsStatus, loadWallets } = useWallets();
   const { transactions, queryTransactions } = useTransactions();
+  const { occurrences, loadPendingOccurrences } = useScheduleOccurrences();
+  const { payingOccurrence, openPayModal, closePayModal, handleCancelOccurrence } =
+    useScheduleOccurrenceActions();
 
   const locationState = location.state as TransactionsPageLocationState | null;
   const shouldFocusSearch = Boolean(locationState?.focusSearch);
@@ -106,6 +113,14 @@ export function TransactionsPage() {
     return () => clearTimeout(timer);
   }, [searchQuery]);
 
+  useEffect(() => {
+    void loadPendingOccurrences();
+    // Deliberately runs once on mount only — occurrences are refreshed via
+    // the hook's own dispatches after pay/cancel, not by re-invoking fetch
+    // (which would also re-trigger the backend's catch-up generation).
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const filterParams: Omit<TransactionListParams, "page" | "limit"> = {
     month: formatMonthParam(selectedMonth),
     type: typeFilter !== "all" ? typeFilter : undefined,
@@ -118,6 +133,11 @@ export function TransactionsPage() {
     sort: sortOption,
   };
   const filterKey = JSON.stringify(filterParams);
+
+  // Pending occurrences that belong in the currently visible window — same
+  // filters as the real-transaction query, applied client-side since
+  // occurrences are already fully loaded (no server-side filtering needed).
+  const visibleOccurrences = filterOccurrencesForView(occurrences, filterParams);
 
   // Reset back to page 1 whenever the filters change, or whenever the global
   // transactions array reference changes — i.e. after any create/edit/delete
@@ -239,9 +259,12 @@ export function TransactionsPage() {
 
         <TransactionList
           transactions={displayedTransactions}
+          occurrences={visibleOccurrences}
           categories={categories}
           wallets={wallets}
           onEditTransaction={handleEditTransaction}
+          onPayOccurrence={openPayModal}
+          onCancelOccurrence={(occurrence) => void handleCancelOccurrence(occurrence)}
           title=""
           emptyMessage={hasActiveFilter ? t("transaction.noDataForFilter") : t("dashboard.noTransactions")}
           dateGroupOrder={displaySortConfig.dateGroupOrder}
@@ -269,6 +292,12 @@ export function TransactionsPage() {
         wallet={correctionState?.wallet ?? null}
         transaction={correctionState?.transaction ?? null}
         onClose={() => setCorrectionState(null)}
+      />
+
+      <PayOccurrenceModal
+        isOpen={payingOccurrence !== null}
+        occurrence={payingOccurrence}
+        onClose={closePayModal}
       />
     </DashboardLayout>
   );

@@ -16,3 +16,7 @@ export { default as instrumentSlice } from "./instrumentSlice";
 export * from "./instrumentSlice";
 export { default as investmentTransactionSlice } from "./investmentTransactionSlice";
 export * from "./investmentTransactionSlice";
+export { default as scheduleSlice } from "./scheduleSlice";
+export * from "./scheduleSlice";
+export { default as scheduleOccurrenceSlice } from "./scheduleOccurrenceSlice";
+export * from "./scheduleOccurrenceSlice";

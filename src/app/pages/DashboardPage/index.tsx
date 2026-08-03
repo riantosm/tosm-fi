@@ -13,11 +13,15 @@ import { FinancialHealthCard } from "@/layouts/dashboard/FinancialHealthCard";
 import { ExpenseByCategoryChart } from "@/layouts/dashboard/ExpenseByCategoryChart";
 import { AddTransactionModal } from "@/layouts/transaction/AddTransactionModal";
 import { BalanceCorrectionModal } from "@/layouts/wallet/BalanceCorrectionModal";
+import { PayOccurrenceModal } from "@/layouts/schedule/PayOccurrenceModal";
 import { useCategories } from "@/hooks/use-categories";
 import { useWallets } from "@/hooks/use-wallets";
 import { useTransactions } from "@/hooks/use-transactions";
 import { useDashboardSummary } from "@/hooks/use-dashboard-summary";
+import { useScheduleOccurrences } from "@/hooks/use-schedule-occurrences";
+import { useScheduleOccurrenceActions } from "@/hooks/use-schedule-occurrence-actions";
 import { formatMonthParam, startOfMonth } from "@/utils/month";
+import { filterOccurrencesForView } from "@/utils/schedule-occurrence-filter";
 import { getGreetingKey } from "@/utils/greeting";
 import { ROUTES } from "@/constants/routes";
 import type { Transaction, TransactionSummary } from "@/types/transaction.types";
@@ -41,6 +45,9 @@ export function DashboardPage() {
   // data instead of reading the full unpaginated history.
   const { transactions, queryTransactions } = useTransactions();
   const { summary: dashboardSummary, isLoading: isDashboardSummaryLoading } = useDashboardSummary();
+  const { occurrences, loadPendingOccurrences } = useScheduleOccurrences();
+  const { payingOccurrence, openPayModal, closePayModal, handleCancelOccurrence } =
+    useScheduleOccurrenceActions();
 
   const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
   const [correctionState, setCorrectionState] = useState<CorrectionState | null>(null);
@@ -61,6 +68,12 @@ export function DashboardPage() {
     if (walletsStatus === "idle") void loadWallets();
   }, [walletsStatus, loadWallets]);
 
+  useEffect(() => {
+    void loadPendingOccurrences();
+    // Deliberately runs once on mount only — same reasoning as TransactionsPage.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   // Reset back to page 1 whenever the global `transactions` array reference
   // changes — i.e. after any create/edit/delete anywhere in the app (the
   // slice is only used as that change signal here) — so the accumulated
@@ -75,12 +88,16 @@ export function DashboardPage() {
     setRefreshToken((token) => token + 1);
   }
 
+  const currentMonth = formatMonthParam(startOfMonth(new Date()));
   const queryParams = {
-    month: formatMonthParam(startOfMonth(new Date())),
+    month: currentMonth,
     page,
     limit: MONTH_LIST_PAGE_SIZE,
   };
   const queryKey = JSON.stringify({ ...queryParams, refreshToken });
+  // Only occurrences due within the current month, matching the widget's own
+  // month-scoped query above.
+  const visibleOccurrences = filterOccurrencesForView(occurrences, { month: currentMonth });
   const isQueryLoading = page === 1 && completedQueryKey !== queryKey;
   const isLoadingMore = page > 1 && completedQueryKey !== queryKey;
   const hasMore = page < totalPages;
@@ -172,9 +189,12 @@ export function DashboardPage() {
             </div>
             <TransactionList
               transactions={displayedTransactions}
+              occurrences={visibleOccurrences}
               categories={categories}
               wallets={wallets}
               onEditTransaction={handleEditTransaction}
+              onPayOccurrence={openPayModal}
+              onCancelOccurrence={(occurrence) => void handleCancelOccurrence(occurrence)}
               headerAction={
                 <button
                   type="button"
@@ -211,6 +231,12 @@ export function DashboardPage() {
         wallet={correctionState?.wallet ?? null}
         transaction={correctionState?.transaction ?? null}
         onClose={() => setCorrectionState(null)}
+      />
+
+      <PayOccurrenceModal
+        isOpen={payingOccurrence !== null}
+        occurrence={payingOccurrence}
+        onClose={closePayModal}
       />
     </DashboardLayout>
   );

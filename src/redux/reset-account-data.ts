@@ -2,6 +2,8 @@ import {
   resetCategories,
   resetInstruments,
   resetInvestmentTransactions,
+  resetScheduleOccurrences,
+  resetSchedules,
   resetTransactions,
   resetWallets,
 } from "./slices";
@@ -17,4 +19,6 @@ export function resetAccountData(dispatch: AppDispatch) {
   dispatch(resetTransactions());
   dispatch(resetInstruments());
   dispatch(resetInvestmentTransactions());
+  dispatch(resetSchedules());
+  dispatch(resetScheduleOccurrences());
 }

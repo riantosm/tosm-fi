@@ -31,6 +31,9 @@ const TransactionsPage = lazy(() =>
     import("@/app/pages/TransactionsPage").then((m) => ({ default: m.TransactionsPage })),
   ),
 );
+const SchedulePage = lazy(() =>
+  retryImport(() => import("@/app/pages/SchedulePage").then((m) => ({ default: m.SchedulePage }))),
+);
 const WalletPage = lazy(() =>
   retryImport(() => import("@/app/pages/WalletPage").then((m) => ({ default: m.WalletPage }))),
 );
@@ -108,6 +111,14 @@ export function AppRouter() {
           element={
             <ProtectedRoute>
               <TransactionsPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path={ROUTES.SCHEDULE}
+          element={
+            <ProtectedRoute>
+              <SchedulePage />
             </ProtectedRoute>
           }
         />

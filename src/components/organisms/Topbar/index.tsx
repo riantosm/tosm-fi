@@ -17,7 +17,7 @@ export function Topbar({ onOpenMenu }: TopbarProps) {
   const navigate = useNavigate();
 
   return (
-    <header className="flex items-center justify-between gap-3 border-b border-ink-200 bg-white/80 px-4 py-4 backdrop-blur-sm dark:border-ink-800 dark:bg-ink-900/80 sm:gap-4 sm:px-6">
+    <header className="relative z-30 flex items-center justify-between gap-3 border-b border-ink-200 bg-white/80 px-4 py-4 backdrop-blur-sm dark:border-ink-800 dark:bg-ink-900/80 sm:gap-4 sm:px-6">
       <div className="flex min-w-0 flex-1 items-center gap-3 sm:flex-initial">
         <Tooltip content={t("topbar.openMenu")}>
           <button

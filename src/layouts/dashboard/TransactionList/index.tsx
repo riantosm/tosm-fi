@@ -4,17 +4,25 @@ import { IconLoader } from "@/components/atoms/IconLoader";
 import { Words } from "@/components/atoms/Words";
 import { TransactionRow } from "@/components/molecules/TransactionRow";
 import { TransferRow } from "@/components/molecules/TransferRow";
+import { ScheduledTransactionRow } from "@/components/molecules/ScheduledTransactionRow";
 import { useCurrency } from "@/hooks/use-currency";
 import { useLanguage } from "@/hooks/use-language";
 import type { Category } from "@/types/category.types";
 import type { Transaction } from "@/types/transaction.types";
+import type { ScheduleOccurrence } from "@/types/schedule-occurrence.types";
 import type { WalletAccount } from "@/types/wallet.types";
 
 interface TransactionListProps {
   transactions: Transaction[];
+  // Pending schedule occurrences to render inline, styled as not-yet-real —
+  // their amount never contributes to a day group's net total (see
+  // netContribution below), only actual transactions do.
+  occurrences?: ScheduleOccurrence[];
   categories: Category[];
   wallets: WalletAccount[];
   onEditTransaction: (transaction: Transaction) => void;
+  onPayOccurrence?: (occurrence: ScheduleOccurrence) => void;
+  onCancelOccurrence?: (occurrence: ScheduleOccurrence) => void;
   title?: string;
   headerAction?: ReactNode;
   emptyMessage?: string;
@@ -23,10 +31,14 @@ interface TransactionListProps {
   isLoading?: boolean;
 }
 
+type ListEntry =
+  | { kind: "transaction"; date: string; amount: number; transaction: Transaction }
+  | { kind: "occurrence"; date: string; amount: number; occurrence: ScheduleOccurrence };
+
 interface DateGroup {
   dateKey: string;
   date: Date;
-  transactions: Transaction[];
+  entries: ListEntry[];
   net: number;
 }
 
@@ -49,30 +61,31 @@ function netContribution(transaction: Transaction): number {
 }
 
 function groupByDate(
-  transactions: Transaction[],
+  entries: ListEntry[],
   dateGroupOrder: "desc" | "asc",
   sortWithinDay: "chronological" | "amountDesc" | "amountAsc",
 ): DateGroup[] {
-  const sorted = [...transactions].sort((a, b) => {
+  const sorted = [...entries].sort((a, b) => {
     const diff = new Date(a.date).getTime() - new Date(b.date).getTime();
     return dateGroupOrder === "desc" ? -diff : diff;
   });
   const groups = new Map<string, DateGroup>();
 
-  for (const transaction of sorted) {
-    const key = toDateKey(transaction.date);
+  for (const entry of sorted) {
+    const key = toDateKey(entry.date);
     let group = groups.get(key);
     if (!group) {
-      group = { dateKey: key, date: new Date(transaction.date), transactions: [], net: 0 };
+      group = { dateKey: key, date: new Date(entry.date), entries: [], net: 0 };
       groups.set(key, group);
     }
-    group.transactions.push(transaction);
-    group.net += netContribution(transaction);
+    group.entries.push(entry);
+    // Pending occurrences aren't real yet — excluded from the day's net.
+    if (entry.kind === "transaction") group.net += netContribution(entry.transaction);
   }
 
   if (sortWithinDay !== "chronological") {
     for (const group of groups.values()) {
-      group.transactions.sort((a, b) => {
+      group.entries.sort((a, b) => {
         const diff = Math.abs(a.amount) - Math.abs(b.amount);
         return sortWithinDay === "amountDesc" ? -diff : diff;
       });
@@ -97,9 +110,12 @@ function formatDateHeader(date: Date, locale: string, todayLabel: string): strin
 
 export function TransactionList({
   transactions,
+  occurrences = [],
   categories,
   wallets,
   onEditTransaction,
+  onPayOccurrence,
+  onCancelOccurrence,
   title,
   headerAction,
   emptyMessage,
@@ -114,9 +130,27 @@ export function TransactionList({
   const resolvedTitle = title === undefined ? t("dashboard.recentTransactions") : title;
   const resolvedEmptyMessage = emptyMessage ?? t("dashboard.noTransactions");
 
+  const entries = useMemo<ListEntry[]>(
+    () => [
+      ...transactions.map((transaction) => ({
+        kind: "transaction" as const,
+        date: transaction.date,
+        amount: transaction.amount,
+        transaction,
+      })),
+      ...occurrences.map((occurrence) => ({
+        kind: "occurrence" as const,
+        date: occurrence.dueDate,
+        amount: occurrence.amount,
+        occurrence,
+      })),
+    ],
+    [transactions, occurrences],
+  );
+
   const groups = useMemo(
-    () => groupByDate(transactions, dateGroupOrder, sortWithinDay),
-    [transactions, dateGroupOrder, sortWithinDay],
+    () => groupByDate(entries, dateGroupOrder, sortWithinDay),
+    [entries, dateGroupOrder, sortWithinDay],
   );
 
   function resolveCategory(idCategory: string | null) {
@@ -169,9 +203,28 @@ export function TransactionList({
                     {format(Math.abs(group.net))}
                   </Words>
                 </div>
-                <div className="flex flex-col divide-y divide-ink-100 dark:divide-ink-800">
-                  {group.transactions.map((transaction) =>
-                    transaction.type === "transfer" ? (
+                <div className="flex flex-col gap-2 divide-y divide-ink-100 dark:divide-ink-800">
+                  {group.entries.map((entry) => {
+                    if (entry.kind === "occurrence") {
+                      const { occurrence } = entry;
+                      return (
+                        <ScheduledTransactionRow
+                          key={occurrence.idOccurrence}
+                          occurrence={occurrence}
+                          category={resolveCategory(occurrence.idCategory)}
+                          subCategory={resolveSubCategory(
+                            occurrence.idCategory,
+                            occurrence.idSubCategory,
+                          )}
+                          wallet={resolveWallet(occurrence.idWallet)}
+                          onPay={() => onPayOccurrence?.(occurrence)}
+                          onCancel={() => onCancelOccurrence?.(occurrence)}
+                        />
+                      );
+                    }
+
+                    const { transaction } = entry;
+                    return transaction.type === "transfer" ? (
                       <TransferRow
                         key={transaction.idTransaction}
                         transaction={transaction}
@@ -191,8 +244,8 @@ export function TransactionList({
                         wallet={resolveWallet(transaction.idWallet)}
                         onClick={() => onEditTransaction(transaction)}
                       />
-                    ),
-                  )}
+                    );
+                  })}
                 </div>
               </div>
             ))}

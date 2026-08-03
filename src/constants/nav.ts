@@ -3,6 +3,7 @@ import type { IconType } from "react-icons";
 import {
   HiOutlineSquares2X2,
   HiOutlineArrowsRightLeft,
+  HiOutlineCalendarDays,
   HiOutlineWallet,
   HiOutlineTag,
   HiOutlineChartPie,
@@ -21,6 +22,7 @@ export const NAV_GROUPS: NavItem[][] = [
   [
     { labelKey: "nav.dashboard", path: ROUTES.DASHBOARD, icon: HiOutlineSquares2X2 },
     { labelKey: "nav.transactions", path: ROUTES.TRANSACTIONS, icon: HiOutlineArrowsRightLeft },
+    { labelKey: "nav.schedule", path: ROUTES.SCHEDULE, icon: HiOutlineCalendarDays },
   ],
   [
     { labelKey: "nav.wallet", path: ROUTES.WALLET, icon: HiOutlineWallet },
