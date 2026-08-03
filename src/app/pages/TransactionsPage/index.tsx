@@ -15,6 +15,7 @@ import {
   type TransactionSortOption,
 } from "@/layouts/transaction/TransactionToolbar";
 import { TransactionSummaryBar } from "@/layouts/transaction/TransactionSummaryBar";
+import { TransactionCalendar } from "@/layouts/transaction/TransactionCalendar";
 import { TransactionList } from "@/layouts/dashboard/TransactionList";
 import { AddTransactionFab } from "@/layouts/dashboard/AddTransactionFab";
 import { AddTransactionModal } from "@/layouts/transaction/AddTransactionModal";
@@ -96,6 +97,9 @@ export function TransactionsPage() {
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(0);
   const sentinelRef = useRef<HTMLDivElement | null>(null);
+
+  const [calendarTransactions, setCalendarTransactions] = useState<Transaction[]>([]);
+  const [isCalendarLoading, setIsCalendarLoading] = useState(false);
 
   const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
   const [correctionState, setCorrectionState] = useState<CorrectionState | null>(null);
@@ -182,6 +186,55 @@ export function TransactionsPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [queryKey, queryTransactions]);
 
+  // A single day is "selected" whenever the toolbar's date range collapses to
+  // one day — the calendar drives this via onSelectDay, but a manual toolbar
+  // range pick that happens to be one day highlights the same cell too, so
+  // there's only one source of truth for "which day is filtered".
+  const selectedDay = dateRange.from && dateRange.from === dateRange.to ? dateRange.from : null;
+
+  function handleSelectDay(day: string | null) {
+    setDateRange(day ? { from: day, to: day } : { from: "", to: "" });
+  }
+
+  // Selecting a month is a distinct action from picking a day within it —
+  // switching months always resets to the "whole month" default view.
+  function handleSelectMonth(nextMonth: Date) {
+    setSelectedMonth(nextMonth);
+    setDateRange({ from: "", to: "" });
+  }
+
+  // Independent of the paginated list above: fetches every transaction for
+  // the visible month (unpaginated, per the backend's documented behavior
+  // when page/limit are omitted) so the calendar can show a dot/net summary
+  // for every day at once, not just whichever page has scrolled into view.
+  // Respects every filter except the day range itself, since that's what
+  // clicking a calendar cell sets.
+  const calendarQueryParams: Omit<TransactionListParams, "page" | "limit" | "dateFrom" | "dateTo" | "sort"> = {
+    month: formatMonthParam(selectedMonth),
+    type: typeFilter !== "all" ? typeFilter : undefined,
+    idWallet: walletFilter !== "all" ? walletFilter : undefined,
+    idCategory: categoryFilter !== "all" ? categoryFilter : undefined,
+    idSubCategory: subCategoryFilter !== "all" ? subCategoryFilter : undefined,
+    search: debouncedSearch || undefined,
+  };
+  const calendarQueryKey = JSON.stringify({ ...calendarQueryParams, refreshToken });
+
+  useEffect(() => {
+    let cancelled = false;
+    setIsCalendarLoading(true);
+
+    void queryTransactions(calendarQueryParams).then((result) => {
+      if (cancelled) return;
+      setCalendarTransactions(result.transactions);
+      setIsCalendarLoading(false);
+    });
+
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [calendarQueryKey, queryTransactions]);
+
   // Infinite scroll: advance the page once the sentinel at the bottom of
   // the list comes into view, instead of a "Load More" button.
   useEffect(() => {
@@ -247,36 +300,48 @@ export function TransactionsPage() {
           onSearchChange={setSearchQuery}
           dateRange={dateRange}
           onDateRangeChange={setDateRange}
-          onGoToCurrentMonth={() => setSelectedMonth(startOfMonth(new Date()))}
+          onGoToCurrentMonth={() => handleSelectMonth(startOfMonth(new Date()))}
           sortOption={sortOption}
           onSortChange={setSortOption}
           focusSearchToken={focusSearchToken}
         />
 
-        <MonthTabs months={months} selected={selectedMonth} onSelect={setSelectedMonth} />
+        <MonthTabs months={months} selected={selectedMonth} onSelect={handleSelectMonth} />
 
         <TransactionSummaryBar expense={summary?.expense ?? 0} income={summary?.income ?? 0} />
 
-        <TransactionList
-          transactions={displayedTransactions}
-          occurrences={visibleOccurrences}
-          categories={categories}
-          wallets={wallets}
-          onEditTransaction={handleEditTransaction}
-          onPayOccurrence={openPayModal}
-          onCancelOccurrence={(occurrence) => void handleCancelOccurrence(occurrence)}
-          title=""
-          emptyMessage={hasActiveFilter ? t("transaction.noDataForFilter") : t("dashboard.noTransactions")}
-          dateGroupOrder={displaySortConfig.dateGroupOrder}
-          sortWithinDay={displaySortConfig.sortWithinDay}
-          isLoading={isQueryLoading}
-        />
+        <div className="grid grid-cols-1 gap-5 lg:grid-cols-[3fr_2fr] lg:items-start">
+          <TransactionCalendar
+            month={selectedMonth}
+            transactions={calendarTransactions}
+            selectedDay={selectedDay}
+            onSelectDay={handleSelectDay}
+            isLoading={isCalendarLoading}
+          />
 
-        {hasMore && (
-          <div ref={sentinelRef} className="flex justify-center py-4">
-            {isLoadingMore && <IconLoader className="h-5 w-5 animate-spin text-primary-500" />}
+          <div className="flex flex-col gap-5">
+            <TransactionList
+              transactions={displayedTransactions}
+              occurrences={visibleOccurrences}
+              categories={categories}
+              wallets={wallets}
+              onEditTransaction={handleEditTransaction}
+              onPayOccurrence={openPayModal}
+              onCancelOccurrence={(occurrence) => void handleCancelOccurrence(occurrence)}
+              title=""
+              emptyMessage={hasActiveFilter ? t("transaction.noDataForFilter") : t("dashboard.noTransactions")}
+              dateGroupOrder={displaySortConfig.dateGroupOrder}
+              sortWithinDay={displaySortConfig.sortWithinDay}
+              isLoading={isQueryLoading}
+            />
+
+            {hasMore && (
+              <div ref={sentinelRef} className="flex justify-center py-4">
+                {isLoadingMore && <IconLoader className="h-5 w-5 animate-spin text-primary-500" />}
+              </div>
+            )}
           </div>
-        )}
+        </div>
       </div>
 
       <AddTransactionFab />
