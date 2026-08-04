@@ -47,6 +47,9 @@ const InvestmentPage = lazy(() =>
     import("@/app/pages/InvestmentPage").then((m) => ({ default: m.InvestmentPage })),
   ),
 );
+const BudgetsPage = lazy(() =>
+  retryImport(() => import("@/app/pages/BudgetsPage").then((m) => ({ default: m.BudgetsPage }))),
+);
 const ReportsPage = lazy(() =>
   retryImport(() => import("@/app/pages/ReportsPage").then((m) => ({ default: m.ReportsPage }))),
 );
@@ -143,6 +146,14 @@ export function AppRouter() {
           element={
             <ProtectedRoute>
               <InvestmentPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path={ROUTES.BUDGETS}
+          element={
+            <ProtectedRoute>
+              <BudgetsPage />
             </ProtectedRoute>
           }
         />

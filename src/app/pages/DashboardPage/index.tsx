@@ -11,12 +11,15 @@ import { TransactionList } from "@/layouts/dashboard/TransactionList";
 import { MonthlySummaryCard } from "@/layouts/dashboard/MonthlySummaryCard";
 import { FinancialHealthCard } from "@/layouts/dashboard/FinancialHealthCard";
 import { ExpenseByCategoryChart } from "@/layouts/dashboard/ExpenseByCategoryChart";
+import { BudgetsSummary } from "@/layouts/dashboard/BudgetsSummary";
 import { AddTransactionModal } from "@/layouts/transaction/AddTransactionModal";
 import { BalanceCorrectionModal } from "@/layouts/wallet/BalanceCorrectionModal";
 import { PayOccurrenceModal } from "@/layouts/schedule/PayOccurrenceModal";
 import { useCategories } from "@/hooks/use-categories";
 import { useWallets } from "@/hooks/use-wallets";
 import { useTransactions } from "@/hooks/use-transactions";
+import { useBudgets } from "@/hooks/use-budgets";
+import { useBudgetSpending } from "@/hooks/use-budget-spending";
 import { useDashboardSummary } from "@/hooks/use-dashboard-summary";
 import { useScheduleOccurrences } from "@/hooks/use-schedule-occurrences";
 import { useScheduleOccurrenceActions } from "@/hooks/use-schedule-occurrence-actions";
@@ -44,6 +47,9 @@ export function DashboardPage() {
   // its contents are never rendered. Dashboard fetches its own month-scoped
   // data instead of reading the full unpaginated history.
   const { transactions, queryTransactions } = useTransactions();
+  const { budgets, status: budgetsStatus, loadBudgets } = useBudgets();
+  const { categoryBreakdown: budgetCategoryBreakdown, isLoading: isBudgetSpendingLoading } =
+    useBudgetSpending();
   const { summary: dashboardSummary, isLoading: isDashboardSummaryLoading } = useDashboardSummary();
   const { occurrences, loadPendingOccurrences } = useScheduleOccurrences();
   const { payingOccurrence, openPayModal, closePayModal, handleCancelOccurrence } =
@@ -67,6 +73,10 @@ export function DashboardPage() {
   useEffect(() => {
     if (walletsStatus === "idle") void loadWallets();
   }, [walletsStatus, loadWallets]);
+
+  useEffect(() => {
+    if (budgetsStatus === "idle") void loadBudgets();
+  }, [budgetsStatus, loadBudgets]);
 
   useEffect(() => {
     void loadPendingOccurrences();
@@ -180,6 +190,11 @@ export function DashboardPage() {
               </div>
             </div>
             <ExpenseByCategoryChart summary={monthSummary} isLoading={isQueryLoading} />
+            <BudgetsSummary
+              budgets={budgets}
+              categoryBreakdown={budgetCategoryBreakdown}
+              isLoading={budgetsStatus !== "loaded" || isBudgetSpendingLoading}
+            />
           </div>
           <div className="flex-1 w-full overflow-hidden space-y-4">
             <div className="w-full">

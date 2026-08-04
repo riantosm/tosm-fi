@@ -6,6 +6,7 @@ import {
   HiOutlineCalendarDays,
   HiOutlineWallet,
   HiOutlineTag,
+  HiOutlineBanknotes,
   HiOutlineChartPie,
   HiOutlineDocumentText,
   HiOutlineCog6Tooth,
@@ -22,11 +23,12 @@ export const NAV_GROUPS: NavItem[][] = [
   [
     { labelKey: "nav.dashboard", path: ROUTES.DASHBOARD, icon: HiOutlineSquares2X2 },
     { labelKey: "nav.transactions", path: ROUTES.TRANSACTIONS, icon: HiOutlineArrowsRightLeft },
-    { labelKey: "nav.schedule", path: ROUTES.SCHEDULE, icon: HiOutlineCalendarDays },
   ],
   [
     { labelKey: "nav.wallet", path: ROUTES.WALLET, icon: HiOutlineWallet },
     { labelKey: "nav.category", path: ROUTES.CATEGORIES, icon: HiOutlineTag },
+    { labelKey: "nav.schedule", path: ROUTES.SCHEDULE, icon: HiOutlineCalendarDays },
+    { labelKey: "nav.budgets", path: ROUTES.BUDGETS, icon: HiOutlineBanknotes },
   ],
   [{ labelKey: "nav.investment", path: ROUTES.INVESTMENT, icon: HiOutlineChartPie }],
   [{ labelKey: "nav.reports", path: ROUTES.REPORTS, icon: HiOutlineDocumentText }],

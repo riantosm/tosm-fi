@@ -8,6 +8,7 @@ import {
 } from "redux-persist";
 import {
   authenticationSlice,
+  budgetSlice,
   categorySlice,
   clientErrorSlice,
   instrumentSlice,
@@ -18,6 +19,7 @@ import {
   transactionSlice,
   userApprovalSlice,
   walletSlice,
+  type IBudgetReduxState,
   type ICategoryReduxState,
   type IInstrumentReduxState,
   type IScheduleReduxState,
@@ -46,6 +48,9 @@ const reducer = combineReducers({
   clientError: clientErrorSlice,
   // Recurring-schedule rules — relatively stable, persisted like wallet/category.
   schedule: scheduleSlice,
+  // Budget definitions (limits are a reminder feature) — backed by a real
+  // API now, persisted like wallet/category/instrument/schedule.
+  budget: budgetSlice,
   // Not persisted — pending occurrences are always regenerated/refetched
   // fresh from the backend's lazy catch-up generator, same reasoning as transaction.
   scheduleOccurrence: scheduleOccurrenceSlice,
@@ -58,7 +63,7 @@ const reducer = combineReducers({
 // rehydrate makes every such guard refetch fresh data on the next mount.
 // One transform per slice backed by a real API.
 function createResetStatusOnRehydrateTransform<T extends { status: string }>(
-  sliceKey: "wallet" | "category" | "instrument" | "schedule",
+  sliceKey: "wallet" | "category" | "instrument" | "schedule" | "budget",
 ) {
   return createTransform<T, T>(
     (inboundState) => inboundState,
@@ -77,12 +82,21 @@ const persistConfig: PersistConfig<ReturnType<typeof reducer>> = {
   // `investmentTransaction` is the same story — a growing ledger, always
   // freshly fetched, never persisted. `instrument` IS persisted now that it's
   // backed by a real API, same treatment as wallet/category.
-  whitelist: ["authentication", "wallet", "category", "settings", "instrument", "schedule"],
+  whitelist: [
+    "authentication",
+    "wallet",
+    "category",
+    "settings",
+    "instrument",
+    "schedule",
+    "budget",
+  ],
   transforms: [
     createResetStatusOnRehydrateTransform<IWalletReduxState>("wallet"),
     createResetStatusOnRehydrateTransform<ICategoryReduxState>("category"),
     createResetStatusOnRehydrateTransform<IInstrumentReduxState>("instrument"),
     createResetStatusOnRehydrateTransform<IScheduleReduxState>("schedule"),
+    createResetStatusOnRehydrateTransform<IBudgetReduxState>("budget"),
   ],
 };
 

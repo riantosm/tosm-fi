@@ -1,4 +1,5 @@
 import {
+  resetBudgets,
   resetCategories,
   resetInstruments,
   resetInvestmentTransactions,
@@ -12,7 +13,7 @@ import type { AppDispatch } from "./store";
 // Called on every logout path (explicit logout, auto-logout on session
 // expiry, or the Settings danger-zone reset) so a different account logging
 // in on the same browser never sees the previous account's cached
-// wallet/category/transaction/instrument data.
+// wallet/category/transaction/instrument/budget data.
 export function resetAccountData(dispatch: AppDispatch) {
   dispatch(resetWallets());
   dispatch(resetCategories());
@@ -21,4 +22,5 @@ export function resetAccountData(dispatch: AppDispatch) {
   dispatch(resetInvestmentTransactions());
   dispatch(resetSchedules());
   dispatch(resetScheduleOccurrences());
+  dispatch(resetBudgets());
 }
