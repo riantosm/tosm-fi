@@ -268,7 +268,7 @@ export function BudgetBreakdownList({
           {title}
         </Words>
         <span className="shrink-0 rounded-full bg-ink-100 px-3 py-1.5 dark:bg-ink-800">
-          <Words type="xs/bold" as="span" className="text-ink-600 dark:text-ink-300">
+          <Words type="xs/bold" as="span" className="text-ink-600 dark:text-ink-300 flex">
             {periodLabel}
           </Words>
         </span>
@@ -306,7 +306,10 @@ export function BudgetBreakdownList({
                 <Words
                   type="xxs/regular"
                   as="span"
-                  className="px-1 pb-1 text-ink-400 dark:text-ink-500"
+                  className={cn(
+                    "px-1 pb-1 text-ink-400 dark:text-ink-500",
+                    allocatedLimit > totalLimit && "text-red-500 dark:text-red-400",
+                  )}
                 >
                   {t("budget.allocatedLimitHint", {
                     allocated: format(allocatedLimit),
