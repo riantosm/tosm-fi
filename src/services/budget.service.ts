@@ -37,4 +37,13 @@ export const budgetService = {
       throw new Error(getApiErrorMessage(error, i18n.t("budget.genericError")));
     }
   },
+
+  async reorderBudgets(orderedIds: string[]): Promise<Budget[]> {
+    try {
+      const { data } = await httpClient.patch("/budgets/reorder", { orderedIds });
+      return data.data as Budget[];
+    } catch (error) {
+      throw new Error(getApiErrorMessage(error, i18n.t("budget.genericError")));
+    }
+  },
 };

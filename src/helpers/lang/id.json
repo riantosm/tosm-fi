@@ -620,7 +620,9 @@
     "deleteButton": "Hapus",
     "deleteConfirmTitle": "Hapus Anggaran?",
     "deleteConfirmDescription": "Anggaran \"{{name}}\" akan dihapus. Ini tidak memengaruhi transaksi yang sudah ada.",
-    "deleteSuccess": "Anggaran berhasil dihapus"
+    "deleteSuccess": "Anggaran berhasil dihapus",
+    "toggleReorder": "Urutkan anggaran",
+    "saveOrder": "Simpan Urutan"
   },
   "reports": {
     "genericError": "Terjadi kesalahan, coba lagi.",

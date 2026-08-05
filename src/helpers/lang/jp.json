@@ -620,7 +620,9 @@
     "deleteButton": "削除",
     "deleteConfirmTitle": "予算を削除しますか?",
     "deleteConfirmDescription": "「{{name}}」予算が削除されます。既存の取引には影響しません。",
-    "deleteSuccess": "予算を削除しました"
+    "deleteSuccess": "予算を削除しました",
+    "toggleReorder": "予算の並べ替え",
+    "saveOrder": "並び順を保存"
   },
   "reports": {
     "genericError": "エラーが発生しました。もう一度お試しください。",

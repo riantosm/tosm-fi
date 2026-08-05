@@ -620,7 +620,9 @@
     "deleteButton": "Delete",
     "deleteConfirmTitle": "Delete Budget?",
     "deleteConfirmDescription": "The \"{{name}}\" budget will be removed. This does not affect any existing transactions.",
-    "deleteSuccess": "Budget deleted successfully"
+    "deleteSuccess": "Budget deleted successfully",
+    "toggleReorder": "Reorder budgets",
+    "saveOrder": "Save Order"
   },
   "reports": {
     "genericError": "Something went wrong, please try again.",

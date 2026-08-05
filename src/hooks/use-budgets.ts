@@ -48,6 +48,14 @@ export function useBudgets() {
     [dispatch],
   );
 
+  const reorderBudgets = useCallback(
+    async (orderedIds: string[]) => {
+      const updated = await budgetService.reorderBudgets(orderedIds);
+      dispatch(setBudgets(updated));
+    },
+    [dispatch],
+  );
+
   // A `limitAmount` of 0 clears the row back to "no limit set" rather than
   // storing a literal zero-cap — matches how the breakdown UI treats `null`.
   const setChildLimit = useCallback(
@@ -73,5 +81,14 @@ export function useBudgets() {
     [budgets, editBudget],
   );
 
-  return { budgets, status, loadBudgets, createBudget, editBudget, deleteBudget, setChildLimit };
+  return {
+    budgets,
+    status,
+    loadBudgets,
+    createBudget,
+    editBudget,
+    deleteBudget,
+    reorderBudgets,
+    setChildLimit,
+  };
 }

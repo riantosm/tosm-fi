@@ -2875,6 +2875,58 @@ export const API_DOC_GROUPS: ApiDocGroup[] = [
           2,
         ),
       },
+      {
+        id: "reorder-budgets",
+        title: "Reorder Budgets",
+        method: "PATCH",
+        endpoint: "/budgets/reorder",
+        payload: [{ name: "orderedIds", type: "string[]", required: true }],
+        successExample: JSON.stringify(
+          {
+            message: "Urutan anggaran berhasil disimpan",
+            data: [
+              {
+                idBudget: "6a705f1a7b76529dd52a2302",
+                name: "Makan",
+                color: "#4F9E94",
+                idCategories: ["6a705cfb7b76529dd52a2099"],
+                limitAmount: 1000000,
+                childLimits: [],
+                isPinned: false,
+              },
+              {
+                idBudget: "6a705f1a7b76529dd52a2301",
+                name: "Monthly Spending",
+                color: "#4A90E2",
+                idCategories: [],
+                limitAmount: 4000000,
+                childLimits: [
+                  {
+                    idCategory: "6a705cfb7b76529dd52a2099",
+                    idSubCategory: null,
+                    limitAmount: 300000,
+                  },
+                ],
+                isPinned: true,
+              },
+            ],
+            isSuccess: true,
+            status: 200,
+          },
+          null,
+          2,
+        ),
+        errorExample: JSON.stringify(
+          {
+            message: "orderedIds wajib diisi",
+            data: { error: "orderedIds wajib diisi" },
+            isSuccess: false,
+            status: 400,
+          },
+          null,
+          2,
+        ),
+      },
     ],
   },
 ];
