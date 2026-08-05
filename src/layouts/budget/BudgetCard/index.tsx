@@ -33,8 +33,14 @@ export function BudgetCard({
   const remainingAmount = Math.max(0, budget.limitAmount - spent);
   const dailyPacing = remainingDays > 0 ? remainingAmount / remainingDays : null;
 
-  const startLabel = new Date(dateFrom).toLocaleDateString(undefined, { month: "short", day: "numeric" });
-  const endLabel = new Date(dateTo).toLocaleDateString(undefined, { month: "short", day: "numeric" });
+  const startLabel = new Date(dateFrom).toLocaleDateString(undefined, {
+    month: "short",
+    day: "numeric",
+  });
+  const endLabel = new Date(dateTo).toLocaleDateString(undefined, {
+    month: "short",
+    day: "numeric",
+  });
 
   return (
     <div
@@ -53,7 +59,7 @@ export function BudgetCard({
           <Words type="lg/bold" as="h3" className="text-white">
             {budget.name}
           </Words>
-          <div className="flex items-baseline gap-1.5">
+          <div className="flex flex-col items-baseline gap-1.5">
             <Words type="xl/bold" as="span" className="text-white">
               {format(spent)}
             </Words>
@@ -64,14 +70,18 @@ export function BudgetCard({
         </div>
 
         <div className="relative z-10 flex shrink-0 items-center gap-1">
-          <Tooltip content={budget.isPinned ? t("budget.unpinFromDashboard") : t("budget.pinToDashboard")}>
+          <Tooltip
+            content={budget.isPinned ? t("budget.unpinFromDashboard") : t("budget.pinToDashboard")}
+          >
             <button
               type="button"
               onClick={(event) => {
                 event.stopPropagation();
                 onTogglePin();
               }}
-              aria-label={budget.isPinned ? t("budget.unpinFromDashboard") : t("budget.pinToDashboard")}
+              aria-label={
+                budget.isPinned ? t("budget.unpinFromDashboard") : t("budget.pinToDashboard")
+              }
               className="flex h-8 w-8 items-center justify-center rounded-full bg-white/15 text-white transition-colors hover:bg-white/25"
             >
               {budget.isPinned ? (

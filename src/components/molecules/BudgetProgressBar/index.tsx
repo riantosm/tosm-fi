@@ -62,7 +62,7 @@ export function BudgetProgressBar({
 
         <div
           className={cn(
-            "absolute bottom-0 left-1/2 -translate-x-1/2 rounded-full px-2.5 py-0.5",
+            "absolute bottom-[-7px] left-1/2 -translate-x-1/2 rounded-full px-2.5 py-0.5",
             isOverLimit ? "bg-red-500/90" : "bg-black/20",
           )}
         >

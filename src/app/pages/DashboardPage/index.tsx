@@ -174,6 +174,11 @@ export function DashboardPage() {
 
         <div className="xl:flex-row flex-col flex w-full lg:items-start gap-8">
           <div className="flex flex-1 w-full flex-col gap-6">
+            <BudgetsSummary
+              budgets={budgets}
+              categoryBreakdown={budgetCategoryBreakdown}
+              isLoading={budgetsStatus !== "loaded" || isBudgetSpendingLoading}
+            />
             <div className="flex flex-col gap-4 sm:flex-row sm:items-stretch">
               <div className="w-full sm:flex-1">
                 <MonthlySummaryCard
@@ -190,11 +195,6 @@ export function DashboardPage() {
               </div>
             </div>
             <ExpenseByCategoryChart summary={monthSummary} isLoading={isQueryLoading} />
-            <BudgetsSummary
-              budgets={budgets}
-              categoryBreakdown={budgetCategoryBreakdown}
-              isLoading={budgetsStatus !== "loaded" || isBudgetSpendingLoading}
-            />
           </div>
           <div className="flex-1 w-full overflow-hidden space-y-4">
             <div className="w-full">
