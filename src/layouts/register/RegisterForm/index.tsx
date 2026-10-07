@@ -1,16 +1,16 @@
 import { useState, type SubmitEvent } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
+import { AnimatePresence } from "motion/react";
+import { LuAtSign, LuCircleAlert, LuIdCard, LuShieldCheck, LuUserPlus } from "react-icons/lu";
 import { Button } from "@/components/atoms/Button";
 import { Input } from "@/components/atoms/Input";
-import { IconUser } from "@/components/atoms/Icons";
-import { PasswordInput } from "@/components/molecules/PasswordInput";
 import { FormField } from "@/components/molecules/FormField";
-import { LanguageMenuButton } from "@/components/molecules/LanguageMenuButton";
-import { Words } from "@/components/atoms/Words";
+import { PasswordInput } from "@/components/molecules/PasswordInput";
+import { AuthNotice } from "@/layouts/auth/AuthNotice";
+import { ROUTES } from "@/constants/routes";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
-import { ROUTES } from "@/constants/routes";
 
 export function RegisterForm() {
   const { t } = useTranslation();
@@ -41,16 +41,17 @@ export function RegisterForm() {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col gap-5">
+    <form onSubmit={(event) => void handleSubmit(event)} className="flex flex-col gap-4">
       <FormField label={t("auth.nameLabel")} htmlFor="nameUser">
         <Input
           id="nameUser"
           type="text"
           placeholder={t("auth.namePlaceholder")}
           autoComplete="name"
-          startIcon={<IconUser className="h-4 w-4" />}
+          startIcon={<LuIdCard />}
           value={nameUser}
           onChange={(event) => setNameUser(event.target.value)}
+          boxClassName="bg-surface border-border"
           required
         />
       </FormField>
@@ -61,9 +62,10 @@ export function RegisterForm() {
           type="text"
           placeholder={t("auth.usernamePlaceholder")}
           autoComplete="username"
-          startIcon={<IconUser className="h-4 w-4" />}
+          startIcon={<LuAtSign />}
           value={username}
           onChange={(event) => setUsername(event.target.value)}
+          boxClassName="bg-surface border-border"
           required
         />
       </FormField>
@@ -75,42 +77,51 @@ export function RegisterForm() {
           autoComplete="new-password"
           value={password}
           onChange={(event) => setPassword(event.target.value)}
+          boxClassName="bg-surface border-border"
           required
         />
       </FormField>
 
-      {error && (
-        <Words
-          type="sm/regular"
-          className="rounded-lg bg-red-50 px-3 py-2 text-red-600 dark:bg-red-500/10 dark:text-red-400"
-        >
-          {error}
-        </Words>
-      )}
+      <AnimatePresence initial={false} mode="wait">
+        {error ? (
+          <AuthNotice
+            key="error"
+            tone="error"
+            icon={<LuCircleAlert />}
+            title={t("auth.registerErrorTitle")}
+            description={error}
+          />
+        ) : (
+          <AuthNotice
+            key="info"
+            tone="info"
+            icon={<LuShieldCheck />}
+            title={t("auth.approvalInfoTitle")}
+            description={t("auth.approvalInfoDescription")}
+          />
+        )}
+      </AnimatePresence>
 
-      <Button type="submit" isLoading={isLoading} className="w-full">
-        <Words type="sm/bold" as="span">
-          {t("auth.registerSubmit")}
-        </Words>
+      <Button
+        type="submit"
+        size="lg"
+        leftIcon={<LuUserPlus />}
+        isLoading={isLoading}
+        fullWidth
+        className="mt-1"
+      >
+        {t("auth.registerSubmit")}
       </Button>
 
-      <div className="flex items-center justify-center gap-1.5">
-        <Words type="sm/regular" as="span" className="text-ink-500 dark:text-ink-400">
-          {t("auth.alreadyHaveAccount")}
-        </Words>
+      <p className="flex items-center justify-center gap-1.5 text-[13.5px] text-text-2">
+        {t("auth.alreadyHaveAccount")}
         <Link
           to={ROUTES.LOGIN}
-          className="text-primary-700 hover:text-primary-600 hover:underline dark:text-primary-400 dark:hover:text-primary-300"
+          className="font-semibold text-primary-text transition-colors hover:text-primary"
         >
-          <Words type="sm/bold" as="span">
-            {t("auth.loginLink")}
-          </Words>
+          {t("auth.loginLink")}
         </Link>
-      </div>
-
-      <div className="flex justify-center">
-        <LanguageMenuButton />
-      </div>
+      </p>
     </form>
   );
 }

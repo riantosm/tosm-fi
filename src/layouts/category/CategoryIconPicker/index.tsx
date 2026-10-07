@@ -1,11 +1,14 @@
 import { createElement, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { HiOutlineMagnifyingGlass } from "react-icons/hi2";
+import { LuSearch, LuSearchX } from "react-icons/lu";
 import { Input } from "@/components/atoms/Input";
+import { EmptyState } from "@/components/molecules/EmptyState";
 import { Modal } from "@/components/molecules/Modal";
-import { Words } from "@/components/atoms/Words";
-import { Tooltip } from "@/components/atoms/Tooltip";
-import { CATEGORY_ICON_GROUPS, resolveCategoryIcon } from "@/constants/category-icons";
+import {
+  CATEGORY_ICON_GROUPS,
+  CATEGORY_ICONS,
+  resolveCategoryIcon,
+} from "@/constants/category-icons";
 import { cn } from "@/utils/cn";
 
 interface CategoryIconPickerProps {
@@ -14,11 +17,11 @@ interface CategoryIconPickerProps {
   color: string;
 }
 
+/** Round icon trigger (tinted with the category color) + the "Pilih ikon" dialog. */
 export function CategoryIconPicker({ value, onChange, color }: CategoryIconPickerProps) {
   const { t } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
   const [query, setQuery] = useState("");
-  const selectedIcon = resolveCategoryIcon(value);
 
   const filteredGroups = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase();
@@ -39,80 +42,77 @@ export function CategoryIconPicker({ value, onChange, color }: CategoryIconPicke
 
   return (
     <>
-      <Tooltip content={t("category.chooseIcon")}>
-        <button
-          type="button"
-          onClick={() => setIsOpen(true)}
-          aria-label={t("category.chooseIcon")}
-          className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full border-2 border-transparent transition-colors hover:border-primary-400"
-          style={{ backgroundColor: `${color}33` }}
-        >
-          {createElement(selectedIcon, { className: "h-7 w-7", style: { color } })}
-        </button>
-      </Tooltip>
+      <button
+        type="button"
+        onClick={() => setIsOpen(true)}
+        aria-label={t("category.chooseIcon")}
+        title={t("category.chooseIcon")}
+        className="pressable flex size-[52px] shrink-0 items-center justify-center rounded-full border-[1.5px] transition-[transform,background-color,border-color] duration-300 hover:scale-105"
+        style={{ backgroundColor: `${color}26`, borderColor: color, color }}
+      >
+        {createElement(resolveCategoryIcon(value), { className: "size-[22px]" })}
+      </button>
 
-      <Modal isOpen={isOpen} onClose={close}>
-        <div className="flex max-h-[75vh] flex-col gap-4">
-          <Words as="h2" type="lg/bold" className="shrink-0 text-ink-900 dark:text-ink-50">
-            {t("category.chooseIcon")}
-          </Words>
-
+      <Modal
+        isOpen={isOpen}
+        onClose={close}
+        onBack={close}
+        size="lg"
+        title={t("category.chooseIcon")}
+        subtitle={t("category.iconCount", { count: CATEGORY_ICONS.length })}
+      >
+        <div className="flex flex-col gap-4">
           <Input
             autoFocus
             value={query}
             onChange={(event) => setQuery(event.target.value)}
             placeholder={t("category.searchIconPlaceholder")}
-            startIcon={<HiOutlineMagnifyingGlass className="h-4 w-4" />}
+            startIcon={<LuSearch />}
           />
 
-          <div className="-mx-2 flex min-h-0 flex-col gap-4 overflow-y-auto px-2">
-            {filteredGroups.length === 0 ? (
-              <Words type="sm/regular" className="py-6 text-center text-ink-400 dark:text-ink-500">
-                {t("category.noIconResults")}
-              </Words>
-            ) : (
-              filteredGroups.map((group) => (
-                <div key={group.key} className="flex flex-col gap-2">
-                  <Words
-                    type="xs/bold"
-                    className="uppercase tracking-wide text-ink-400 dark:text-ink-500"
-                  >
-                    {t(group.titleKey)}
-                  </Words>
-                  <div className="grid grid-cols-6 gap-2">
-                    {group.icons.map((option) => {
-                      const Icon = option.icon;
-                      const isActive = option.name === value;
-
-                      return (
-                        <Tooltip
-                          key={option.name}
-                          content={t(`category.iconNames.${option.labelKey}`)}
-                        >
-                          <button
-                            type="button"
-                            onClick={() => {
-                              onChange(option.name);
-                              close();
-                            }}
-                            aria-label={t(`category.iconNames.${option.labelKey}`)}
-                            className={cn(
-                              "flex h-10 w-10 items-center justify-center rounded-lg transition-colors",
-                              isActive
-                                ? "bg-primary-50 text-primary-600 dark:bg-primary-500/10 dark:text-primary-400"
-                                : "text-ink-400 hover:bg-ink-100 dark:hover:bg-ink-800",
-                            )}
-                          >
-                            <Icon className="h-5 w-5" />
-                          </button>
-                        </Tooltip>
-                      );
-                    })}
-                  </div>
+          {filteredGroups.length === 0 ? (
+            <EmptyState icon={<LuSearchX />} title={t("category.noIconResults")} />
+          ) : (
+            filteredGroups.map((group) => (
+              <div key={group.key} className="flex flex-col gap-2.5">
+                <span className="text-[11.5px] font-semibold tracking-[0.08em] text-text-3 uppercase">
+                  {t(group.titleKey)}
+                </span>
+                <div className="grid grid-cols-6 gap-2 sm:grid-cols-8">
+                  {group.icons.map((option) => {
+                    const Icon = option.icon;
+                    const isActive = option.name === value;
+                    const label = t(`category.iconNames.${option.labelKey}`);
+                    return (
+                      <button
+                        key={option.name}
+                        type="button"
+                        title={label}
+                        aria-label={label}
+                        aria-pressed={isActive}
+                        onClick={() => {
+                          onChange(option.name);
+                          close();
+                        }}
+                        className={cn(
+                          "pressable flex aspect-square items-center justify-center rounded-control border-[1.5px] transition-colors duration-200",
+                          !isActive &&
+                            "border-transparent bg-surface-2 text-text-2 hover:bg-surface-3 hover:text-text",
+                        )}
+                        style={
+                          isActive
+                            ? { backgroundColor: `${color}26`, borderColor: color, color }
+                            : undefined
+                        }
+                      >
+                        <Icon className="size-5" />
+                      </button>
+                    );
+                  })}
                 </div>
-              ))
-            )}
-          </div>
+              </div>
+            ))
+          )}
         </div>
       </Modal>
     </>

@@ -1,8 +1,8 @@
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { DashboardLayout } from "@/components/templates/DashboardLayout";
-import { Words } from "@/components/atoms/Words";
+import { Reveal } from "@/components/atoms/Reveal";
 import { CategoryBreakdownChart } from "@/components/molecules/CategoryBreakdownChart";
+import { PageHeader } from "@/components/molecules/PageHeader";
 import { ReportPeriodFilter } from "@/layouts/report/ReportPeriodFilter";
 import { ReportExportMenu } from "@/layouts/report/ReportExportMenu";
 import { ReportSummaryCards } from "@/layouts/report/ReportSummaryCards";
@@ -15,6 +15,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/hooks/use-language";
 import { useCurrency } from "@/hooks/use-currency";
 import { buildCategoryBreakdown } from "@/utils/category-breakdown";
+import { toIntlLocale } from "@/utils/locale";
 import { parseIsoDateLocal } from "@/utils/report-period";
 import type { ExportDocument } from "@/utils/report-export-types";
 import type {
@@ -30,6 +31,7 @@ type ExportFormat = Exclude<ReportExportFormat, "print">;
 export function ReportsPage() {
   const { t } = useTranslation();
   const { language } = useLanguage();
+  const locale = toIntlLocale(language);
   const { format: formatCurrency } = useCurrency();
   const { showToast } = useToast();
 
@@ -61,16 +63,33 @@ export function ReportsPage() {
   } = useReports(period, monthlyTrendMetric);
 
   const periodLabel = period.preset.startsWith("month:")
-    ? new Intl.DateTimeFormat(language, { month: "long", year: "numeric" }).format(
+    ? new Intl.DateTimeFormat(locale, { month: "long", year: "numeric" }).format(
         parseIsoDateLocal(resolvedPeriod.dateFrom),
       )
     : period.preset === "custom"
-      ? `${new Intl.DateTimeFormat(language, { day: "numeric", month: "short" }).format(
+      ? `${new Intl.DateTimeFormat(locale, { day: "numeric", month: "short" }).format(
           parseIsoDateLocal(resolvedPeriod.dateFrom),
-        )} - ${new Intl.DateTimeFormat(language, { day: "numeric", month: "short" }).format(
+        )} - ${new Intl.DateTimeFormat(locale, { day: "numeric", month: "short" }).format(
           parseIsoDateLocal(resolvedPeriod.dateTo),
         )}`
       : t(`reports.period.${period.preset}`);
+
+  /** Header subtitle: "1 – 31 Oktober 2026", or "Hari ini · 5 Oktober 2026" for a single day. */
+  const rangeLabel = useMemo(() => {
+    if (!resolvedPeriod.dateFrom || !resolvedPeriod.dateTo) return "";
+    const from = parseIsoDateLocal(resolvedPeriod.dateFrom);
+    const to = parseIsoDateLocal(resolvedPeriod.dateTo);
+    const formatter = new Intl.DateTimeFormat(locale, {
+      day: "numeric",
+      month: "long",
+      year: "numeric",
+    });
+    if (resolvedPeriod.dateFrom === resolvedPeriod.dateTo) {
+      const day = formatter.format(from);
+      return period.preset === "today" ? `${t("reports.period.today")} · ${day}` : day;
+    }
+    return formatter.formatRange(from, to);
+  }, [resolvedPeriod.dateFrom, resolvedPeriod.dateTo, locale, period.preset, t]);
 
   function buildExportDocument(): ExportDocument {
     const summarySection = {
@@ -150,7 +169,7 @@ export function ReportsPage() {
         item.title,
         item.subCategoryName ? `${item.categoryName} · ${item.subCategoryName}` : item.categoryName,
         formatCurrency(item.amount),
-        new Intl.DateTimeFormat(language, {
+        new Intl.DateTimeFormat(locale, {
           day: "numeric",
           month: "short",
           year: "numeric",
@@ -177,7 +196,7 @@ export function ReportsPage() {
           );
           const wallet = wallets.find((item) => item.idWallet === transaction.idWallet);
           return [
-            new Intl.DateTimeFormat(language, {
+            new Intl.DateTimeFormat(locale, {
               day: "numeric",
               month: "short",
               year: "numeric",
@@ -238,58 +257,73 @@ export function ReportsPage() {
   );
 
   return (
-    <DashboardLayout>
-      <div className="flex flex-col gap-6">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <Words as="h1" type="2xl/bold" className="text-ink-900 dark:text-ink-50">
-            {t("nav.reports")}
-          </Words>
-          <div className="flex min-w-0 max-w-full flex-wrap items-center gap-2">
-            <ReportPeriodFilter value={period} onChange={setPeriod} />
-            <ReportExportMenu onExport={handleExport} exportingFormat={exportingFormat} />
-          </div>
-        </div>
+    <div className="flex flex-col gap-4 lg:gap-5">
+      <PageHeader
+        title={t("nav.reports")}
+        subtitle={rangeLabel}
+        actions={<ReportExportMenu onExport={handleExport} exportingFormat={exportingFormat} />}
+        mobileActions={
+          <ReportExportMenu
+            onExport={handleExport}
+            exportingFormat={exportingFormat}
+            variant="icon"
+          />
+        }
+      />
 
-        <ReportSummaryCards summary={summary} previousLabel={t("reports.summary.previousPeriod")} />
+      <ReportPeriodFilter value={period} onChange={setPeriod} />
 
-        <div className="flex flex-col xl:flex-row gap-4">
-          <div className="flex flex-col gap-4 flex-1">
-            <div>
-              <CashFlowChart data={cashFlow} periodLabel={periodLabel} isLoading={isCashFlowLoading} />
-            </div>
-            <div className="">
-              <MonthlyTrendChart
-                data={monthlyTrend}
-                metric={monthlyTrendMetric}
-                onMetricChange={setMonthlyTrendMetric}
-                monthsLabel={t("reports.monthlyTrend.monthsLabel", {
-                  count: MONTHLY_TREND_MONTHS_COUNT,
-                })}
-                isLoading={isMonthlyTrendLoading}
-              />
-            </div>
-          </div>
-          <div className="flex flex-col gap-4 flex-1">
-            <div>
-              <CategoryBreakdownChart
-                slices={categoryBreakdownSlices}
-                title={t("reports.expenseByCategory.title")}
-                periodLabel={periodLabel}
-                isLoading={isSummaryLoading}
-              />
-            </div>
-            <div className="xl:flex grid sm:grid-cols-2 grid-cols-1 gap-4">
-              <div className="flex-2">
-                <TopSpendingList items={topSpending} isLoading={isTopSpendingLoading} />
-              </div>
-              <div className="h-fit">
-                <WalletUsageCard items={walletUsage} isLoading={isWalletUsageLoading} />
-              </div>
-            </div>
-          </div>
-        </div>
-        {/* <ExportSection onExport={handleExport} exportingFormat={exportingFormat} /> */}
+      <ReportSummaryCards
+        summary={summary}
+        previousLabel={t("reports.summary.previousPeriod")}
+        isLoading={isSummaryLoading}
+      />
+
+      <Reveal delay={0.04}>
+        <CashFlowChart
+          data={cashFlow}
+          eyebrow={t("reports.eyebrow.cashFlow")}
+          isLoading={isCashFlowLoading}
+        />
+      </Reveal>
+
+      <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_340px] lg:gap-5 xl:grid-cols-[minmax(0,1fr)_400px]">
+        <Reveal delay={0.04} className="min-w-0 lg:col-start-1 lg:row-start-1">
+          <CategoryBreakdownChart
+            slices={categoryBreakdownSlices}
+            title={t("reports.expenseByCategory.title")}
+            periodLabel={t("reports.eyebrow.category")}
+            isLoading={isSummaryLoading}
+            className="h-full"
+          />
+        </Reveal>
+        <Reveal delay={0.04} className="min-w-0 lg:col-start-1 lg:row-start-2">
+          <MonthlyTrendChart
+            data={monthlyTrend}
+            metric={monthlyTrendMetric}
+            onMetricChange={setMonthlyTrendMetric}
+            eyebrow={t("reports.eyebrow.monthlyTrend", { count: MONTHLY_TREND_MONTHS_COUNT })}
+            isLoading={isMonthlyTrendLoading}
+            className="h-full"
+          />
+        </Reveal>
+        <Reveal delay={0.06} className="min-w-0 lg:col-start-2 lg:row-start-1">
+          <TopSpendingList
+            items={topSpending}
+            eyebrow={t("reports.eyebrow.topSpending")}
+            isLoading={isTopSpendingLoading}
+            className="h-full"
+          />
+        </Reveal>
+        <Reveal delay={0.06} className="min-w-0 lg:col-start-2 lg:row-start-2">
+          <WalletUsageCard
+            items={walletUsage}
+            eyebrow={t("reports.eyebrow.walletUsage")}
+            isLoading={isWalletUsageLoading}
+            className="h-full"
+          />
+        </Reveal>
       </div>
-    </DashboardLayout>
+    </div>
   );
 }

@@ -42,6 +42,7 @@ export function ConfirmDialogProvider({ children }: { children: ReactNode }) {
         confirmLabel={state.confirmLabel}
         cancelLabel={state.cancelLabel}
         destructive={state.destructive}
+        icon={state.icon}
         onConfirm={() => resolveDialog(true)}
         onCancel={state.cancelLabel ? () => resolveDialog(false) : undefined}
       />

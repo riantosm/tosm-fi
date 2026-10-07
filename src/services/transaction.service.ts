@@ -13,7 +13,9 @@ export const transactionService = {
       const { data } = await httpClient.get("/transactions", { params });
       return data.data as TransactionListResult;
     } catch (error) {
-      throw new Error(getApiErrorMessage(error, i18n.t("transaction.genericError")));
+      throw new Error(getApiErrorMessage(error, i18n.t("transaction.genericError")), {
+        cause: error,
+      });
     }
   },
 
@@ -22,7 +24,9 @@ export const transactionService = {
       const { data } = await httpClient.post("/transactions", input);
       return data.data as Transaction;
     } catch (error) {
-      throw new Error(getApiErrorMessage(error, i18n.t("transaction.genericError")));
+      throw new Error(getApiErrorMessage(error, i18n.t("transaction.genericError")), {
+        cause: error,
+      });
     }
   },
 
@@ -31,7 +35,9 @@ export const transactionService = {
       const { data } = await httpClient.patch(`/transactions/${idTransaction}`, input);
       return data.data as Transaction;
     } catch (error) {
-      throw new Error(getApiErrorMessage(error, i18n.t("transaction.genericError")));
+      throw new Error(getApiErrorMessage(error, i18n.t("transaction.genericError")), {
+        cause: error,
+      });
     }
   },
 
@@ -39,7 +45,9 @@ export const transactionService = {
     try {
       await httpClient.delete(`/transactions/${idTransaction}`);
     } catch (error) {
-      throw new Error(getApiErrorMessage(error, i18n.t("transaction.genericError")));
+      throw new Error(getApiErrorMessage(error, i18n.t("transaction.genericError")), {
+        cause: error,
+      });
     }
   },
 };

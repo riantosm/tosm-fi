@@ -1,96 +1,167 @@
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import { Area, AreaChart, ResponsiveContainer } from "recharts";
-import { Words } from "@/components/atoms/Words";
-import { useCurrency } from "@/hooks/use-currency";
+import { LuPlus } from "react-icons/lu";
+import { Monogram } from "@/components/atoms/Monogram";
+import { Card } from "@/components/molecules/Card";
+import { InvestmentSparkline } from "@/layouts/investment/InvestmentSparkline";
+import { MoneyAmount } from "@/layouts/investment/MoneyAmount";
+import { ProfitLossPill } from "@/layouts/investment/ProfitLossPill";
+import { useMoneyFormat } from "@/hooks/use-money-format";
 import { getInstrumentTotals } from "@/utils/investment";
+import { cn } from "@/utils/cn";
 import type { Instrument } from "@/types/instrument.types";
 import type { TimelinePoint } from "@/types/investment-transaction.types";
-import { cn } from "@/utils/cn";
+
+function activeAccountCount(instrument: Instrument): number {
+  return instrument.investmentAccounts.filter((account) => !account.isDeleted).length;
+}
 
 interface InstrumentCardProps {
   instrument: Instrument;
   sparkline: TimelinePoint[];
-  isSelected: boolean;
-  onClick: () => void;
-  /** "carousel" (default): fixed width for a horizontal scroll row. "grid": fills its grid cell. */
+  /** carousel = fixed width in a horizontal scroll row; grid = fills its grid cell. */
   layout?: "carousel" | "grid";
+  onOpen: () => void;
 }
 
+/** Desktop instrument card: solid monogram, value, P/L pill and a bleeding sparkline. */
 export function InstrumentCard({
   instrument,
   sparkline,
-  isSelected,
-  onClick,
-  layout = "carousel",
+  layout = "grid",
+  onOpen,
 }: InstrumentCardProps) {
   const { t } = useTranslation();
-  const { format } = useCurrency();
-
   const totals = useMemo(() => getInstrumentTotals(instrument), [instrument]);
-  const isPositive = totals.profitLoss >= 0;
-  const gradientId = `instrument-spark-${instrument.idInstrument}`;
 
+  return (
+    <Card
+      as="button"
+      onClick={onOpen}
+      interactive
+      padding="none"
+      className={cn(
+        "flex flex-col gap-3.5 overflow-hidden px-5 pt-5 text-left",
+        layout === "carousel" ? "w-[300px] shrink-0 snap-start" : "w-full",
+      )}
+    >
+      <div className="flex w-full items-center gap-2.5">
+        <Monogram
+          name={instrument.nameInstrument}
+          color={instrument.color}
+          variant="solid"
+          shape="square"
+          size="md"
+        />
+        <span className="flex min-w-0 flex-1 flex-col gap-px">
+          <span className="truncate text-[14px] font-semibold text-text">
+            {instrument.nameInstrument}
+          </span>
+          <span className="truncate text-[12px] text-text-3">
+            {t("investment.accountsShort", { count: activeAccountCount(instrument) })}
+          </span>
+        </span>
+        <ProfitLossPill profitLoss={totals.profitLoss} percent={totals.profitLossPercent} />
+      </div>
+      <MoneyAmount
+        value={totals.currentValue}
+        symbolClassName="text-[14px] font-medium text-text-3"
+        numberClassName="text-[26px] leading-[1.15] tracking-[-0.02em] text-text"
+      />
+      <InvestmentSparkline
+        data={sparkline}
+        color={instrument.color}
+        className="-mx-5 h-14 w-[calc(100%+40px)]"
+      />
+    </Card>
+  );
+}
+
+interface InstrumentListRowProps {
+  instrument: Instrument;
+  sparkline: TimelinePoint[];
+  onOpen: () => void;
+}
+
+/** Phone instrument row: monogram, name, mini sparkline, value + P/L %. */
+export function InstrumentListRow({ instrument, sparkline, onOpen }: InstrumentListRowProps) {
+  const { t } = useTranslation();
+  const { formatNumber } = useMoneyFormat();
+  const totals = useMemo(() => getInstrumentTotals(instrument), [instrument]);
+
+  return (
+    <button
+      type="button"
+      onClick={onOpen}
+      className="flex w-full items-center gap-3 py-3 text-left transition-opacity active:opacity-70"
+    >
+      <Monogram
+        name={instrument.nameInstrument}
+        color={instrument.color}
+        variant="solid"
+        shape="square"
+        size="md"
+      />
+      <span className="flex min-w-0 flex-1 flex-col gap-px">
+        <span className="truncate text-[14.5px] font-semibold text-text">
+          {instrument.nameInstrument}
+        </span>
+        <span className="truncate text-[12px] text-text-3">
+          {t("investment.accountsShort", { count: activeAccountCount(instrument) })}
+        </span>
+      </span>
+      <InvestmentSparkline
+        data={sparkline}
+        color={instrument.color}
+        lineOnly
+        className="h-7 w-16 shrink-0"
+      />
+      <span className="flex shrink-0 flex-col items-end gap-px">
+        <span className="font-num text-[14.5px] font-semibold text-text tabular">
+          {formatNumber(totals.currentValue)}
+        </span>
+        <ProfitLossPill
+          profitLoss={totals.profitLoss}
+          percent={totals.profitLossPercent}
+          className="bg-transparent px-0 py-0"
+        />
+      </span>
+    </button>
+  );
+}
+
+interface AddInstrumentTileProps {
+  onClick: () => void;
+  /** Defaults to "Tambah instrumen" (also used for "Tambah akun"). */
+  label?: string;
+  layout?: "carousel" | "grid";
+  className?: string;
+}
+
+/** "Tambah instrumen" tile at the end of the card row. */
+export function AddInstrumentTile({
+  onClick,
+  label,
+  layout = "grid",
+  className,
+}: AddInstrumentTileProps) {
+  const { t } = useTranslation();
   return (
     <button
       type="button"
       onClick={onClick}
       className={cn(
-        "relative flex flex-col overflow-hidden rounded-2xl border bg-white p-4 text-left transition-all duration-300 ease-in-out dark:bg-ink-900",
-        layout === "grid" ? "w-full" : "w-56 shrink-0",
-        isSelected ? "" : "border-ink-200 hover:border-ink-300 dark:border-ink-800 dark:hover:border-ink-700",
+        "group flex min-h-[168px] flex-col items-center justify-center gap-2.5 rounded-card border border-border bg-surface/40 transition-colors duration-300 hover:border-primary hover:bg-primary-soft/40",
+        layout === "carousel" ? "w-[240px] shrink-0 snap-start" : "w-full",
+        className,
       )}
-      style={isSelected ? { borderColor: instrument.color } : undefined}
     >
-      <div className="relative z-10 flex flex-col gap-1.5">
-        <Words type="sm/bold" className="truncate" style={{ color: instrument.color }}>
-          {instrument.nameInstrument}
-        </Words>
-        <Words type="lg/bold" className="truncate text-ink-900 dark:text-ink-50">
-          {format(totals.currentValue)}
-        </Words>
-        <div className="flex items-center justify-between gap-2">
-          <Words type="xs/regular" className="text-ink-400 dark:text-ink-500">
-            {t("investment.accountsCount", {
-              n: instrument.investmentAccounts.filter((account) => !account.isDeleted).length,
-            })}
-          </Words>
-          <Words
-            type="xs/bold"
-            as="span"
-            className={
-              isPositive
-                ? "text-primary-600 dark:text-primary-400"
-                : "text-red-500 dark:text-red-400"
-            }
-          >
-            {isPositive ? "↑" : "↓"} {Math.abs(totals.profitLossPercent).toFixed(2)}%
-          </Words>
-        </div>
-      </div>
-
-      {sparkline.length > 0 && (
-        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-10 opacity-60">
-          <ResponsiveContainer width="100%" height="100%">
-            <AreaChart data={sparkline} margin={{ top: 0, right: 0, left: 0, bottom: 0 }}>
-              <defs>
-                <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor={instrument.color} stopOpacity={0.4} />
-                  <stop offset="100%" stopColor={instrument.color} stopOpacity={0} />
-                </linearGradient>
-              </defs>
-              <Area
-                type="monotone"
-                dataKey="current"
-                stroke={instrument.color}
-                strokeWidth={1.5}
-                fill={`url(#${gradientId})`}
-                isAnimationActive={false}
-              />
-            </AreaChart>
-          </ResponsiveContainer>
-        </div>
-      )}
+      <span className="flex size-11 items-center justify-center rounded-full bg-primary-soft text-primary-text transition-transform duration-300 group-hover:scale-110">
+        <LuPlus className="size-5" />
+      </span>
+      <span className="text-[14px] font-semibold text-primary-text">
+        {label ?? t("investment.addInstrument")}
+      </span>
     </button>
   );
 }

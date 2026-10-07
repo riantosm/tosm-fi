@@ -2,26 +2,48 @@ import type { ButtonHTMLAttributes, ReactNode } from "react";
 import { cn } from "@/utils/cn";
 import { IconLoader } from "@/components/atoms/IconLoader";
 
-type ButtonVariant = "primary" | "secondary" | "ghost" | "danger";
+export type ButtonVariant =
+  "primary" | "soft" | "secondary" | "outline" | "ghost" | "danger" | "danger-soft";
+export type ButtonSize = "sm" | "md" | "lg";
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: ButtonVariant;
+  size?: ButtonSize;
   isLoading?: boolean;
+  /** Icon element rendered before the label (e.g. `<LuPlus />`). */
+  leftIcon?: ReactNode;
+  rightIcon?: ReactNode;
+  fullWidth?: boolean;
   children: ReactNode;
 }
 
-const variantClass: Record<ButtonVariant, string> = {
+const VARIANT_CLASS: Record<ButtonVariant, string> = {
   primary:
-    "bg-primary-600 text-white hover:bg-primary-500 dark:bg-primary-500 dark:text-ink-950 dark:hover:bg-primary-400",
+    "bg-primary text-primary-fg shadow-[0_6px_18px_color-mix(in_oklab,var(--primary)_32%,transparent)] hover:brightness-[1.06] hover:shadow-[0_10px_24px_color-mix(in_oklab,var(--primary)_38%,transparent)]",
+  soft: "bg-primary-soft text-primary-text hover:bg-[color-mix(in_oklab,var(--primary-soft),var(--primary)_14%)]",
   secondary:
-    "bg-ink-100 text-ink-900 hover:bg-ink-200 dark:bg-ink-800 dark:text-ink-100 dark:hover:bg-ink-700",
-  ghost: "bg-transparent text-ink-600 hover:bg-ink-100 dark:text-ink-300 dark:hover:bg-ink-800",
-  danger: "bg-red-500 text-white hover:bg-red-600 dark:bg-red-500 dark:hover:bg-red-400",
+    "bg-primary-soft text-primary-text hover:bg-[color-mix(in_oklab,var(--primary-soft),var(--primary)_14%)]",
+  outline:
+    "border border-border bg-surface text-text hover:border-border-strong hover:bg-surface-2",
+  ghost: "bg-transparent text-text-2 hover:bg-surface-2 hover:text-text",
+  danger:
+    "bg-expense-text text-surface shadow-[0_6px_18px_color-mix(in_oklab,var(--expense-text)_28%,transparent)] hover:brightness-110",
+  "danger-soft": "bg-expense-soft text-expense-text hover:brightness-[0.97]",
+};
+
+const SIZE_CLASS: Record<ButtonSize, string> = {
+  sm: "h-9 px-3.5 gap-1.5 text-[13px] [&_svg]:size-4",
+  md: "h-11 px-5 gap-2 text-[14px] [&_svg]:size-[18px]",
+  lg: "h-[50px] px-6 gap-2 text-[14.5px] [&_svg]:size-[18px]",
 };
 
 export function Button({
   variant = "primary",
+  size = "md",
   isLoading = false,
+  leftIcon,
+  rightIcon,
+  fullWidth = false,
   disabled,
   className,
   children,
@@ -31,16 +53,18 @@ export function Button({
     <button
       disabled={disabled || isLoading}
       className={cn(
-        "inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 transition-colors duration-150",
-        "disabled:cursor-not-allowed disabled:opacity-60",
-        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500/30 dark:focus-visible:ring-primary-400/30",
-        variantClass[variant],
+        "pressable inline-flex shrink-0 select-none items-center justify-center whitespace-nowrap rounded-full font-semibold",
+        "disabled:cursor-not-allowed disabled:opacity-50 disabled:shadow-none",
+        SIZE_CLASS[size],
+        VARIANT_CLASS[variant],
+        fullWidth && "w-full",
         className,
       )}
       {...rest}
     >
-      {isLoading && <IconLoader className="h-4 w-4 animate-spin" />}
+      {isLoading ? <IconLoader className="animate-spin" /> : leftIcon}
       {children}
+      {!isLoading && rightIcon}
     </button>
   );
 }

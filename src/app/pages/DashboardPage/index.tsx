@@ -1,17 +1,17 @@
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
-import { DashboardLayout } from "@/components/templates/DashboardLayout";
-import { Words } from "@/components/atoms/Words";
+import { LuArrowRight } from "react-icons/lu";
 import { IconLoader } from "@/components/atoms/IconLoader";
-import { WalletQuickSwitcher } from "@/layouts/dashboard/WalletQuickSwitcher";
+import { Reveal } from "@/components/atoms/Reveal";
+import { Card } from "@/components/molecules/Card";
 import { FinanceOverview } from "@/layouts/dashboard/FinanceOverview";
-import { AddTransactionFab } from "@/layouts/dashboard/AddTransactionFab";
 import { TransactionList } from "@/layouts/dashboard/TransactionList";
 import { MonthlySummaryCard } from "@/layouts/dashboard/MonthlySummaryCard";
 import { FinancialHealthCard } from "@/layouts/dashboard/FinancialHealthCard";
 import { ExpenseByCategoryChart } from "@/layouts/dashboard/ExpenseByCategoryChart";
 import { BudgetsSummary } from "@/layouts/dashboard/BudgetsSummary";
+import { WalletQuickSwitcher } from "@/layouts/dashboard/WalletQuickSwitcher";
 import { AddTransactionModal } from "@/layouts/transaction/AddTransactionModal";
 import { BalanceCorrectionModal } from "@/layouts/wallet/BalanceCorrectionModal";
 import { PayOccurrenceModal } from "@/layouts/schedule/PayOccurrenceModal";
@@ -25,7 +25,6 @@ import { useScheduleOccurrences } from "@/hooks/use-schedule-occurrences";
 import { useScheduleOccurrenceActions } from "@/hooks/use-schedule-occurrence-actions";
 import { formatMonthParam, startOfMonth } from "@/utils/month";
 import { filterOccurrencesForView } from "@/utils/schedule-occurrence-filter";
-import { getGreetingKey } from "@/utils/greeting";
 import { ROUTES } from "@/constants/routes";
 import type { Transaction, TransactionSummary } from "@/types/transaction.types";
 import type { WalletAccount } from "@/types/wallet.types";
@@ -158,82 +157,82 @@ export function DashboardPage() {
     setEditingTransaction(transaction);
   }
 
+  // Phones stack the cards in the design's own order (budgets first); from
+  // `lg` the two column wrappers take over and `order` no longer applies.
   return (
-    <DashboardLayout>
-      <div className="flex flex-col gap-6">
-        <div>
-          <Words as="h1" type="xl/bold" className="text-ink-900 dark:text-ink-50">
-            {t(getGreetingKey())}
-          </Words>
-          <Words type="sm/regular" className="text-ink-500 dark:text-ink-400">
-            {t("dashboard.subtitle")}
-          </Words>
+    <div className="flex flex-col gap-4 lg:gap-5">
+      <Reveal immediate>
+        <FinanceOverview summary={dashboardSummary} isLoading={isDashboardSummaryLoading} />
+      </Reveal>
+
+      <div className="flex flex-col gap-4 lg:grid lg:grid-cols-[minmax(0,1fr)_380px] lg:items-start lg:gap-5 xl:grid-cols-[minmax(0,1fr)_420px]">
+        <div className="contents lg:flex lg:min-w-0 lg:flex-col lg:gap-5">
+          <div className="contents xl:grid xl:grid-cols-[minmax(0,1fr)_300px] xl:items-start xl:gap-5">
+            <Reveal className="order-2 h-full lg:order-none">
+              <MonthlySummaryCard
+                summary={dashboardSummary}
+                transactionCount={monthTotal}
+                isLoading={isDashboardSummaryLoading || isQueryLoading}
+              />
+            </Reveal>
+            <Reveal className="order-3 lg:order-none" delay={0.05}>
+              <FinancialHealthCard
+                summary={dashboardSummary}
+                isLoading={isDashboardSummaryLoading}
+              />
+            </Reveal>
+          </div>
+
+          <Reveal className="order-4 lg:order-none">
+            <ExpenseByCategoryChart summary={monthSummary} isLoading={isQueryLoading} />
+          </Reveal>
+
+          <Reveal className="order-6 lg:order-none">
+            <Card className="flex flex-col">
+              <TransactionList
+                transactions={displayedTransactions}
+                occurrences={visibleOccurrences}
+                categories={categories}
+                wallets={wallets}
+                onEditTransaction={handleEditTransaction}
+                onPayOccurrence={openPayModal}
+                onCancelOccurrence={(occurrence) => void handleCancelOccurrence(occurrence)}
+                eyebrow={t("dashboard.activityEyebrow")}
+                headerAction={
+                  <SeeAllLink
+                    label={t("dashboard.seeAll")}
+                    onClick={() => navigate(ROUTES.TRANSACTIONS)}
+                  />
+                }
+                isLoading={
+                  isQueryLoading || walletsStatus !== "loaded" || categoriesStatus !== "loaded"
+                }
+              />
+
+              {hasMore && (
+                <div ref={sentinelRef} className="flex justify-center pt-4">
+                  {isLoadingMore && <IconLoader className="size-5 animate-spin text-primary" />}
+                </div>
+              )}
+            </Card>
+          </Reveal>
         </div>
 
-        <FinanceOverview summary={dashboardSummary} isLoading={isDashboardSummaryLoading} />
-
-        <div className="xl:flex-row flex-col flex w-full lg:items-start gap-8">
-          <div className="flex flex-1 w-full flex-col gap-6">
+        <div className="contents lg:flex lg:min-w-0 lg:flex-col lg:gap-5">
+          <Reveal className="order-5 lg:order-none" delay={0.05}>
+            <WalletQuickSwitcher
+              onCorrectBalance={(wallet) => setCorrectionState({ wallet, transaction: null })}
+            />
+          </Reveal>
+          <Reveal className="order-1 lg:order-none" delay={0.1}>
             <BudgetsSummary
               budgets={budgets}
               categoryBreakdown={budgetCategoryBreakdown}
               isLoading={budgetsStatus !== "loaded" || isBudgetSpendingLoading}
             />
-            <div className="flex flex-col gap-4 sm:flex-row sm:items-stretch">
-              <div className="w-full sm:flex-1">
-                <MonthlySummaryCard
-                  summary={dashboardSummary}
-                  transactionCount={monthTotal}
-                  isLoading={isDashboardSummaryLoading || isQueryLoading}
-                />
-              </div>
-              <div className="w-full sm:flex-1">
-                <FinancialHealthCard
-                  summary={dashboardSummary}
-                  isLoading={isDashboardSummaryLoading}
-                />
-              </div>
-            </div>
-            <ExpenseByCategoryChart summary={monthSummary} isLoading={isQueryLoading} />
-          </div>
-          <div className="flex-1 w-full overflow-hidden space-y-4">
-            <div className="w-full">
-              <WalletQuickSwitcher
-                onCorrectBalance={(wallet) => setCorrectionState({ wallet, transaction: null })}
-              />
-            </div>
-            <TransactionList
-              transactions={displayedTransactions}
-              occurrences={visibleOccurrences}
-              categories={categories}
-              wallets={wallets}
-              onEditTransaction={handleEditTransaction}
-              onPayOccurrence={openPayModal}
-              onCancelOccurrence={(occurrence) => void handleCancelOccurrence(occurrence)}
-              headerAction={
-                <button
-                  type="button"
-                  onClick={() => navigate(ROUTES.TRANSACTIONS)}
-                  className="text-[13px] font-bold text-primary-600 hover:underline dark:text-primary-400"
-                >
-                  {t("dashboard.viewAll")}
-                </button>
-              }
-              isLoading={
-                isQueryLoading || walletsStatus !== "loaded" || categoriesStatus !== "loaded"
-              }
-            />
-
-            {hasMore && (
-              <div ref={sentinelRef} className="flex justify-center py-4">
-                {isLoadingMore && <IconLoader className="h-5 w-5 animate-spin text-primary-500" />}
-              </div>
-            )}
-          </div>
+          </Reveal>
         </div>
       </div>
-
-      <AddTransactionFab />
 
       <AddTransactionModal
         isOpen={editingTransaction !== null}
@@ -253,6 +252,19 @@ export function DashboardPage() {
         occurrence={payingOccurrence}
         onClose={closePayModal}
       />
-    </DashboardLayout>
+    </div>
+  );
+}
+
+function SeeAllLink({ label, onClick }: { label: string; onClick: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="group inline-flex items-center gap-1 rounded-full text-[13px] font-semibold text-primary-text transition-colors hover:text-primary"
+    >
+      {label}
+      <LuArrowRight className="size-3.5 transition-transform duration-200 group-hover:translate-x-0.5" />
+    </button>
   );
 }

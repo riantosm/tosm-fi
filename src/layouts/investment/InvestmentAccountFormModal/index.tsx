@@ -1,18 +1,23 @@
 import { useState, type SubmitEvent } from "react";
 import { useTranslation } from "react-i18next";
-import { HiOutlineTrash } from "react-icons/hi2";
-import { Modal } from "@/components/molecules/Modal";
+import { LuCheck, LuLandmark, LuLock, LuPlus, LuTrash2 } from "react-icons/lu";
 import { Button } from "@/components/atoms/Button";
+import { IconButton } from "@/components/atoms/IconButton";
 import { Input } from "@/components/atoms/Input";
-import { IconLoader } from "@/components/atoms/IconLoader";
+import { Monogram } from "@/components/atoms/Monogram";
 import { FormField } from "@/components/molecules/FormField";
-import { Words } from "@/components/atoms/Words";
-import { Tooltip } from "@/components/atoms/Tooltip";
-import { ModalCloseButton } from "@/components/atoms/ModalCloseButton";
-import type { InvestmentAccount, InvestmentAccountInput } from "@/types/instrument.types";
+import { Modal, ModalActions } from "@/components/molecules/Modal";
+import { useDialogSession } from "@/hooks/use-dialog-session";
+import type {
+  Instrument,
+  InvestmentAccount,
+  InvestmentAccountInput,
+} from "@/types/instrument.types";
 
 interface InvestmentAccountFormModalProps {
   isOpen: boolean;
+  /** The instrument the account lives in (shown locked). */
+  instrument: Instrument | null;
   account?: InvestmentAccount | null;
   isSubmitting?: boolean;
   isDeleting?: boolean;
@@ -21,50 +26,29 @@ interface InvestmentAccountFormModalProps {
   onDelete?: (id: string) => void;
 }
 
-export function InvestmentAccountFormModal({
+const FORM_ID = "investment-account-form";
+
+export function InvestmentAccountFormModal(props: InvestmentAccountFormModalProps) {
+  const session = useDialogSession(props.isOpen);
+  return <InvestmentAccountFormDialog key={session} {...props} />;
+}
+
+function InvestmentAccountFormDialog({
   isOpen,
-  account,
+  instrument: instrumentProp,
+  account: accountProp,
   isSubmitting,
   isDeleting,
   onClose,
   onSubmit,
   onDelete,
 }: InvestmentAccountFormModalProps) {
-  return (
-    <Modal isOpen={isOpen} onClose={onClose}>
-      {isOpen && (
-        <InvestmentAccountFormFields
-          account={account}
-          isSubmitting={isSubmitting}
-          isDeleting={isDeleting}
-          onClose={onClose}
-          onSubmit={onSubmit}
-          onDelete={onDelete}
-        />
-      )}
-    </Modal>
-  );
-}
-
-interface InvestmentAccountFormFieldsProps {
-  account?: InvestmentAccount | null;
-  isSubmitting?: boolean;
-  isDeleting?: boolean;
-  onClose: () => void;
-  onSubmit: (input: InvestmentAccountInput) => void;
-  onDelete?: (id: string) => void;
-}
-
-function InvestmentAccountFormFields({
-  account,
-  isSubmitting,
-  isDeleting,
-  onClose,
-  onSubmit,
-  onDelete,
-}: InvestmentAccountFormFieldsProps) {
   const { t } = useTranslation();
+  // Frozen for this dialog's lifetime so the exit animation keeps the same content.
+  const [instrument] = useState(instrumentProp);
+  const [account] = useState(accountProp ?? null);
   const [name, setName] = useState(account?.nameInvestmentAccount ?? "");
+  const isBusy = Boolean(isSubmitting || isDeleting);
 
   function handleSubmit(event: SubmitEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -73,56 +57,81 @@ function InvestmentAccountFormFields({
   }
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col gap-5">
-      <div className="flex items-center justify-between gap-2">
-        <Words as="h2" type="lg/bold" className="text-ink-900 dark:text-ink-50">
-          {account ? t("investment.editAccountTitle") : t("investment.addAccountTitle")}
-        </Words>
-
-        <div className="flex shrink-0 items-center gap-1">
-          {account && (
-            <Tooltip content={t("investment.deleteButton")}>
-              <button
-                type="button"
-                onClick={() => onDelete?.(account.idInvestmentAccount)}
-                disabled={isDeleting}
-                aria-label={t("investment.deleteButton")}
-                className="flex h-8 w-8 items-center justify-center rounded-md text-ink-400 transition-colors hover:bg-red-50 hover:text-red-500 disabled:opacity-60 dark:hover:bg-red-500/10 dark:hover:text-red-400"
-              >
-                {isDeleting ? (
-                  <IconLoader className="h-4 w-4 animate-spin" />
-                ) : (
-                  <HiOutlineTrash className="h-4 w-4" />
-                )}
-              </button>
-            </Tooltip>
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      size="md"
+      title={account ? t("investment.editAccountTitle") : t("investment.addAccountTitle")}
+      subtitle={
+        instrument ? t("investment.inInstrument", { name: instrument.nameInstrument }) : undefined
+      }
+      footer={
+        <div className="flex items-center gap-2.5">
+          {account && onDelete && (
+            <IconButton
+              label={t("investment.deleteAccount")}
+              icon={<LuTrash2 />}
+              variant="danger"
+              size="lg"
+              className="size-[50px]"
+              onClick={() => onDelete(account.idInvestmentAccount)}
+              disabled={isBusy}
+            />
           )}
-          <ModalCloseButton onClose={onClose} />
+          <ModalActions className="flex-1">
+            <Button type="button" variant="outline" onClick={onClose} disabled={isBusy}>
+              {t("common.cancel")}
+            </Button>
+            <Button
+              type="submit"
+              form={FORM_ID}
+              leftIcon={account ? <LuCheck /> : <LuPlus />}
+              isLoading={isSubmitting}
+              disabled={isBusy || !name.trim()}
+            >
+              {account ? t("investment.save") : t("investment.addAccount")}
+            </Button>
+          </ModalActions>
         </div>
-      </div>
+      }
+    >
+      <form id={FORM_ID} onSubmit={handleSubmit} className="flex flex-col gap-[18px]">
+        {instrument && (
+          <div className="flex items-center gap-2.5 rounded-control bg-surface-2 px-3.5 py-2.5">
+            <Monogram
+              name={instrument.nameInstrument}
+              color={instrument.color}
+              variant="solid"
+              shape="square"
+              size="xs"
+              className="size-7 text-[10px]"
+            />
+            <span className="min-w-0 flex-1 truncate text-[14px] font-semibold text-text">
+              {instrument.nameInstrument}
+            </span>
+            <LuLock
+              className="size-4 shrink-0 text-text-3"
+              aria-label={t("investment.instrumentLocked")}
+            />
+          </div>
+        )}
 
-      <FormField label={t("investment.accountNameLabel")} htmlFor="account-name">
-        <Input
-          id="account-name"
-          value={name}
-          onChange={(event) => setName(event.target.value)}
-          placeholder={t("investment.accountNamePlaceholder")}
-          required
-        />
-      </FormField>
-
-      <div className="flex gap-3">
-        <Button type="button" variant="secondary" className="flex-1" onClick={onClose}>
-          <Words type="sm/bold" as="span">
-            {t("common.cancel")}
-          </Words>
-        </Button>
-        <Button type="submit" className="flex-1" isLoading={isSubmitting}>
-          <Words type="sm/bold" as="span">
-            {t("common.confirm")}
-          </Words>
-        </Button>
-      </div>
-    </form>
+        <FormField
+          label={t("investment.accountNameLabel")}
+          htmlFor="account-name"
+          helper={t("investment.accountNameHelper")}
+        >
+          <Input
+            id="account-name"
+            value={name}
+            onChange={(event) => setName(event.target.value)}
+            placeholder={t("investment.accountNamePlaceholder")}
+            startIcon={<LuLandmark />}
+            required
+            autoFocus={!account}
+          />
+        </FormField>
+      </form>
+    </Modal>
   );
 }

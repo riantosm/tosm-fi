@@ -1,20 +1,24 @@
-import { createElement, useState } from "react";
+import { createElement, useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
-import { HiOutlineNoSymbol, HiOutlinePlus } from "react-icons/hi2";
+import { LuCheck, LuMinus, LuPlus } from "react-icons/lu";
+import { Button } from "@/components/atoms/Button";
 import { Modal } from "@/components/molecules/Modal";
-import { Words } from "@/components/atoms/Words";
-import { ModalCloseButton } from "@/components/atoms/ModalCloseButton";
 import { SubCategoryFormModal } from "@/layouts/category/SubCategoryFormModal";
 import { useCategories } from "@/hooks/use-categories";
 import { useToast } from "@/hooks/use-toast";
 import { resolveCategoryIcon } from "@/constants/category-icons";
 import type { Category, SubCategory, SubCategoryInput } from "@/types/category.types";
+import { cn } from "@/utils/cn";
 
 interface SelectSubCategoryModalProps {
   isOpen: boolean;
   category: Category | null;
   onClose: () => void;
   onSelect: (subCategory: SubCategory | null) => void;
+  /** Highlights the current pick (`null` = "Tanpa subkategori"). */
+  selectedId?: string | null;
+  /** Shows a back arrow (e.g. back to the category picker). */
+  onBack?: () => void;
 }
 
 export function SelectSubCategoryModal({
@@ -22,6 +26,8 @@ export function SelectSubCategoryModal({
   category,
   onClose,
   onSelect,
+  selectedId,
+  onBack,
 }: SelectSubCategoryModalProps) {
   const { t } = useTranslation();
   const { createSubCategory } = useCategories();
@@ -44,67 +50,42 @@ export function SelectSubCategoryModal({
 
   return (
     <>
-      <Modal isOpen={isOpen} onClose={onClose} size="lg">
-        <div className="flex max-h-[75vh] flex-col gap-4">
-          <div className="flex shrink-0 items-center justify-between gap-2">
-            <Words as="h2" type="lg/bold" className="text-ink-900 dark:text-ink-50">
-              {t("transaction.selectSubCategoryTitle")}
-            </Words>
-            <ModalCloseButton onClose={onClose} />
-          </div>
-
-          <div className="-mx-2 min-h-0 overflow-y-auto px-2">
-            <div className="grid grid-cols-4 gap-3 sm:grid-cols-5">
-              <button
-                type="button"
-                onClick={() => onSelect(null)}
-                className="flex flex-col items-center gap-1.5"
-              >
-                <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-ink-100 text-ink-400 transition-transform hover:scale-105 dark:bg-ink-800 dark:text-ink-500">
-                  <HiOutlineNoSymbol className="h-6 w-6" />
-                </div>
-                <Words type="xs/regular" className="text-center text-ink-700 dark:text-ink-300">
-                  {t("transaction.noSubCategory")}
-                </Words>
-              </button>
-
-              {category?.subCategories.map((sub) => {
-                const Icon = resolveCategoryIcon(sub.icon);
-
-                return (
-                  <button
-                    key={sub.idSubCategory}
-                    type="button"
-                    onClick={() => onSelect(sub)}
-                    className="flex flex-col items-center gap-1.5"
-                  >
-                    <div
-                      className="flex h-14 w-14 items-center justify-center rounded-2xl transition-transform hover:scale-105"
-                      style={{ backgroundColor: `${category.color}33` }}
-                    >
-                      {createElement(Icon, { className: "h-6 w-6", style: { color: category.color } })}
-                    </div>
-                    <Words
-                      type="xs/regular"
-                      className="line-clamp-1 text-center text-ink-700 dark:text-ink-300"
-                    >
-                      {sub.nameSubCategory}
-                    </Words>
-                  </button>
-                );
-              })}
-
-              <button
-                type="button"
-                onClick={() => setIsCreateOpen(true)}
-                className="flex flex-col items-center gap-1.5"
-              >
-                <div className="flex h-14 w-14 items-center justify-center rounded-2xl border-2 border-dashed border-ink-200 text-ink-300 transition-colors hover:border-primary-400 hover:text-primary-500 dark:border-ink-700 dark:text-ink-600 dark:hover:border-primary-500 dark:hover:text-primary-400">
-                  <HiOutlinePlus className="h-6 w-6" />
-                </div>
-              </button>
-            </div>
-          </div>
+      <Modal
+        isOpen={isOpen}
+        onClose={onClose}
+        size="md"
+        title={category?.nameCategory ?? t("transaction.selectSubCategoryTitle")}
+        subtitle={t("transaction.selectSubCategoryTitle")}
+        onBack={onBack}
+        footer={
+          <Button
+            type="button"
+            variant="soft"
+            fullWidth
+            leftIcon={<LuPlus />}
+            onClick={() => setIsCreateOpen(true)}
+          >
+            {t("transaction.newSubCategory")}
+          </Button>
+        }
+      >
+        <div className="flex flex-col gap-1">
+          <SubRow
+            label={t("transaction.noSubCategory")}
+            icon={<LuMinus className="size-4" />}
+            isSelected={selectedId === null}
+            onClick={() => onSelect(null)}
+          />
+          {category?.subCategories.map((sub) => (
+            <SubRow
+              key={sub.idSubCategory}
+              label={sub.nameSubCategory}
+              color={category.color}
+              icon={createElement(resolveCategoryIcon(sub.icon), { className: "size-4" })}
+              isSelected={selectedId === sub.idSubCategory}
+              onClick={() => onSelect(sub)}
+            />
+          ))}
         </div>
       </Modal>
 
@@ -112,10 +93,58 @@ export function SelectSubCategoryModal({
         isOpen={isCreateOpen}
         subCategory={null}
         categoryColor={category?.color ?? "#a1a1aa"}
+        categoryName={category?.nameCategory}
         isSubmitting={isSubmitting}
         onClose={() => setIsCreateOpen(false)}
         onSubmit={(input) => void handleCreate(input)}
       />
     </>
+  );
+}
+
+function SubRow({
+  label,
+  icon,
+  color,
+  isSelected,
+  onClick,
+}: {
+  label: string;
+  icon: ReactNode;
+  color?: string;
+  isSelected: boolean;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-pressed={isSelected}
+      className={cn(
+        "group flex w-full items-center gap-3 rounded-control px-3.5 py-3 text-left transition-colors duration-200",
+        isSelected ? "bg-primary-soft" : "hover:bg-surface-2",
+      )}
+    >
+      <span
+        className={cn(
+          "flex size-[34px] shrink-0 items-center justify-center rounded-full transition-transform duration-300 group-hover:scale-105",
+          !color && "bg-surface-2 text-text-3",
+        )}
+        style={color ? { backgroundColor: `${color}26`, color } : undefined}
+      >
+        {icon}
+      </span>
+      <span
+        className={cn(
+          "min-w-0 flex-1 truncate text-[14px]",
+          isSelected ? "font-semibold text-primary-text" : "text-text",
+        )}
+      >
+        {label}
+      </span>
+      {isSelected && (
+        <LuCheck className="size-[18px] shrink-0 animate-scale-in text-primary-text" />
+      )}
+    </button>
   );
 }

@@ -1,21 +1,21 @@
 import { useState, type SubmitEvent } from "react";
 import { useTranslation } from "react-i18next";
-import { HiOutlineTrash } from "react-icons/hi2";
-import { Modal } from "@/components/molecules/Modal";
+import { LuCheck, LuTrash2, LuType } from "react-icons/lu";
 import { Button } from "@/components/atoms/Button";
+import { IconButton } from "@/components/atoms/IconButton";
 import { Input } from "@/components/atoms/Input";
-import { IconLoader } from "@/components/atoms/IconLoader";
-import { Words } from "@/components/atoms/Words";
-import { Tooltip } from "@/components/atoms/Tooltip";
-import { ModalCloseButton } from "@/components/atoms/ModalCloseButton";
+import { Modal, ModalActions } from "@/components/molecules/Modal";
 import { CategoryIconPicker } from "@/layouts/category/CategoryIconPicker";
 import { CATEGORY_ICONS } from "@/constants/category-icons";
+import { useDialogSession } from "@/hooks/use-dialog-session";
 import type { SubCategory, SubCategoryInput } from "@/types/category.types";
 
 interface SubCategoryFormModalProps {
   isOpen: boolean;
   subCategory?: SubCategory | null;
   categoryColor: string;
+  /** Parent category name for the subtitle and the color note. */
+  categoryName?: string;
   isSubmitting?: boolean;
   isDeleting?: boolean;
   onClose: () => void;
@@ -23,55 +23,30 @@ interface SubCategoryFormModalProps {
   onDelete?: (id: string) => void;
 }
 
-export function SubCategoryFormModal({
+const FORM_ID = "subcategory-form";
+
+export function SubCategoryFormModal(props: SubCategoryFormModalProps) {
+  const session = useDialogSession(props.isOpen);
+  return <SubCategoryFormDialog key={session} {...props} />;
+}
+
+function SubCategoryFormDialog({
   isOpen,
-  subCategory,
+  subCategory: subCategoryProp,
   categoryColor,
+  categoryName,
   isSubmitting,
   isDeleting,
   onClose,
   onSubmit,
   onDelete,
 }: SubCategoryFormModalProps) {
-  return (
-    <Modal isOpen={isOpen} onClose={onClose}>
-      {isOpen && (
-        <SubCategoryFormFields
-          subCategory={subCategory}
-          categoryColor={categoryColor}
-          isSubmitting={isSubmitting}
-          isDeleting={isDeleting}
-          onClose={onClose}
-          onSubmit={onSubmit}
-          onDelete={onDelete}
-        />
-      )}
-    </Modal>
-  );
-}
-
-interface SubCategoryFormFieldsProps {
-  subCategory?: SubCategory | null;
-  categoryColor: string;
-  isSubmitting?: boolean;
-  isDeleting?: boolean;
-  onClose: () => void;
-  onSubmit: (input: SubCategoryInput) => void;
-  onDelete?: (id: string) => void;
-}
-
-function SubCategoryFormFields({
-  subCategory,
-  categoryColor,
-  isSubmitting,
-  isDeleting,
-  onClose,
-  onSubmit,
-  onDelete,
-}: SubCategoryFormFieldsProps) {
   const { t } = useTranslation();
+  // Frozen for this dialog's lifetime so the exit animation keeps the same content.
+  const [subCategory] = useState(subCategoryProp ?? null);
   const [name, setName] = useState(subCategory?.nameSubCategory ?? "");
   const [icon, setIcon] = useState(subCategory?.icon ?? CATEGORY_ICONS[0].name);
+  const isBusy = Boolean(isSubmitting || isDeleting);
 
   function handleSubmit(event: SubmitEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -80,68 +55,74 @@ function SubCategoryFormFields({
   }
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col gap-5">
-      <div className="flex items-center justify-between gap-2">
-        <Words as="h2" type="lg/bold" className="text-ink-900 dark:text-ink-50">
-          {subCategory ? t("category.editSubCategoryTitle") : t("category.addSubCategoryTitle")}
-        </Words>
-
-        <div className="flex shrink-0 items-center gap-1">
-          {subCategory && (
-            <Tooltip content={t("wallet.deleteButton")}>
-              <button
-                type="button"
-                onClick={() => onDelete?.(subCategory.idSubCategory)}
-                disabled={isDeleting}
-                aria-label={t("wallet.deleteButton")}
-                className="flex h-8 w-8 items-center justify-center rounded-md text-ink-400 transition-colors hover:bg-red-50 hover:text-red-500 disabled:opacity-60 dark:hover:bg-red-500/10 dark:hover:text-red-400"
-              >
-                {isDeleting ? (
-                  <IconLoader className="h-4 w-4 animate-spin" />
-                ) : (
-                  <HiOutlineTrash className="h-4 w-4" />
-                )}
-              </button>
-            </Tooltip>
-          )}
-          <ModalCloseButton onClose={onClose} />
-        </div>
-      </div>
-
-      <div className="flex items-center gap-4">
-        <CategoryIconPicker value={icon} onChange={setIcon} color={categoryColor} />
-        <div className="flex flex-1 flex-col gap-1.5 pt-1">
-          <label htmlFor="subcategory-name">
-            <Words type="sm/bold" as="span" className="text-ink-700 dark:text-ink-300">
-              {t("category.nameLabel")}
-            </Words>
-          </label>
-          <Input
-            id="subcategory-name"
-            value={name}
-            onChange={(event) => setName(event.target.value)}
-            placeholder={t("category.subCategoryNamePlaceholder")}
-            required
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      size="md"
+      title={subCategory ? t("category.editSubCategoryTitle") : t("category.addSubCategoryTitle")}
+      subtitle={categoryName ? t("category.inCategory", { name: categoryName }) : undefined}
+      headerActions={
+        subCategory &&
+        onDelete && (
+          <IconButton
+            label={t("wallet.deleteButton")}
+            icon={<LuTrash2 />}
+            size="sm"
+            variant="danger"
+            onClick={() => onDelete(subCategory.idSubCategory)}
+            disabled={isBusy}
           />
-        </div>
-      </div>
-
-      {/* <Words type="xs/regular" className="text-ink-400 dark:text-ink-500">
-        {t("category.colorFollowsCategory")}
-      </Words> */}
-
-      <div className="flex gap-3">
-        <Button type="button" variant="secondary" className="flex-1" onClick={onClose}>
-          <Words type="sm/bold" as="span">
+        )
+      }
+      footer={
+        <ModalActions>
+          <Button type="button" variant="outline" onClick={onClose} disabled={isBusy}>
             {t("common.cancel")}
-          </Words>
-        </Button>
-        <Button type="submit" className="flex-1" isLoading={isSubmitting}>
-          <Words type="sm/bold" as="span">
-            {t("common.confirm")}
-          </Words>
-        </Button>
-      </div>
-    </form>
+          </Button>
+          <Button
+            type="submit"
+            form={FORM_ID}
+            leftIcon={<LuCheck />}
+            isLoading={isSubmitting}
+            disabled={isBusy || !name.trim()}
+          >
+            {t("transaction.save")}
+          </Button>
+        </ModalActions>
+      }
+    >
+      <form id={FORM_ID} onSubmit={handleSubmit} className="flex flex-col gap-[18px]">
+        <div className="flex items-start gap-3.5">
+          <div className="flex shrink-0 flex-col items-center gap-2">
+            <span className="text-[13px] font-semibold text-text-2">{t("category.iconLabel")}</span>
+            <CategoryIconPicker value={icon} onChange={setIcon} color={categoryColor} />
+          </div>
+          <div className="flex min-w-0 flex-1 flex-col gap-2">
+            <label htmlFor="subcategory-name" className="text-[13px] font-semibold text-text-2">
+              {t("category.subNameLabel")}
+            </label>
+            <Input
+              id="subcategory-name"
+              value={name}
+              onChange={(event) => setName(event.target.value)}
+              placeholder={t("category.subCategoryNamePlaceholder")}
+              startIcon={<LuType />}
+              required
+              autoFocus={!subCategory}
+            />
+          </div>
+        </div>
+
+        <p className="flex items-center gap-2.5 rounded-control bg-surface-2 px-3.5 py-3 text-[12.5px] text-text-2">
+          <span
+            className="size-2.5 shrink-0 rounded-full"
+            style={{ backgroundColor: categoryColor }}
+          />
+          {categoryName
+            ? t("category.colorFollowsNamed", { name: categoryName })
+            : t("category.colorFollowsCategory")}
+        </p>
+      </form>
+    </Modal>
   );
 }

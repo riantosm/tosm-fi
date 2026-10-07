@@ -8,7 +8,7 @@ export const budgetService = {
       const { data } = await httpClient.get("/budgets");
       return data.data as Budget[];
     } catch (error) {
-      throw new Error(getApiErrorMessage(error, i18n.t("budget.genericError")));
+      throw new Error(getApiErrorMessage(error, i18n.t("budget.genericError")), { cause: error });
     }
   },
 
@@ -17,7 +17,7 @@ export const budgetService = {
       const { data } = await httpClient.post("/budgets", input);
       return data.data as Budget;
     } catch (error) {
-      throw new Error(getApiErrorMessage(error, i18n.t("budget.genericError")));
+      throw new Error(getApiErrorMessage(error, i18n.t("budget.genericError")), { cause: error });
     }
   },
 
@@ -26,7 +26,7 @@ export const budgetService = {
       const { data } = await httpClient.patch(`/budgets/${idBudget}`, patch);
       return data.data as Budget;
     } catch (error) {
-      throw new Error(getApiErrorMessage(error, i18n.t("budget.genericError")));
+      throw new Error(getApiErrorMessage(error, i18n.t("budget.genericError")), { cause: error });
     }
   },
 
@@ -34,7 +34,7 @@ export const budgetService = {
     try {
       await httpClient.delete(`/budgets/${idBudget}`);
     } catch (error) {
-      throw new Error(getApiErrorMessage(error, i18n.t("budget.genericError")));
+      throw new Error(getApiErrorMessage(error, i18n.t("budget.genericError")), { cause: error });
     }
   },
 
@@ -43,7 +43,7 @@ export const budgetService = {
       const { data } = await httpClient.patch("/budgets/reorder", { orderedIds });
       return data.data as Budget[];
     } catch (error) {
-      throw new Error(getApiErrorMessage(error, i18n.t("budget.genericError")));
+      throw new Error(getApiErrorMessage(error, i18n.t("budget.genericError")), { cause: error });
     }
   },
 };

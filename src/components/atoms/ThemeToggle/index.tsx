@@ -1,6 +1,5 @@
 import { useTranslation } from "react-i18next";
-import { IconMoon, IconSun } from "@/components/atoms/Icons";
-import { Tooltip } from "@/components/atoms/Tooltip";
+import { LuMoon, LuSun } from "react-icons/lu";
 import { useTheme } from "@/hooks/use-theme";
 import { cn } from "@/utils/cn";
 
@@ -8,46 +7,49 @@ interface ThemeToggleProps {
   className?: string;
 }
 
+/** Sun / moon segmented switch with a sliding thumb. */
 export function ThemeToggle({ className }: ThemeToggleProps) {
   const { t } = useTranslation();
-  const { theme, toggleTheme } = useTheme();
+  const { theme, setTheme } = useTheme();
   const isDark = theme === "dark";
 
   return (
-    <Tooltip content={t("theme.toggle")}>
-      <button
-        type="button"
-        onClick={toggleTheme}
-        aria-label={t("theme.toggle")}
+    <div
+      role="radiogroup"
+      aria-label={t("theme.toggle")}
+      className={cn("relative inline-flex rounded-full bg-surface-2 p-[3px]", className)}
+    >
+      <span
+        aria-hidden="true"
         className={cn(
-          "relative inline-flex h-9 w-16 items-center rounded-full border transition-colors",
-          "border-ink-200 bg-ink-100 dark:border-ink-700 dark:bg-ink-800",
-          className,
+          "absolute top-[3px] left-[3px] h-[30px] w-[36px] rounded-full bg-surface shadow-[0_2px_6px_var(--shadow-color)] transition-transform duration-300 ease-[var(--ease-smooth)]",
+          isDark && "translate-x-[36px]",
         )}
-      >
-        <span
-          className={cn(
-            "absolute left-1 h-7 w-7 rounded-full bg-white shadow-sm transition-transform duration-200 dark:bg-ink-900",
-            isDark && "translate-x-7",
-          )}
-        />
-        <span className="relative z-10 flex flex-1 items-center justify-center">
-          <IconSun
+      />
+      {(
+        [
+          ["light", LuSun],
+          ["dark", LuMoon],
+        ] as const
+      ).map(([value, Icon]) => {
+        const active = theme === value;
+        return (
+          <button
+            key={value}
+            type="button"
+            role="radio"
+            aria-checked={active}
+            aria-label={value === "light" ? "Light" : "Dark"}
+            onClick={() => setTheme(value)}
             className={cn(
-              "h-3.5 w-3.5 transition-colors",
-              isDark ? "text-ink-400 dark:text-ink-500" : "text-primary-600",
+              "relative z-10 flex h-[30px] w-[36px] items-center justify-center rounded-full transition-colors duration-200",
+              active ? "text-primary-text" : "text-text-3 hover:text-text-2",
             )}
-          />
-        </span>
-        <span className="relative z-10 flex flex-1 items-center justify-center">
-          <IconMoon
-            className={cn(
-              "h-3.5 w-3.5 transition-colors",
-              isDark ? "text-primary-400" : "text-ink-400 dark:text-ink-500",
-            )}
-          />
-        </span>
-      </button>
-    </Tooltip>
+          >
+            <Icon className="size-[15px]" />
+          </button>
+        );
+      })}
+    </div>
   );
 }

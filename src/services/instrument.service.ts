@@ -13,7 +13,9 @@ export const instrumentService = {
       const { data } = await httpClient.get("/instruments");
       return data.data as Instrument[];
     } catch (error) {
-      throw new Error(getApiErrorMessage(error, i18n.t("investment.genericError")));
+      throw new Error(getApiErrorMessage(error, i18n.t("investment.genericError")), {
+        cause: error,
+      });
     }
   },
 
@@ -22,7 +24,9 @@ export const instrumentService = {
       const { data } = await httpClient.post("/instruments", input);
       return data.data as Instrument;
     } catch (error) {
-      throw new Error(getApiErrorMessage(error, i18n.t("investment.genericError")));
+      throw new Error(getApiErrorMessage(error, i18n.t("investment.genericError")), {
+        cause: error,
+      });
     }
   },
 
@@ -31,7 +35,9 @@ export const instrumentService = {
       const { data } = await httpClient.patch(`/instruments/${idInstrument}`, input);
       return data.data as Instrument;
     } catch (error) {
-      throw new Error(getApiErrorMessage(error, i18n.t("investment.genericError")));
+      throw new Error(getApiErrorMessage(error, i18n.t("investment.genericError")), {
+        cause: error,
+      });
     }
   },
 
@@ -39,7 +45,9 @@ export const instrumentService = {
     try {
       await httpClient.delete(`/instruments/${idInstrument}`);
     } catch (error) {
-      throw new Error(getApiErrorMessage(error, i18n.t("investment.genericError")));
+      throw new Error(getApiErrorMessage(error, i18n.t("investment.genericError")), {
+        cause: error,
+      });
     }
   },
 
@@ -51,7 +59,9 @@ export const instrumentService = {
       const { data } = await httpClient.post(`/instruments/${idInstrument}/accounts`, input);
       return data.data as InvestmentAccount;
     } catch (error) {
-      throw new Error(getApiErrorMessage(error, i18n.t("investment.genericError")));
+      throw new Error(getApiErrorMessage(error, i18n.t("investment.genericError")), {
+        cause: error,
+      });
     }
   },
 
@@ -67,7 +77,9 @@ export const instrumentService = {
       );
       return data.data as InvestmentAccount;
     } catch (error) {
-      throw new Error(getApiErrorMessage(error, i18n.t("investment.genericError")));
+      throw new Error(getApiErrorMessage(error, i18n.t("investment.genericError")), {
+        cause: error,
+      });
     }
   },
 
@@ -75,7 +87,9 @@ export const instrumentService = {
     try {
       await httpClient.delete(`/instruments/${idInstrument}/accounts/${idInvestmentAccount}`);
     } catch (error) {
-      throw new Error(getApiErrorMessage(error, i18n.t("investment.genericError")));
+      throw new Error(getApiErrorMessage(error, i18n.t("investment.genericError")), {
+        cause: error,
+      });
     }
   },
 };

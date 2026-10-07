@@ -1,10 +1,5 @@
 import type { IconType } from "react-icons";
-import {
-  HiOutlineCheckCircle,
-  HiOutlineExclamationTriangle,
-  HiOutlineInformationCircle,
-} from "react-icons/hi2";
-import { Words } from "@/components/atoms/Words";
+import { LuCircleAlert, LuCircleCheck, LuInfo } from "react-icons/lu";
 import type { ToastVariant } from "@/types/toast.types";
 import { cn } from "@/utils/cn";
 
@@ -14,15 +9,15 @@ interface ToastProps {
 }
 
 const VARIANT_ICON: Record<ToastVariant, IconType> = {
-  success: HiOutlineCheckCircle,
-  error: HiOutlineExclamationTriangle,
-  info: HiOutlineInformationCircle,
+  success: LuCircleCheck,
+  error: LuCircleAlert,
+  info: LuInfo,
 };
 
 const VARIANT_ICON_CLASS: Record<ToastVariant, string> = {
-  success: "text-primary-600 dark:text-primary-400",
-  error: "text-red-500 dark:text-red-400",
-  info: "text-ink-500 dark:text-ink-400",
+  success: "bg-income-soft text-income-text",
+  error: "bg-expense-soft text-expense-text",
+  info: "bg-primary-soft text-primary-text",
 };
 
 export function Toast({ variant, message }: ToastProps) {
@@ -31,12 +26,17 @@ export function Toast({ variant, message }: ToastProps) {
   return (
     <div
       role="status"
-      className="flex items-center gap-2 rounded-xl border border-ink-200 bg-white px-4 py-2.5 shadow-lg dark:border-ink-800 dark:bg-ink-900"
+      className="flex max-w-[calc(100vw-2rem)] items-center gap-2.5 rounded-full bg-surface py-2.5 pr-4 pl-2.5 shadow-float"
     >
-      <Icon className={cn("h-5 w-5 shrink-0", VARIANT_ICON_CLASS[variant])} />
-      <Words type="sm/bold" as="span" className="text-ink-800 dark:text-ink-200">
-        {message}
-      </Words>
+      <span
+        className={cn(
+          "flex size-[30px] shrink-0 items-center justify-center rounded-full",
+          VARIANT_ICON_CLASS[variant],
+        )}
+      >
+        <Icon className="size-4" />
+      </span>
+      <span className="truncate text-[13.5px] font-medium text-text">{message}</span>
     </div>
   );
 }

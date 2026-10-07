@@ -1,11 +1,12 @@
-import { createElement } from "react";
+import { createElement, useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
-import { HiOutlinePlus, HiOutlineTrash } from "react-icons/hi2";
-import { IconLoader } from "@/components/atoms/IconLoader";
-import { Words } from "@/components/atoms/Words";
-import { Tooltip } from "@/components/atoms/Tooltip";
+import { LuEllipsisVertical, LuPencil, LuTrash2 } from "react-icons/lu";
+import { Badge } from "@/components/atoms/Badge";
+import { IconButton } from "@/components/atoms/IconButton";
+import { Card } from "@/components/molecules/Card";
+import { Popover } from "@/components/molecules/Popover";
 import { resolveCategoryIcon } from "@/constants/category-icons";
-import { SubCategoryPill } from "@/layouts/category/SubCategoryPill";
+import { SubCategoryPills } from "@/layouts/category/SubCategoryPills";
 import type { Category, SubCategory } from "@/types/category.types";
 import { cn } from "@/utils/cn";
 
@@ -27,77 +28,147 @@ export function CategoryCard({
   onAddSubCategory,
 }: CategoryCardProps) {
   const { t } = useTranslation();
-  const icon = resolveCategoryIcon(category.icon);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const isIncome = category.type === "income";
+  const typeBadge = (
+    <Badge tone={isIncome ? "income" : "expense"}>
+      {isIncome ? t("category.income") : t("category.expense")}
+    </Badge>
+  );
 
   return (
-    <div className="flex flex-col gap-3 rounded-2xl border border-ink-200 bg-white p-4 dark:border-ink-800 dark:bg-ink-900">
-      <div className="flex items-center gap-3">
-        <button type="button" onClick={onEdit} className="flex flex-1 items-center gap-3 text-left">
-          <div
-            className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full"
-            style={{ backgroundColor: `${category.color}33` }}
+    <Card className="flex h-full flex-col gap-3.5 lg:gap-4">
+      <div className="flex items-center gap-3 lg:gap-3.5">
+        <button
+          type="button"
+          onClick={onEdit}
+          className="group flex min-w-0 flex-1 items-center gap-3 text-left lg:gap-3.5"
+        >
+          <span
+            className="flex size-11 shrink-0 items-center justify-center rounded-full transition-transform duration-300 group-hover:scale-105 lg:size-12"
+            style={{ backgroundColor: `${category.color}26`, color: category.color }}
           >
-            {createElement(icon, { className: "h-6 w-6", style: { color: category.color } })}
-          </div>
-          <div className="flex min-w-0 flex-col gap-1">
-            <span
-              className={cn(
-                "inline-flex w-fit shrink-0 items-center rounded-full px-2 py-0.5 uppercase tracking-wide",
-                category.type === "income"
-                  ? "bg-primary-50 text-primary-700 dark:bg-primary-500/10 dark:text-primary-400"
-                  : "bg-red-50 text-red-600 dark:bg-red-500/10 dark:text-red-400",
-              )}
-            >
-              <Words type="xs/bold" as="span">
-                {category.type === "income" ? t("category.income") : t("category.expense")}
-              </Words>
+            {createElement(resolveCategoryIcon(category.icon), {
+              className: "size-5 lg:size-[22px]",
+            })}
+          </span>
+          <span className="flex min-w-0 flex-col gap-1">
+            <span className="flex min-w-0 items-center gap-2">
+              <span className="truncate text-[15px] font-semibold text-text lg:text-[17px]">
+                {category.nameCategory}
+              </span>
+              <span className="hidden shrink-0 lg:inline-flex">{typeBadge}</span>
             </span>
-            <Words type="base/bold" className="truncate text-ink-900 dark:text-ink-50">
-              {category.nameCategory}
-            </Words>
-            <Words type="xs/regular" className="text-ink-400 dark:text-ink-500">
-              {t("wallet.transactionCount", { n: category.transactionCount })}
-            </Words>
-          </div>
+            <span className="flex min-w-0 items-center gap-2 text-[12.5px] text-text-3">
+              <span className="shrink-0 lg:hidden">{typeBadge}</span>
+              <span className="truncate lg:hidden">
+                {t("category.trxShort", { count: category.transactionCount })}
+              </span>
+              <span className="hidden truncate lg:inline">
+                {t("wallet.transactionCount", { n: category.transactionCount })} ·{" "}
+                {t("category.subCount", { count: category.subCategories.length })}
+              </span>
+            </span>
+          </span>
         </button>
 
-        <Tooltip content={t("wallet.deleteButton")}>
-          <button
-            type="button"
+        {/* Desktop actions */}
+        <div className="hidden shrink-0 items-center gap-2 lg:flex">
+          <IconButton
+            label={t("category.editTitle")}
+            icon={<LuPencil />}
+            size="sm"
+            onClick={onEdit}
+          />
+          <IconButton
+            label={t("wallet.deleteButton")}
+            icon={<LuTrash2 />}
+            size="sm"
+            variant="danger"
             onClick={onDelete}
             disabled={isDeleting}
-            aria-label={t("wallet.deleteButton")}
-            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-ink-400 transition-colors hover:bg-red-50 hover:text-red-500 disabled:opacity-60 dark:hover:bg-red-500/10 dark:hover:text-red-400"
-          >
-            {isDeleting ? (
-              <IconLoader className="h-4 w-4 animate-spin" />
-            ) : (
-              <HiOutlineTrash className="h-4 w-4" />
-            )}
-          </button>
-        </Tooltip>
+          />
+        </div>
+
+        {/* Phone / tablet: overflow menu */}
+        <Popover
+          className="lg:hidden"
+          isOpen={isMenuOpen}
+          onClose={() => setIsMenuOpen(false)}
+          align="end"
+          panelClassName="w-48"
+          trigger={
+            <IconButton
+              label={t("common.more")}
+              icon={<LuEllipsisVertical />}
+              variant="ghost"
+              size="sm"
+              tooltip={false}
+              className="lg:hidden"
+              onClick={() => setIsMenuOpen((open) => !open)}
+            />
+          }
+        >
+          <div className="flex flex-col gap-0.5">
+            <MenuItem
+              icon={<LuPencil />}
+              label={t("category.editTitle")}
+              onClick={() => {
+                setIsMenuOpen(false);
+                onEdit();
+              }}
+            />
+            <MenuItem
+              icon={<LuTrash2 />}
+              label={t("wallet.deleteButton")}
+              danger
+              disabled={isDeleting}
+              onClick={() => {
+                setIsMenuOpen(false);
+                onDelete();
+              }}
+            />
+          </div>
+        </Popover>
       </div>
 
-      <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
-        {category.subCategories.map((sub) => (
-          <SubCategoryPill
-            key={sub.idSubCategory}
-            subCategory={sub}
-            categoryColor={category.color}
-            onClick={() => onEditSubCategory(sub)}
-          />
-        ))}
-        <Tooltip content={t("category.addSubCategory")}>
-          <button
-            type="button"
-            onClick={onAddSubCategory}
-            aria-label={t("category.addSubCategory")}
-            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border-2 border-dashed border-ink-200 text-ink-300 transition-colors hover:border-primary-400 hover:text-primary-500 dark:border-ink-700 dark:text-ink-600 dark:hover:border-primary-500 dark:hover:text-primary-400"
-          >
-            <HiOutlinePlus className="h-4 w-4" />
-          </button>
-        </Tooltip>
-      </div>
-    </div>
+      <span className="hidden h-px bg-border lg:block" aria-hidden="true" />
+
+      <SubCategoryPills
+        category={category}
+        onEditSubCategory={onEditSubCategory}
+        onAddSubCategory={onAddSubCategory}
+        onShowAll={onEdit}
+      />
+    </Card>
+  );
+}
+
+function MenuItem({
+  icon,
+  label,
+  onClick,
+  danger,
+  disabled,
+}: {
+  icon: ReactNode;
+  label: string;
+  onClick: () => void;
+  danger?: boolean;
+  disabled?: boolean;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={disabled}
+      className={cn(
+        "flex w-full items-center gap-3 rounded-control px-3 py-2.5 text-left text-[14px] transition-colors disabled:opacity-50 [&_svg]:size-[18px]",
+        danger ? "text-expense-text hover:bg-expense-soft" : "text-text hover:bg-surface-2",
+      )}
+    >
+      {icon}
+      {label}
+    </button>
   );
 }

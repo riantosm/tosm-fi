@@ -12,16 +12,19 @@ export const scheduleOccurrenceService = {
       const { data } = await httpClient.get("/schedules/occurrences");
       return data.data as ScheduleOccurrence[];
     } catch (error) {
-      throw new Error(getApiErrorMessage(error, i18n.t("schedule.genericError")));
+      throw new Error(getApiErrorMessage(error, i18n.t("schedule.genericError")), { cause: error });
     }
   },
 
-  async payOccurrence(idOccurrence: string, input: PayOccurrenceInput): Promise<PayOccurrenceResult> {
+  async payOccurrence(
+    idOccurrence: string,
+    input: PayOccurrenceInput,
+  ): Promise<PayOccurrenceResult> {
     try {
       const { data } = await httpClient.post(`/schedules/occurrences/${idOccurrence}/pay`, input);
       return data.data as PayOccurrenceResult;
     } catch (error) {
-      throw new Error(getApiErrorMessage(error, i18n.t("schedule.genericError")));
+      throw new Error(getApiErrorMessage(error, i18n.t("schedule.genericError")), { cause: error });
     }
   },
 
@@ -30,7 +33,7 @@ export const scheduleOccurrenceService = {
       const { data } = await httpClient.post(`/schedules/occurrences/${idOccurrence}/cancel`);
       return data.data as ScheduleOccurrence;
     } catch (error) {
-      throw new Error(getApiErrorMessage(error, i18n.t("schedule.genericError")));
+      throw new Error(getApiErrorMessage(error, i18n.t("schedule.genericError")), { cause: error });
     }
   },
 };

@@ -1,32 +1,37 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
+import { LuEye, LuEyeOff, LuLock } from "react-icons/lu";
 import { Input } from "@/components/atoms/Input";
-import { IconEye, IconEyeOff, IconLock } from "@/components/atoms/Icons";
-import { Tooltip } from "@/components/atoms/Tooltip";
 import type { InputHTMLAttributes } from "react";
 
-type PasswordInputProps = InputHTMLAttributes<HTMLInputElement>;
+type PasswordInputProps = InputHTMLAttributes<HTMLInputElement> & {
+  hasError?: boolean;
+  /** Classes for the outer field box (e.g. the white bordered auth variant). */
+  boxClassName?: string;
+};
 
-export function PasswordInput(props: PasswordInputProps) {
+export function PasswordInput({ hasError, boxClassName, ...props }: PasswordInputProps) {
   const { t } = useTranslation();
   const [visible, setVisible] = useState(false);
+  const label = visible ? t("auth.hidePassword") : t("auth.showPassword");
 
   return (
     <Input
       {...props}
+      hasError={hasError}
+      boxClassName={boxClassName}
       type={visible ? "text" : "password"}
-      startIcon={<IconLock className="h-4 w-4" />}
+      startIcon={<LuLock />}
       endSlot={
-        <Tooltip content={visible ? t("auth.hidePassword") : t("auth.showPassword")}>
-          <button
-            type="button"
-            onClick={() => setVisible((prev) => !prev)}
-            className="text-ink-400 hover:text-ink-600 dark:text-ink-500 dark:hover:text-ink-300"
-            aria-label={visible ? t("auth.hidePassword") : t("auth.showPassword")}
-          >
-            {visible ? <IconEyeOff className="h-4 w-4" /> : <IconEye className="h-4 w-4" />}
-          </button>
-        </Tooltip>
+        <button
+          type="button"
+          onClick={() => setVisible((prev) => !prev)}
+          className="pressable -mr-1 flex size-8 items-center justify-center rounded-full text-text-3 hover:bg-surface-3 hover:text-text"
+          aria-label={label}
+          title={label}
+        >
+          {visible ? <LuEyeOff className="size-[17px]" /> : <LuEye className="size-[17px]" />}
+        </button>
       }
     />
   );

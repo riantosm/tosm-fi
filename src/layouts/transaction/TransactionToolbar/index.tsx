@@ -1,171 +1,175 @@
-import { useEffect, useRef, useState } from "react";
+import { forwardRef, useState, type ComponentType } from "react";
 import { useTranslation } from "react-i18next";
-import { HiOutlineArrowsUpDown, HiOutlineCheck, HiOutlineMagnifyingGlass, HiOutlineXMark } from "react-icons/hi2";
-import { Words } from "@/components/atoms/Words";
-import { Tooltip } from "@/components/atoms/Tooltip";
 import {
-  DateRangeFilterPopover,
-  type DateRangeFilter,
-} from "@/layouts/transaction/DateRangeFilterPopover";
+  LuArrowDownWideNarrow,
+  LuArrowUpNarrowWide,
+  LuCalendarArrowDown,
+  LuCalendarArrowUp,
+  LuCheck,
+  LuChevronDown,
+  LuListFilter,
+  LuSearch,
+  LuX,
+} from "react-icons/lu";
+import { IconButton } from "@/components/atoms/IconButton";
+import { Popover } from "@/components/molecules/Popover";
 import { cn } from "@/utils/cn";
 
 export type { DateRangeFilter } from "@/layouts/transaction/DateRangeFilterPopover";
 export type TransactionSortOption = "dateDesc" | "dateAsc" | "amountDesc" | "amountAsc";
 
-const SORT_OPTIONS: TransactionSortOption[] = ["dateDesc", "dateAsc", "amountDesc", "amountAsc"];
+const SORT_OPTIONS: {
+  value: TransactionSortOption;
+  icon: ComponentType<{ className?: string }>;
+}[] = [
+  { value: "dateDesc", icon: LuCalendarArrowDown },
+  { value: "dateAsc", icon: LuCalendarArrowUp },
+  { value: "amountDesc", icon: LuArrowDownWideNarrow },
+  { value: "amountAsc", icon: LuArrowUpNarrowWide },
+];
 
-interface TransactionToolbarProps {
-  searchQuery: string;
-  onSearchChange: (value: string) => void;
-  dateRange: DateRangeFilter;
-  onDateRangeChange: (range: DateRangeFilter) => void;
-  onGoToCurrentMonth: () => void;
-  sortOption: TransactionSortOption;
-  onSortChange: (option: TransactionSortOption) => void;
-  /** Change this value (e.g. to a fresh router location key) to force the search field open + focused, even if the component is already mounted. */
-  focusSearchToken?: string;
+interface TransactionSearchFieldProps {
+  value: string;
+  onChange: (value: string) => void;
+  autoFocus?: boolean;
+  /** Defaults to "Cari judul atau catatan". */
+  placeholder?: string;
+  className?: string;
 }
 
-export function TransactionToolbar({
-  searchQuery,
-  onSearchChange,
-  dateRange,
-  onDateRangeChange,
-  onGoToCurrentMonth,
-  sortOption,
-  onSortChange,
-  focusSearchToken = "",
-}: TransactionToolbarProps) {
-  const { t } = useTranslation();
-  const [isSearchOpen, setIsSearchOpen] = useState(focusSearchToken !== "");
-  const [lastFocusSearchToken, setLastFocusSearchToken] = useState(focusSearchToken);
-  const [isSortOpen, setIsSortOpen] = useState(false);
-  const sortRef = useRef<HTMLDivElement>(null);
-
-  const hasSortFilter = sortOption !== "dateDesc";
-
-  if (focusSearchToken !== lastFocusSearchToken) {
-    setLastFocusSearchToken(focusSearchToken);
-    if (focusSearchToken !== "") setIsSearchOpen(true);
-  }
-
-  useEffect(() => {
-    if (!isSortOpen) return;
-
-    function handleClickOutside(event: MouseEvent) {
-      if (sortRef.current && !sortRef.current.contains(event.target as Node)) {
-        setIsSortOpen(false);
-      }
-    }
-
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, [isSortOpen]);
-
-  return (
-    <div className="flex items-center gap-2">
-      <div
+/** Pill search input ("Cari judul atau catatan") with a clear button. */
+export const TransactionSearchField = forwardRef<HTMLInputElement, TransactionSearchFieldProps>(
+  function TransactionSearchField({ value, onChange, autoFocus, placeholder, className }, ref) {
+    const { t } = useTranslation();
+    const label = placeholder ?? t("transaction.searchPlaceholder");
+    return (
+      <label
         className={cn(
-          "flex h-9 shrink-0 items-center overflow-hidden rounded-full border transition-[width] duration-300 ease-out",
-          isSearchOpen
-            ? "w-40 border-ink-200 bg-white dark:border-ink-700 dark:bg-ink-900 sm:w-56"
-            : "w-9 border-transparent bg-ink-100 dark:bg-ink-800",
+          "group flex h-[38px] items-center gap-2.5 rounded-full border border-border bg-surface px-4 transition-[border-color,box-shadow] duration-200 focus-within:border-primary focus-within:shadow-[0_0_0_4px_color-mix(in_oklab,var(--primary)_14%,transparent)]",
+          className,
         )}
       >
-        {isSearchOpen ? (
-          <div className="flex w-full items-center gap-1.5 px-2.5">
-            <HiOutlineMagnifyingGlass className="h-4 w-4 shrink-0 text-ink-400 dark:text-ink-500" />
-            <input
-              autoFocus
-              value={searchQuery}
-              onChange={(event) => onSearchChange(event.target.value)}
-              placeholder={t("transaction.searchPlaceholder")}
-              className="w-full min-w-0 bg-transparent text-sm text-ink-900 placeholder:text-ink-400 outline-none dark:text-ink-100 dark:placeholder:text-ink-500"
-            />
-            <button
-              type="button"
-              onClick={() => {
-                onSearchChange("");
-                setIsSearchOpen(false);
-              }}
-              className="shrink-0 text-ink-400 hover:text-ink-600 dark:text-ink-500 dark:hover:text-ink-300"
-            >
-              <HiOutlineXMark className="h-4 w-4" />
-            </button>
-          </div>
-        ) : (
-          <Tooltip content={t("transaction.searchPlaceholder")}>
-            <button
-              type="button"
-              onClick={() => setIsSearchOpen(true)}
-              aria-label={t("transaction.searchPlaceholder")}
-              className="flex h-9 w-9 shrink-0 items-center justify-center text-ink-500 dark:text-ink-400"
-            >
-              <HiOutlineMagnifyingGlass className="h-4 w-4" />
-            </button>
-          </Tooltip>
-        )}
-      </div>
-
-      <DateRangeFilterPopover dateRange={dateRange} onDateRangeChange={onDateRangeChange} />
-
-      <div ref={sortRef} className="relative">
-        <Tooltip content={t("transaction.sortTitle")}>
+        <LuSearch className="size-4 shrink-0 text-text-3" />
+        <input
+          ref={ref}
+          autoFocus={autoFocus}
+          value={value}
+          onChange={(event) => onChange(event.target.value)}
+          placeholder={label}
+          aria-label={label}
+          className="min-w-0 flex-1 bg-transparent text-[13.5px] text-text outline-none placeholder:text-text-3"
+        />
+        {value && (
           <button
             type="button"
-            onClick={() => setIsSortOpen((prev) => !prev)}
-            aria-label={t("transaction.sortTitle")}
-            className={cn(
-              "relative flex h-9 w-9 shrink-0 items-center justify-center rounded-full transition-colors",
-              hasSortFilter
-                ? "bg-primary-100 text-primary-600 dark:bg-primary-500/20 dark:text-primary-400"
-                : "bg-ink-100 text-ink-500 hover:bg-ink-200 dark:bg-ink-800 dark:text-ink-400 dark:hover:bg-ink-700",
-            )}
+            onClick={() => onChange("")}
+            aria-label={t("common.close")}
+            className="flex size-5 shrink-0 animate-scale-in items-center justify-center rounded-full bg-surface-2 text-text-3 hover:text-text"
           >
-            <HiOutlineArrowsUpDown className="h-4 w-4" />
+            <LuX className="size-3" />
           </button>
-        </Tooltip>
-
-        {isSortOpen && (
-          <div className="absolute left-0 top-full z-20 mt-2 w-52 overflow-hidden rounded-2xl border border-ink-200 bg-white py-1 shadow-lg dark:border-ink-800 dark:bg-ink-900">
-            {SORT_OPTIONS.map((option) => {
-              const isActive = sortOption === option;
-
-              return (
-                <button
-                  key={option}
-                  type="button"
-                  onClick={() => {
-                    onSortChange(option);
-                    setIsSortOpen(false);
-                  }}
-                  className={cn(
-                    "flex w-full items-center justify-between gap-2 px-4 py-2.5 transition-colors",
-                    isActive
-                      ? "text-primary-700 dark:text-primary-400"
-                      : "text-ink-600 hover:bg-ink-50 dark:text-ink-300 dark:hover:bg-ink-800",
-                  )}
-                >
-                  <Words type={isActive ? "sm/bold" : "sm/regular"} as="span">
-                    {t(`transaction.sortOptions.${option}`)}
-                  </Words>
-                  {isActive && <HiOutlineCheck className="h-4 w-4 shrink-0" />}
-                </button>
-              );
-            })}
-          </div>
         )}
-      </div>
+      </label>
+    );
+  },
+);
 
+interface TransactionSortMenuProps {
+  value: TransactionSortOption;
+  onChange: (value: TransactionSortOption) => void;
+  /** pill = labelled desktop button; icon = round phone app-bar button. */
+  variant?: "pill" | "icon";
+  align?: "start" | "end";
+}
+
+/** "Urutkan" — trigger + sort option list (popover on desktop, sheet on phones). */
+export function TransactionSortMenu({
+  value,
+  onChange,
+  variant = "pill",
+  align = "start",
+}: TransactionSortMenuProps) {
+  const { t } = useTranslation();
+  const [isOpen, setIsOpen] = useState(false);
+  const isCustom = value !== "dateDesc";
+
+  const trigger =
+    variant === "icon" ? (
+      <IconButton
+        label={t("transaction.sortTitle")}
+        icon={<LuListFilter />}
+        variant="surface"
+        size="lg"
+        tooltip={false}
+        className={cn(isCustom && "bg-primary-soft text-primary-text")}
+        onClick={() => setIsOpen((prev) => !prev)}
+      />
+    ) : (
       <button
         type="button"
-        onClick={onGoToCurrentMonth}
-        className="ml-auto shrink-0 whitespace-nowrap rounded-full bg-ink-100 px-3 py-2 text-ink-600 transition-colors hover:bg-ink-200 dark:bg-ink-800 dark:text-ink-300 dark:hover:bg-ink-700 flex items-center justify-center"
+        onClick={() => setIsOpen((prev) => !prev)}
+        aria-expanded={isOpen}
+        aria-label={t("transaction.sortTitle")}
+        className={cn(
+          "pressable flex h-[38px] items-center gap-2 rounded-full border px-3.5 text-[13.5px] font-medium transition-colors",
+          isCustom
+            ? "border-primary bg-primary-soft text-primary-text"
+            : "border-border bg-surface text-text-2 hover:bg-surface-2 hover:text-text",
+        )}
       >
-        <Words type="xs/bold" as="span">
-          {t("transaction.goToCurrentMonth")}
-        </Words>
+        <LuListFilter className="size-4 shrink-0" />
+        {t(`transaction.sortShort.${value}`)}
+        <LuChevronDown
+          className={cn(
+            "size-3.5 shrink-0 text-text-3 transition-transform duration-200",
+            isOpen && "rotate-180",
+          )}
+        />
       </button>
-    </div>
+    );
+
+  return (
+    <Popover
+      isOpen={isOpen}
+      onClose={() => setIsOpen(false)}
+      trigger={trigger}
+      align={align}
+      panelClassName="w-[280px]"
+    >
+      <div className="flex flex-col gap-0.5">
+        <span className="px-3 pt-2 pb-1.5 text-[11px] font-semibold tracking-[0.08em] text-text-3 uppercase">
+          {t("transaction.sortTitle")}
+        </span>
+        {SORT_OPTIONS.map(({ value: option, icon: Icon }) => {
+          const isActive = value === option;
+          return (
+            <button
+              key={option}
+              type="button"
+              onClick={() => {
+                onChange(option);
+                setIsOpen(false);
+              }}
+              aria-pressed={isActive}
+              className={cn(
+                "flex w-full items-center gap-3 rounded-control px-3 py-2.5 text-left text-[14px] transition-colors duration-200",
+                isActive
+                  ? "bg-primary-soft font-semibold text-primary-text"
+                  : "text-text hover:bg-surface-2",
+              )}
+            >
+              <Icon
+                className={cn(
+                  "size-[18px] shrink-0",
+                  isActive ? "text-primary-text" : "text-text-2",
+                )}
+              />
+              <span className="flex-1">{t(`transaction.sortOptions.${option}`)}</span>
+              {isActive && <LuCheck className="size-4 shrink-0 animate-scale-in" />}
+            </button>
+          );
+        })}
+      </div>
+    </Popover>
   );
 }

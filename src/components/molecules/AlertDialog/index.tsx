@@ -1,29 +1,23 @@
 import { useTranslation } from "react-i18next";
 import type { IconType } from "react-icons";
-import {
-  HiOutlineCheckCircle,
-  HiOutlineExclamationTriangle,
-  HiOutlineInformationCircle,
-  HiOutlineQuestionMarkCircle,
-} from "react-icons/hi2";
-import { Modal } from "@/components/molecules/Modal";
+import { LuCircleAlert, LuCircleCheck, LuCircleHelp, LuInfo, LuTrash2 } from "react-icons/lu";
+import { Modal, ModalActions } from "@/components/molecules/Modal";
 import { Button } from "@/components/atoms/Button";
-import { Words } from "@/components/atoms/Words";
 import { cn } from "@/utils/cn";
 import type { DialogVariant } from "@/types/dialog.types";
 
 const VARIANT_ICON: Record<DialogVariant, IconType> = {
-  confirm: HiOutlineQuestionMarkCircle,
-  success: HiOutlineCheckCircle,
-  error: HiOutlineExclamationTriangle,
-  info: HiOutlineInformationCircle,
+  confirm: LuCircleHelp,
+  success: LuCircleCheck,
+  error: LuCircleAlert,
+  info: LuInfo,
 };
 
 const VARIANT_ICON_CLASS: Record<DialogVariant, string> = {
-  confirm: "bg-primary-50 text-primary-600 dark:bg-primary-500/10 dark:text-primary-400",
-  success: "bg-primary-50 text-primary-600 dark:bg-primary-500/10 dark:text-primary-400",
-  error: "bg-red-50 text-red-500 dark:bg-red-500/10 dark:text-red-400",
-  info: "bg-ink-100 text-ink-600 dark:bg-ink-800 dark:text-ink-300",
+  confirm: "bg-primary-soft text-primary-text",
+  success: "bg-income-soft text-income-text",
+  error: "bg-expense-soft text-expense-text",
+  info: "bg-surface-2 text-text-2",
 };
 
 interface AlertDialogProps {
@@ -34,6 +28,8 @@ interface AlertDialogProps {
   confirmLabel?: string;
   cancelLabel?: string;
   destructive?: boolean;
+  /** Overrides the variant/destructive icon. */
+  icon?: IconType;
   isLoading?: boolean;
   onConfirm: () => void;
   onCancel?: () => void;
@@ -47,62 +43,42 @@ export function AlertDialog({
   confirmLabel,
   cancelLabel,
   destructive = false,
+  icon,
   isLoading = false,
   onConfirm,
   onCancel,
 }: AlertDialogProps) {
   const { t } = useTranslation();
-  const Icon = VARIANT_ICON[variant];
+  const Icon = icon ?? (destructive ? LuTrash2 : VARIANT_ICON[variant]);
+  const iconClass = destructive ? VARIANT_ICON_CLASS.error : VARIANT_ICON_CLASS[variant];
 
   return (
-    <Modal isOpen={isOpen} onClose={onCancel ?? onConfirm}>
-      <div className="flex flex-col items-center gap-4 text-center">
-        <div
-          className={cn(
-            "flex h-12 w-12 items-center justify-center rounded-full",
-            VARIANT_ICON_CLASS[variant],
-          )}
-        >
-          <Icon className="h-6 w-6" />
+    <Modal isOpen={isOpen} onClose={onCancel ?? onConfirm} size="sm" placement="center">
+      <div className="flex flex-col items-center gap-4 pt-2 text-center">
+        <div className={cn("flex size-16 items-center justify-center rounded-full", iconClass)}>
+          <Icon className="size-7" />
         </div>
-        <div className="flex flex-col gap-1">
-          <Words as="h2" type="base/bold" className="text-ink-900 dark:text-ink-50">
-            {title}
-          </Words>
-          {description && (
-            <Words type="sm/regular" className="text-ink-500 dark:text-ink-400">
-              {description}
-            </Words>
-          )}
+        <div className="flex flex-col gap-2">
+          <h2 className="font-display text-[21px] font-semibold text-text">{title}</h2>
+          {description && <p className="text-[14px] leading-relaxed text-text-2">{description}</p>}
         </div>
       </div>
 
-      <div className="mt-6 flex gap-3">
+      <ModalActions className="mt-6">
         {cancelLabel && (
-          <Button
-            type="button"
-            variant="secondary"
-            className="flex-1"
-            onClick={onCancel}
-            disabled={isLoading}
-          >
-            <Words type="sm/bold" as="span">
-              {cancelLabel}
-            </Words>
+          <Button type="button" variant="outline" onClick={onCancel} disabled={isLoading}>
+            {cancelLabel}
           </Button>
         )}
         <Button
           type="button"
           variant={destructive ? "danger" : "primary"}
-          className="flex-1"
           onClick={onConfirm}
           isLoading={isLoading}
         >
-          <Words type="sm/bold" as="span">
-            {confirmLabel ?? t("common.confirm")}
-          </Words>
+          {confirmLabel ?? t("common.confirm")}
         </Button>
-      </div>
+      </ModalActions>
     </Modal>
   );
 }

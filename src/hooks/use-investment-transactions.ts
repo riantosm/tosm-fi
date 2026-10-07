@@ -36,7 +36,7 @@ export function useInvestmentTransactions() {
   );
 
   // Read-only, doesn't touch the redux slice — powers InstrumentCard's
-  // sparkline, InstrumentDetailPanel's history chart, and
+  // sparkline, InstrumentDetailView's history chart, and
   // InvestmentAccountCard's sparkline.
   const fetchTimelines = useCallback(() => investmentTransactionService.fetchTimelines(), []);
 

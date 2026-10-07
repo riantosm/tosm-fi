@@ -1,8 +1,9 @@
 import { lazy, Suspense } from "react";
 import { Navigate, Route, Routes } from "react-router-dom";
-import { IconLoader } from "@/components/atoms/IconLoader";
 import { ProtectedRoute } from "@/app/ProtectedRoute";
 import { ROUTES } from "@/constants/routes";
+import { AppLayout } from "@/components/templates/AppLayout";
+import { LoadingScreen } from "@/components/molecules/LoadingScreen";
 
 // A lazy chunk fetch can fail from a plain transient network blip, not just a
 // stale deploy — retrying the same import a couple of times recovers from
@@ -24,7 +25,9 @@ const RegisterPage = lazy(() =>
   retryImport(() => import("@/app/pages/RegisterPage").then((m) => ({ default: m.RegisterPage }))),
 );
 const DashboardPage = lazy(() =>
-  retryImport(() => import("@/app/pages/DashboardPage").then((m) => ({ default: m.DashboardPage }))),
+  retryImport(() =>
+    import("@/app/pages/DashboardPage").then((m) => ({ default: m.DashboardPage })),
+  ),
 );
 const TransactionsPage = lazy(() =>
   retryImport(() =>
@@ -87,11 +90,7 @@ const SettingsErrorLogPage = lazy(() =>
 );
 
 function RouteFallback() {
-  return (
-    <div className="flex h-svh items-center justify-center bg-ink-50 dark:bg-ink-950">
-      <IconLoader className="h-6 w-6 animate-spin text-primary-500" />
-    </div>
-  );
+  return <LoadingScreen />;
 }
 
 export function AppRouter() {
@@ -102,117 +101,27 @@ export function AppRouter() {
         <Route path={ROUTES.LOGIN} element={<LoginPage />} />
         <Route path={ROUTES.REGISTER} element={<RegisterPage />} />
         <Route
-          path={ROUTES.DASHBOARD}
           element={
             <ProtectedRoute>
-              <DashboardPage />
+              <AppLayout />
             </ProtectedRoute>
           }
-        />
-        <Route
-          path={ROUTES.TRANSACTIONS}
-          element={
-            <ProtectedRoute>
-              <TransactionsPage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path={ROUTES.SCHEDULE}
-          element={
-            <ProtectedRoute>
-              <SchedulePage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path={ROUTES.WALLET}
-          element={
-            <ProtectedRoute>
-              <WalletPage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path={ROUTES.CATEGORIES}
-          element={
-            <ProtectedRoute>
-              <CategoriesPage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path={ROUTES.INVESTMENT}
-          element={
-            <ProtectedRoute>
-              <InvestmentPage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path={ROUTES.BUDGETS}
-          element={
-            <ProtectedRoute>
-              <BudgetsPage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path={ROUTES.REPORTS}
-          element={
-            <ProtectedRoute>
-              <ReportsPage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path={ROUTES.PROFILE}
-          element={
-            <ProtectedRoute>
-              <EditProfilePage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path={ROUTES.SETTINGS}
-          element={
-            <ProtectedRoute>
-              <SettingsPage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path={ROUTES.SETTINGS_API_DOC}
-          element={
-            <ProtectedRoute>
-              <SettingsApiDocPage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path={ROUTES.SETTINGS_CURRENCY}
-          element={
-            <ProtectedRoute>
-              <SettingsCurrencyPage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path={ROUTES.SETTINGS_USER_APPROVAL}
-          element={
-            <ProtectedRoute>
-              <SettingsUserApprovalPage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path={ROUTES.SETTINGS_ERROR_LOG}
-          element={
-            <ProtectedRoute>
-              <SettingsErrorLogPage />
-            </ProtectedRoute>
-          }
-        />
+        >
+          <Route path={ROUTES.DASHBOARD} element={<DashboardPage />} />
+          <Route path={ROUTES.TRANSACTIONS} element={<TransactionsPage />} />
+          <Route path={ROUTES.SCHEDULE} element={<SchedulePage />} />
+          <Route path={ROUTES.WALLET} element={<WalletPage />} />
+          <Route path={ROUTES.CATEGORIES} element={<CategoriesPage />} />
+          <Route path={ROUTES.INVESTMENT} element={<InvestmentPage />} />
+          <Route path={ROUTES.BUDGETS} element={<BudgetsPage />} />
+          <Route path={ROUTES.REPORTS} element={<ReportsPage />} />
+          <Route path={ROUTES.PROFILE} element={<EditProfilePage />} />
+          <Route path={ROUTES.SETTINGS} element={<SettingsPage />} />
+          <Route path={ROUTES.SETTINGS_API_DOC} element={<SettingsApiDocPage />} />
+          <Route path={ROUTES.SETTINGS_CURRENCY} element={<SettingsCurrencyPage />} />
+          <Route path={ROUTES.SETTINGS_USER_APPROVAL} element={<SettingsUserApprovalPage />} />
+          <Route path={ROUTES.SETTINGS_ERROR_LOG} element={<SettingsErrorLogPage />} />
+        </Route>
         <Route path="*" element={<Navigate to={ROUTES.DASHBOARD} replace />} />
       </Routes>
     </Suspense>

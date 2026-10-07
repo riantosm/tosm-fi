@@ -1,34 +1,38 @@
 import { useEffect, useRef, useState } from "react";
-import { Link, Navigate } from "react-router-dom";
+import { Navigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import {
-  HiOutlineArrowLeft,
-  HiOutlineMagnifyingGlass,
-  HiOutlineTrash,
-} from "react-icons/hi2";
-import { DashboardLayout } from "@/components/templates/DashboardLayout";
-import { Words } from "@/components/atoms/Words";
-import { IconLoader } from "@/components/atoms/IconLoader";
-import { Input } from "@/components/atoms/Input";
+import { AnimatePresence, m } from "motion/react";
+import { LuBug, LuChevronDown, LuTrash2 } from "react-icons/lu";
+import { Reveal } from "@/components/atoms/Reveal";
+import { Skeleton } from "@/components/atoms/Skeleton";
+import { Card } from "@/components/molecules/Card";
+import { Chip } from "@/components/molecules/Chip";
+import { EmptyState } from "@/components/molecules/EmptyState";
+import { PageHeader } from "@/components/molecules/PageHeader";
+import { TransactionSearchField } from "@/layouts/transaction/TransactionToolbar";
+import { ROUTES } from "@/constants/routes";
 import { useAuth } from "@/hooks/use-auth";
 import { useClientErrors } from "@/hooks/use-client-errors";
 import { useConfirmDialog } from "@/hooks/use-confirm-dialog";
+import { useLanguage } from "@/hooks/use-language";
 import { useToast } from "@/hooks/use-toast";
-import { ROUTES } from "@/constants/routes";
 import { cn } from "@/utils/cn";
-import type { ClientErrorEnvironment } from "@/types/client-error.types";
+import { toIntlLocale } from "@/utils/locale";
+import type { ClientError, ClientErrorEnvironment } from "@/types/client-error.types";
 
 const SEARCH_DEBOUNCE_MS = 400;
 const ENVIRONMENT_FILTERS = ["all", "development", "production"] as const;
 type EnvironmentFilter = (typeof ENVIRONMENT_FILTERS)[number];
 
 const ENVIRONMENT_BADGE_CLASS: Record<ClientErrorEnvironment, string> = {
-  production: "bg-red-50 text-red-700 dark:bg-red-500/10 dark:text-red-400",
-  development: "bg-ink-100 text-ink-600 dark:bg-ink-800 dark:text-ink-300",
+  production: "bg-expense-soft text-expense-text",
+  development: "bg-investment-soft text-investment-text",
 };
 
+const EASE = [0.22, 1, 0.36, 1] as const;
+
 export function SettingsErrorLogPage() {
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
   const { user } = useAuth();
   const { errors, status, loadClientErrors, deleteClientError } = useClientErrors();
   const { confirm } = useConfirmDialog();
@@ -68,13 +72,7 @@ export function SettingsErrorLogPage() {
   }
 
   const hasActiveFilter = environmentFilter !== "all" || Boolean(debouncedSearch);
-
-  function formatDate(value: string) {
-    return new Intl.DateTimeFormat(i18n.language, {
-      dateStyle: "medium",
-      timeStyle: "short",
-    }).format(new Date(value));
-  }
+  const isInitialLoading = status !== "loaded" && errors.length === 0;
 
   async function handleDelete(idClientError: string) {
     const confirmed = await confirm({
@@ -83,6 +81,7 @@ export function SettingsErrorLogPage() {
       confirmLabel: t("errorLog.deleteConfirmAction"),
       cancelLabel: t("common.cancel"),
       destructive: true,
+      icon: LuTrash2,
     });
     if (!confirmed) return;
 
@@ -97,131 +96,163 @@ export function SettingsErrorLogPage() {
   }
 
   return (
-    <DashboardLayout>
-      <div className="flex flex-col gap-6">
-        <div className="flex flex-col gap-2">
-          <Link
-            to={ROUTES.SETTINGS}
-            className="flex w-fit items-center gap-1.5 text-ink-500 hover:text-ink-700 dark:text-ink-400 dark:hover:text-ink-200"
-          >
-            <HiOutlineArrowLeft className="h-4 w-4" />
-            <Words type="sm/bold" as="span">
-              {t("common.back")}
-            </Words>
-          </Link>
-          <Words as="h1" type="2xl/bold" className="text-ink-900 dark:text-ink-50">
-            {t("errorLog.title")}
-          </Words>
-          <Words type="sm/regular" className="text-ink-500 dark:text-ink-400">
-            {t("errorLog.subtitle")}
-          </Words>
+    <div className="flex flex-col gap-4 lg:gap-5">
+      <PageHeader
+        title={t("errorLog.title")}
+        subtitle={t("errorLog.subtitle")}
+        backTo={ROUTES.SETTINGS}
+      />
+
+      <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
+        <TransactionSearchField
+          value={search}
+          onChange={setSearch}
+          placeholder={t("errorLog.searchPlaceholder")}
+          className="lg:w-[420px]"
+        />
+        <div className="-mx-1 flex gap-2 overflow-x-auto px-1 py-0.5 scrollbar-hide">
+          {ENVIRONMENT_FILTERS.map((filter) => (
+            <Chip
+              key={filter}
+              size="sm"
+              surface="page"
+              active={environmentFilter === filter}
+              onClick={() => setEnvironmentFilter(filter)}
+            >
+              {filter === "all" ? t("common.all") : t(`errorLog.environment.${filter}`)}
+            </Chip>
+          ))}
         </div>
-
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <Input
-            startIcon={<HiOutlineMagnifyingGlass className="h-4 w-4" />}
-            value={search}
-            onChange={(event) => setSearch(event.target.value)}
-            placeholder={t("errorLog.searchPlaceholder")}
-            className="sm:max-w-xs"
-          />
-          <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
-            {ENVIRONMENT_FILTERS.map((filter) => {
-              const isActive = environmentFilter === filter;
-              return (
-                <button
-                  key={filter}
-                  type="button"
-                  onClick={() => setEnvironmentFilter(filter)}
-                  className={cn(
-                    "shrink-0 rounded-full border-2 px-3.5 py-1.5 transition-colors",
-                    isActive
-                      ? "border-primary-500 bg-primary-50 dark:bg-primary-500/10"
-                      : "border-ink-200 hover:bg-ink-50 dark:border-ink-800 dark:hover:bg-ink-800",
-                  )}
-                >
-                  <Words type="xs/bold" as="span" className="whitespace-nowrap text-ink-800 dark:text-ink-200">
-                    {filter === "all" ? t("common.all") : t(`errorLog.environment.${filter}`)}
-                  </Words>
-                </button>
-              );
-            })}
-          </div>
-        </div>
-
-        {status === "loading" && (
-          <div className="flex items-center justify-center py-12">
-            <IconLoader className="h-6 w-6 animate-spin text-primary-500" />
-          </div>
-        )}
-
-        {status === "loaded" && errors.length === 0 && (
-          <Words type="sm/regular" className="text-ink-400 dark:text-ink-500">
-            {hasActiveFilter ? t("errorLog.emptyFiltered") : t("errorLog.empty")}
-          </Words>
-        )}
-
-        {status === "loaded" && errors.length > 0 && (
-          <div className="flex flex-col overflow-hidden rounded-2xl border border-ink-200 dark:border-ink-800">
-            <div className="divide-y divide-ink-100 dark:divide-ink-800">
-              {errors.map((item) => (
-                <div
-                  key={item.idClientError}
-                  className="flex flex-col gap-1.5 bg-white px-4 py-3 dark:bg-ink-900"
-                >
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="flex min-w-0 flex-wrap items-center gap-2">
-                      {!item.isRead && (
-                        <span className="inline-flex shrink-0 items-center rounded-md bg-primary-50 px-1.5 py-0.5 dark:bg-primary-500/10">
-                          <Words type="xxs/bold" as="span" className="text-primary-700 dark:text-primary-400">
-                            {t("errorLog.newBadge")}
-                          </Words>
-                        </span>
-                      )}
-                      <span
-                        className={cn(
-                          "inline-flex shrink-0 items-center rounded-md px-1.5 py-0.5",
-                          ENVIRONMENT_BADGE_CLASS[item.environment],
-                        )}
-                      >
-                        <Words type="xxs/bold" as="span">
-                          {t(`errorLog.environment.${item.environment}`)}
-                        </Words>
-                      </span>
-                      <Words type="sm/bold" as="span" className="text-red-600 dark:text-red-400">
-                        {item.message}
-                      </Words>
-                    </div>
-                    <div className="flex shrink-0 items-center gap-2">
-                      <Words type="xs/regular" as="span" className="text-ink-400 dark:text-ink-500">
-                        {formatDate(item.createdAt)}
-                      </Words>
-                      <button
-                        type="button"
-                        aria-label={t("errorLog.deleteButton")}
-                        disabled={deletingId === item.idClientError}
-                        onClick={() => void handleDelete(item.idClientError)}
-                        className="text-ink-400 hover:text-red-600 disabled:cursor-not-allowed disabled:opacity-60 dark:text-ink-500 dark:hover:text-red-400"
-                      >
-                        <HiOutlineTrash className="h-4 w-4" />
-                      </button>
-                    </div>
-                  </div>
-                  <Words type="xs/regular" as="span" className="text-ink-400 dark:text-ink-500">
-                    {item.source} · {item.path ?? "-"}
-                    {item.username ? ` · @${item.username}` : ""}
-                  </Words>
-                  {item.stack && (
-                    <pre className="mt-1 max-h-40 overflow-auto rounded-lg bg-ink-50 p-2 text-[11px] text-ink-600 dark:bg-ink-950 dark:text-ink-400">
-                      {item.stack}
-                    </pre>
-                  )}
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
       </div>
-    </DashboardLayout>
+
+      {isInitialLoading ? (
+        <div className="flex flex-col gap-3 lg:gap-4">
+          {Array.from({ length: 3 }, (_, index) => (
+            <Skeleton key={index} className="h-[132px] rounded-card" />
+          ))}
+        </div>
+      ) : errors.length === 0 ? (
+        <EmptyState
+          variant="page"
+          icon={<LuBug />}
+          title={hasActiveFilter ? t("errorLog.emptyFiltered") : t("errorLog.empty")}
+          className="min-h-[320px]"
+        />
+      ) : (
+        <div
+          className={cn(
+            "flex flex-col gap-3 transition-opacity duration-300 lg:gap-4",
+            status === "loading" && "opacity-60",
+          )}
+        >
+          {errors.map((item, index) => (
+            <Reveal key={item.idClientError} delay={Math.min(index, 6) * 0.03}>
+              <ErrorLogCard
+                item={item}
+                defaultExpanded={index === 0}
+                isDeleting={deletingId === item.idClientError}
+                onDelete={() => void handleDelete(item.idClientError)}
+              />
+            </Reveal>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+interface ErrorLogCardProps {
+  item: ClientError;
+  defaultExpanded: boolean;
+  isDeleting: boolean;
+  onDelete: () => void;
+}
+
+function ErrorLogCard({ item, defaultExpanded, isDeleting, onDelete }: ErrorLogCardProps) {
+  const { t } = useTranslation();
+  const { language } = useLanguage();
+  const [isStackOpen, setIsStackOpen] = useState(defaultExpanded);
+
+  const date = new Intl.DateTimeFormat(toIntlLocale(language), {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  }).format(new Date(item.createdAt));
+  const meta = [item.source, item.path, item.username ? `@${item.username}` : null, date]
+    .filter(Boolean)
+    .join(" · ");
+
+  return (
+    <Card className="flex flex-col gap-3">
+      <div className="flex items-start justify-between gap-3">
+        <div className="flex flex-wrap items-center gap-2">
+          {!item.isRead && (
+            <span className="rounded-full bg-primary px-2.5 py-0.5 text-[11.5px] font-semibold text-primary-fg">
+              {t("errorLog.newBadge")}
+            </span>
+          )}
+          <span
+            className={cn(
+              "inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[11.5px] font-semibold",
+              ENVIRONMENT_BADGE_CLASS[item.environment],
+            )}
+          >
+            <span className="size-1.5 rounded-full bg-current" />
+            {t(`errorLog.environment.${item.environment}`)}
+          </span>
+        </div>
+        <button
+          type="button"
+          onClick={onDelete}
+          disabled={isDeleting}
+          aria-label={t("errorLog.deleteButton")}
+          className="pressable flex size-8 shrink-0 items-center justify-center gap-1.5 rounded-full bg-surface-2 text-[12.5px] font-semibold text-expense-text transition-colors hover:bg-expense-soft disabled:opacity-60 lg:w-auto lg:px-3"
+        >
+          <LuTrash2 className="size-3.5" />
+          <span className="hidden lg:inline">{t("errorLog.deleteButton")}</span>
+        </button>
+      </div>
+
+      <p className="font-mono text-[13px] leading-relaxed font-semibold break-words text-expense-text lg:text-[13.5px]">
+        {item.message}
+      </p>
+      <p className="truncate text-[12.5px] text-text-3">{meta}</p>
+
+      {item.stack && (
+        <div className="flex flex-col gap-2">
+          <AnimatePresence initial={false}>
+            {isStackOpen && (
+              <m.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: "auto" }}
+                exit={{ opacity: 0, height: 0 }}
+                transition={{ duration: 0.25, ease: EASE }}
+                className="overflow-hidden"
+              >
+                <pre className="max-h-64 overflow-auto rounded-[16px] bg-code-bg p-4 font-mono text-[12px] leading-[1.65] text-code-fg">
+                  {item.stack}
+                </pre>
+              </m.div>
+            )}
+          </AnimatePresence>
+          <button
+            type="button"
+            onClick={() => setIsStackOpen((open) => !open)}
+            aria-expanded={isStackOpen}
+            className="flex w-fit items-center gap-1.5 text-[13px] font-semibold text-primary-text"
+          >
+            <LuChevronDown
+              className={cn(
+                "size-4 transition-transform duration-300",
+                isStackOpen && "rotate-180",
+              )}
+            />
+            {isStackOpen ? t("errorLog.hideStack") : t("errorLog.showStack")}
+          </button>
+        </div>
+      )}
+    </Card>
   );
 }

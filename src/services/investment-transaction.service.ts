@@ -22,7 +22,9 @@ export const investmentTransactionService = {
       const { data } = await httpClient.get("/investment-transactions", { params });
       return data.data as InvestmentTransactionListResult;
     } catch (error) {
-      throw new Error(getApiErrorMessage(error, i18n.t("investment.genericError")));
+      throw new Error(getApiErrorMessage(error, i18n.t("investment.genericError")), {
+        cause: error,
+      });
     }
   },
 
@@ -39,11 +41,13 @@ export const investmentTransactionService = {
       });
       return data.data as NetWorthTimelinePoint[];
     } catch (error) {
-      throw new Error(getApiErrorMessage(error, i18n.t("investment.genericError")));
+      throw new Error(getApiErrorMessage(error, i18n.t("investment.genericError")), {
+        cause: error,
+      });
     }
   },
 
-  // Powers InstrumentCard's sparkline, InstrumentDetailPanel's history chart,
+  // Powers InstrumentCard's sparkline, InstrumentDetailView's history chart,
   // and InvestmentAccountCard's sparkline — a lean {date, invested, current}
   // series per account/instrument, computed server-side, instead of fetching
   // every field of every ledger row and replaying it client-side.
@@ -52,7 +56,9 @@ export const investmentTransactionService = {
       const { data } = await httpClient.get("/investment-transactions/timelines");
       return data.data as InvestmentTimelinesResult;
     } catch (error) {
-      throw new Error(getApiErrorMessage(error, i18n.t("investment.genericError")));
+      throw new Error(getApiErrorMessage(error, i18n.t("investment.genericError")), {
+        cause: error,
+      });
     }
   },
 
@@ -61,7 +67,9 @@ export const investmentTransactionService = {
       const { data } = await httpClient.post("/investment-transactions/in", input);
       return data.data as InvestmentTransaction;
     } catch (error) {
-      throw new Error(getApiErrorMessage(error, i18n.t("investment.genericError")));
+      throw new Error(getApiErrorMessage(error, i18n.t("investment.genericError")), {
+        cause: error,
+      });
     }
   },
 
@@ -70,7 +78,9 @@ export const investmentTransactionService = {
       const { data } = await httpClient.post("/investment-transactions/out", input);
       return data.data as InvestmentTransaction;
     } catch (error) {
-      throw new Error(getApiErrorMessage(error, i18n.t("investment.genericError")));
+      throw new Error(getApiErrorMessage(error, i18n.t("investment.genericError")), {
+        cause: error,
+      });
     }
   },
 
@@ -79,7 +89,9 @@ export const investmentTransactionService = {
       const { data } = await httpClient.post("/investment-transactions/transfer", input);
       return data.data as InvestmentTransaction;
     } catch (error) {
-      throw new Error(getApiErrorMessage(error, i18n.t("investment.genericError")));
+      throw new Error(getApiErrorMessage(error, i18n.t("investment.genericError")), {
+        cause: error,
+      });
     }
   },
 
@@ -88,7 +100,9 @@ export const investmentTransactionService = {
       const { data } = await httpClient.post("/investment-transactions/pl", input);
       return data.data as InvestmentTransaction;
     } catch (error) {
-      throw new Error(getApiErrorMessage(error, i18n.t("investment.genericError")));
+      throw new Error(getApiErrorMessage(error, i18n.t("investment.genericError")), {
+        cause: error,
+      });
     }
   },
 
@@ -103,7 +117,9 @@ export const investmentTransactionService = {
       );
       return data.data as InvestmentTransaction;
     } catch (error) {
-      throw new Error(getApiErrorMessage(error, i18n.t("investment.genericError")));
+      throw new Error(getApiErrorMessage(error, i18n.t("investment.genericError")), {
+        cause: error,
+      });
     }
   },
 
@@ -111,7 +127,9 @@ export const investmentTransactionService = {
     try {
       await httpClient.delete(`/investment-transactions/${idInvestmentTransaction}`);
     } catch (error) {
-      throw new Error(getApiErrorMessage(error, i18n.t("investment.genericError")));
+      throw new Error(getApiErrorMessage(error, i18n.t("investment.genericError")), {
+        cause: error,
+      });
     }
   },
 };

@@ -1,23 +1,33 @@
 import { useState, type SubmitEvent } from "react";
 import { useTranslation } from "react-i18next";
-import { HiOutlineCalendarDays, HiOutlineTrash } from "react-icons/hi2";
-import { Modal } from "@/components/molecules/Modal";
+import {
+  LuAlarmClock,
+  LuArrowDownLeft,
+  LuArrowLeftRight,
+  LuArrowUpRight,
+  LuCalendar,
+  LuCheck,
+  LuNotebookPen,
+  LuSparkles,
+  LuTrash2,
+} from "react-icons/lu";
+import { Badge } from "@/components/atoms/Badge";
 import { Button } from "@/components/atoms/Button";
-import { Input } from "@/components/atoms/Input";
 import { Checkbox } from "@/components/atoms/Checkbox";
-import { IconLoader } from "@/components/atoms/IconLoader";
+import { IconButton } from "@/components/atoms/IconButton";
+import { Input } from "@/components/atoms/Input";
 import { FormField } from "@/components/molecules/FormField";
-import { Words } from "@/components/atoms/Words";
-import { Tooltip } from "@/components/atoms/Tooltip";
-import { ModalCloseButton } from "@/components/atoms/ModalCloseButton";
+import { Modal, ModalActions } from "@/components/molecules/Modal";
+import { PickerField } from "@/components/molecules/PickerField";
+import { AmountInput } from "@/layouts/investment/AmountInput";
+import { useInvestmentLabels } from "@/layouts/investment/use-investment-labels";
 import { DateTimePickerModal } from "@/layouts/transaction/DateTimePickerModal";
-import { resolveAccountLabel } from "@/utils/investment";
-import { useInvestmentTransactions } from "@/hooks/use-investment-transactions";
 import { useConfirmDialog } from "@/hooks/use-confirm-dialog";
-import { useCurrency } from "@/hooks/use-currency";
+import { useDialogSession } from "@/hooks/use-dialog-session";
+import { useInvestmentTransactions } from "@/hooks/use-investment-transactions";
 import { useLanguage } from "@/hooks/use-language";
 import { useToast } from "@/hooks/use-toast";
-import { CURRENCIES } from "@/constants/currencies";
+import { toIntlLocale } from "@/utils/locale";
 import { formatNumberInput, parseFormattedNumber } from "@/utils/number-input";
 import type { Instrument } from "@/types/instrument.types";
 import type { InvestmentTransaction } from "@/types/investment-transaction.types";
@@ -29,83 +39,59 @@ interface EditInvestmentTransactionModalProps {
   onClose: () => void;
 }
 
-export function EditInvestmentTransactionModal({
+const FORM_ID = "edit-investment-transaction-form";
+
+const TYPE_BADGE = {
+  in: { tone: "income", icon: <LuArrowDownLeft /> },
+  out: { tone: "expense", icon: <LuArrowUpRight /> },
+  transfer: { tone: "primary", icon: <LuArrowLeftRight /> },
+  pl: { tone: "investment", icon: <LuSparkles /> },
+} as const;
+
+export function EditInvestmentTransactionModal(props: EditInvestmentTransactionModalProps) {
+  const session = useDialogSession(props.isOpen);
+  return <EditInvestmentTransactionDialog key={session} {...props} />;
+}
+
+function EditInvestmentTransactionDialog({
   isOpen,
-  transaction,
+  transaction: transactionProp,
   instruments,
   onClose,
 }: EditInvestmentTransactionModalProps) {
-  return (
-    <Modal isOpen={isOpen} onClose={onClose}>
-      {isOpen && transaction && (
-        <EditInvestmentTransactionFields
-          transaction={transaction}
-          instruments={instruments}
-          onClose={onClose}
-        />
-      )}
-    </Modal>
-  );
-}
-
-function EditInvestmentTransactionFields({
-  transaction,
-  instruments,
-  onClose,
-}: {
-  transaction: InvestmentTransaction;
-  instruments: Instrument[];
-  onClose: () => void;
-}) {
   const { t } = useTranslation();
   const { language } = useLanguage();
-  const { currency } = useCurrency();
-  const currencySymbol = CURRENCIES.find((option) => option.code === currency)?.symbol ?? "IDR";
+  const locale = toIntlLocale(language);
   const { editInvestmentTransaction, deleteInvestmentTransaction } = useInvestmentTransactions();
   const { confirm } = useConfirmDialog();
   const { showToast } = useToast();
+  const resolveLabels = useInvestmentLabels(instruments);
 
-  const isPl = transaction.type === "pl";
-  const isOut = transaction.type === "out";
+  // Frozen for this dialog's lifetime so the exit animation keeps the same entry.
+  const [transaction] = useState(transactionProp);
+  const isPl = transaction?.type === "pl";
+  const isOut = transaction?.type === "out";
   const [amountInput, setAmountInput] = useState(
-    formatNumberInput(String(Math.abs(transaction.amount))),
+    transaction ? formatNumberInput(String(Math.abs(transaction.amount)).replace(".", ",")) : "",
   );
-  const [isNegative, setIsNegative] = useState(transaction.amount < 0);
-  const [date, setDate] = useState(() => new Date(transaction.date));
-  const [note, setNote] = useState(transaction.note ?? "");
+  const [isNegative, setIsNegative] = useState((transaction?.amount ?? 0) < 0);
+  const [date, setDate] = useState(() => (transaction ? new Date(transaction.date) : new Date()));
+  const [note, setNote] = useState(transaction?.note ?? "");
   const [isDateTimePickerOpen, setIsDateTimePickerOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const isBusy = isSubmitting || isDeleting;
 
-  const deletedSuffix = t("investment.deletedAccountSuffix");
-  const sourceLabel = resolveAccountLabel(
-    instruments,
-    transaction.idInstrument,
-    transaction.idInvestmentAccount,
-    deletedSuffix,
-  );
-  const destinationLabel =
-    transaction.idInstrumentTo && transaction.idInvestmentAccountTo
-      ? resolveAccountLabel(
-          instruments,
-          transaction.idInstrumentTo,
-          transaction.idInvestmentAccountTo,
-          deletedSuffix,
-        )
-      : null;
-
-  function formatDateLabel(value: Date) {
-    return new Intl.DateTimeFormat(language, {
-      day: "numeric",
-      month: "short",
-      year: "numeric",
-      hour: "numeric",
-      minute: "2-digit",
-    }).format(value);
-  }
+  const source = transaction
+    ? resolveLabels(transaction.idInstrument, transaction.idInvestmentAccount)
+    : null;
+  const destination = transaction?.idInstrumentTo
+    ? resolveLabels(transaction.idInstrumentTo, transaction.idInvestmentAccountTo)
+    : null;
 
   async function handleSubmit(event: SubmitEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (!transaction) return;
     const magnitude = parseFormattedNumber(amountInput);
     if (magnitude <= 0) {
       showToast(t("transaction.amountRequiredError"), "error");
@@ -130,12 +116,14 @@ function EditInvestmentTransactionFields({
   }
 
   async function handleDelete() {
+    if (!transaction) return;
     const confirmed = await confirm({
       title: t("investment.deleteTransactionConfirmTitle"),
       description: t("investment.deleteTransactionConfirmDescription"),
       confirmLabel: t("investment.deleteTransactionConfirmAction"),
       cancelLabel: t("common.cancel"),
       destructive: true,
+      icon: LuTrash2,
     });
     if (!confirmed) return;
 
@@ -151,108 +139,129 @@ function EditInvestmentTransactionFields({
     }
   }
 
+  const badge = transaction ? TYPE_BADGE[transaction.type] : null;
+
   return (
     <>
-      <form onSubmit={(event) => void handleSubmit(event)} className="flex flex-col gap-5">
-        <div className="flex items-start justify-between gap-2">
-          <div className="flex flex-col gap-1">
-            <Words as="h2" type="lg/bold" className="text-ink-900 dark:text-ink-50">
-              {t("investment.editTransactionTitle")}
-            </Words>
-            <Words type="sm/regular" className="text-ink-500 dark:text-ink-400">
-              {t(`investment.type.${transaction.type}`)} ·{" "}
-              {destinationLabel ? `${sourceLabel} → ${destinationLabel}` : sourceLabel}
-            </Words>
-          </div>
-          <div className="flex shrink-0 items-center gap-1">
-            <Tooltip content={t("investment.deleteButton")}>
-              <button
-                type="button"
-                onClick={() => void handleDelete()}
-                disabled={isDeleting}
-                aria-label={t("investment.deleteButton")}
-                className="flex h-8 w-8 items-center justify-center rounded-md text-ink-400 transition-colors hover:bg-red-50 hover:text-red-500 disabled:opacity-60 dark:hover:bg-red-500/10 dark:hover:text-red-400"
+      <Modal
+        isOpen={isOpen}
+        onClose={onClose}
+        size="md"
+        title={t("investment.editTransactionTitle")}
+        subtitle={
+          source &&
+          (destination
+            ? `${source.accountName ?? "-"} → ${destination.accountName ?? "-"}`
+            : `${source.accountName ?? "-"} · ${source.instrumentName}`)
+        }
+        footer={
+          <div className="flex items-center gap-2.5">
+            <IconButton
+              label={t("investment.deleteButton")}
+              icon={<LuTrash2 />}
+              variant="danger"
+              size="lg"
+              className="size-[50px]"
+              onClick={() => void handleDelete()}
+              disabled={isBusy}
+            />
+            <ModalActions className="flex-1">
+              <Button type="button" variant="outline" onClick={onClose} disabled={isBusy}>
+                {t("common.cancel")}
+              </Button>
+              <Button
+                type="submit"
+                form={FORM_ID}
+                leftIcon={<LuCheck />}
+                isLoading={isSubmitting}
+                disabled={isBusy}
               >
-                {isDeleting ? (
-                  <IconLoader className="h-4 w-4 animate-spin" />
-                ) : (
-                  <HiOutlineTrash className="h-4 w-4" />
-                )}
-              </button>
-            </Tooltip>
-            <ModalCloseButton onClose={onClose} />
+                {t("investment.save")}
+              </Button>
+            </ModalActions>
           </div>
-        </div>
+        }
+      >
+        {transaction && badge && (
+          <form
+            id={FORM_ID}
+            onSubmit={(event) => void handleSubmit(event)}
+            className="flex flex-col gap-[18px]"
+          >
+            <div className="flex flex-wrap items-center gap-2">
+              <Badge tone={badge.tone} icon={badge.icon}>
+                {t(`investment.typeFilter.${transaction.type}`)}
+              </Badge>
+              {destination && (
+                <span className="text-[12.5px] text-text-3">
+                  {t("investment.row.from", { account: source?.accountName ?? "-" })}
+                </span>
+              )}
+            </div>
 
-        <FormField
-          label={isPl ? t("investment.profitLossPreviewLabel") : t("investment.investedAmountLabel")}
-          htmlFor="edit-investment-transaction-amount"
-        >
-          <Input
-            id="edit-investment-transaction-amount"
-            type="text"
-            inputMode="decimal"
-            value={amountInput}
-            onChange={(event) => setAmountInput(formatNumberInput(event.target.value))}
-            placeholder="0"
-            startIcon={
-              <Words type="sm/bold" as="span" className="text-ink-400 dark:text-ink-500">
-                {currencySymbol}
-              </Words>
-            }
-          />
-        </FormField>
+            <FormField
+              label={isPl ? t("investment.profitLossPreviewLabel") : t("investment.amountLabel")}
+              htmlFor="edit-investment-amount"
+            >
+              <AmountInput
+                id="edit-investment-amount"
+                value={amountInput}
+                onChange={setAmountInput}
+              />
+            </FormField>
 
-        {isPl && (
-          <label className="flex items-center gap-2">
-            <Checkbox
-              checked={isNegative}
-              onChange={(event) => setIsNegative(event.target.checked)}
-            />
-            <Words type="sm/bold" as="span" className="text-ink-700 dark:text-ink-300">
-              {t("investment.negativeChangeLabel")}
-            </Words>
-          </label>
+            {isPl && (
+              <label className="flex cursor-pointer items-center gap-3 rounded-control bg-surface-2 px-3.5 py-3">
+                <Checkbox
+                  checked={isNegative}
+                  onChange={(event) => setIsNegative(event.target.checked)}
+                />
+                <span className="flex min-w-0 flex-col gap-px">
+                  <span className="text-[14px] font-semibold text-text">
+                    {t("investment.negativeChangeLabel")}
+                  </span>
+                  <span className="text-[12.5px] text-text-2">
+                    {t("investment.negativeChangeHint")}
+                  </span>
+                </span>
+              </label>
+            )}
+
+            <div className="grid grid-cols-2 gap-2.5">
+              <PickerField
+                id="edit-investment-date"
+                label={t("investment.dateLabel")}
+                icon={<LuCalendar />}
+                value={date.toLocaleDateString(locale, {
+                  day: "numeric",
+                  month: "short",
+                  year: "numeric",
+                })}
+                onClick={() => setIsDateTimePickerOpen(true)}
+              />
+              <PickerField
+                id="edit-investment-time"
+                label={t("investment.timeLabel")}
+                icon={<LuAlarmClock />}
+                value={date.toLocaleTimeString(locale, { hour: "2-digit", minute: "2-digit" })}
+                onClick={() => setIsDateTimePickerOpen(true)}
+              />
+            </div>
+
+            {isOut && (
+              <FormField label={t("investment.noteLabel")} htmlFor="edit-investment-note">
+                <Input
+                  id="edit-investment-note"
+                  value={note}
+                  onChange={(event) => setNote(event.target.value)}
+                  placeholder={t("investment.notePlaceholder")}
+                  startIcon={<LuNotebookPen />}
+                />
+              </FormField>
+            )}
+          </form>
         )}
-
-        <button
-          type="button"
-          onClick={() => setIsDateTimePickerOpen(true)}
-          className="flex items-center gap-3 rounded-2xl border border-ink-200 p-3 transition-colors hover:bg-ink-50 dark:border-ink-800 dark:hover:bg-ink-800"
-        >
-          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-ink-100 dark:bg-ink-800">
-            <HiOutlineCalendarDays className="h-4 w-4 text-ink-500 dark:text-ink-400" />
-          </div>
-          <Words type="sm/bold" className="text-ink-900 dark:text-ink-50">
-            {formatDateLabel(date)}
-          </Words>
-        </button>
-
-        {isOut && (
-          <FormField label={t("investment.noteLabel")} htmlFor="edit-note">
-            <Input
-              id="edit-note"
-              type="text"
-              value={note}
-              onChange={(event) => setNote(event.target.value)}
-              placeholder={t("investment.notePlaceholder")}
-            />
-          </FormField>
-        )}
-
-        <div className="flex gap-3">
-          <Button type="button" variant="secondary" className="flex-1" onClick={onClose}>
-            <Words type="sm/bold" as="span">
-              {t("common.cancel")}
-            </Words>
-          </Button>
-          <Button type="submit" className="flex-1" isLoading={isSubmitting}>
-            <Words type="sm/bold" as="span">
-              {t("common.confirm")}
-            </Words>
-          </Button>
-        </div>
-      </form>
+      </Modal>
 
       <DateTimePickerModal
         isOpen={isDateTimePickerOpen}

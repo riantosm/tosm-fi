@@ -41,17 +41,10 @@ export function ExpenseByCategoryChart({ summary, isLoading }: ExpenseByCategory
       slices={slices}
       title={t("dashboard.expenseByCategory")}
       periodLabel={t("dashboard.thisMonth")}
+      actionLabel={t("dashboard.reportsLink")}
+      onAction={() => navigate(ROUTES.REPORTS)}
       onSelectSubCategory={handleSelectSubCategory}
       onSelectCategory={handleSelectCategory}
-      headerAction={
-        <button
-          type="button"
-          onClick={() => navigate(ROUTES.REPORTS)}
-          className="text-[13px] font-bold text-primary-600 hover:underline dark:text-primary-400"
-        >
-          {t("dashboard.viewAll")}
-        </button>
-      }
       isLoading={isLoading}
     />
   );

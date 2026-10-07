@@ -1,7 +1,13 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
 import { authService } from "@/services/auth.service";
-import { onSessionExpired, onSetUserDetail, resetAccountData, useAppDispatch, useAppSelector } from "@/redux";
+import {
+  onSessionExpired,
+  onSetUserDetail,
+  resetAccountData,
+  useAppDispatch,
+  useAppSelector,
+} from "@/redux";
 
 // Runs once per full page load (not per navigation): redux-persist restores
 // `isLogin`/`token` instantly from localStorage, but that only proves a
@@ -13,13 +19,11 @@ export function useSessionBootstrap() {
   const dispatch = useAppDispatch();
   const isLogin = useAppSelector((state) => state.authentication.isLogin);
   const token = useAppSelector((state) => state.authentication.token);
-  const [isChecking, setIsChecking] = useState(isLogin);
+  // Nothing to validate without a persisted session, so start unblocked.
+  const [isChecking, setIsChecking] = useState(isLogin && Boolean(token));
 
   useEffect(() => {
-    if (!isLogin || !token) {
-      setIsChecking(false);
-      return;
-    }
+    if (!isLogin || !token) return;
 
     let cancelled = false;
 

@@ -1,14 +1,14 @@
 import { createElement, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { HiOutlineCheck, HiOutlinePlus } from "react-icons/hi2";
-import { Modal } from "@/components/molecules/Modal";
-import { Words } from "@/components/atoms/Words";
+import { AnimatePresence, m } from "motion/react";
+import { LuCheck, LuPlus } from "react-icons/lu";
 import { Button } from "@/components/atoms/Button";
-import { ModalCloseButton } from "@/components/atoms/ModalCloseButton";
+import { Modal, ModalActions } from "@/components/molecules/Modal";
 import { CategoryFormModal } from "@/layouts/category/CategoryFormModal";
-import { useCategories } from "@/hooks/use-categories";
-import { useToast } from "@/hooks/use-toast";
 import { resolveCategoryIcon } from "@/constants/category-icons";
+import { useCategories } from "@/hooks/use-categories";
+import { useDialogSession } from "@/hooks/use-dialog-session";
+import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/utils/cn";
 import type { Category, CategoryType } from "@/types/category.types";
 
@@ -20,7 +20,12 @@ interface SelectCategoriesModalProps {
   onConfirm: (categories: Category[]) => void;
 }
 
-export function SelectCategoriesModal({
+export function SelectCategoriesModal(props: SelectCategoriesModalProps) {
+  const session = useDialogSession(props.isOpen);
+  return <SelectCategoriesDialog key={session} {...props} />;
+}
+
+function SelectCategoriesDialog({
   isOpen,
   type,
   selectedIds,
@@ -32,13 +37,13 @@ export function SelectCategoriesModal({
   const { showToast } = useToast();
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  // Seeded once from the budget's current selection — the parent remounts
-  // this component (via a `key` keyed on open/closed) every time the modal
-  // opens, so this initializer re-runs fresh instead of leaking a stale
-  // in-progress selection from a previous open.
+  // Seeded from the budget's current pick each time the dialog opens (fresh session key).
   const [selected, setSelected] = useState<Set<string>>(() => new Set(selectedIds));
 
   const filteredCategories = categories.filter((category) => category.type === type);
+  const selectedCount = filteredCategories.filter((category) =>
+    selected.has(category.idCategory),
+  ).length;
 
   function toggle(idCategory: string) {
     setSelected((prev) => {
@@ -67,76 +72,84 @@ export function SelectCategoriesModal({
 
   return (
     <>
-      <Modal isOpen={isOpen} onClose={onClose} size="lg">
-        <div className="flex max-h-[75vh] flex-col gap-4">
-          <div className="flex shrink-0 items-center justify-between gap-2">
-            <Words as="h2" type="lg/bold" className="text-ink-900 dark:text-ink-50">
-              {t("budget.selectCategoriesTitle")}
-            </Words>
-            <ModalCloseButton onClose={onClose} />
-          </div>
-
-          <div className="-mx-2 min-h-0 overflow-y-auto px-2">
-            <div className="grid grid-cols-4 gap-3 sm:grid-cols-5">
-              {filteredCategories.map((category) => {
-                const Icon = resolveCategoryIcon(category.icon);
-                const isSelected = selected.has(category.idCategory);
-
-                return (
-                  <button
-                    key={category.idCategory}
-                    type="button"
-                    onClick={() => toggle(category.idCategory)}
-                    className="flex flex-col items-center gap-1.5"
+      <Modal
+        isOpen={isOpen}
+        onClose={onClose}
+        onBack={onClose}
+        size="lg"
+        title={t("budget.selectCategoriesTitle")}
+        subtitle={t("budget.selectedCount", { count: selectedCount })}
+        footer={
+          <ModalActions>
+            <Button type="button" variant="outline" onClick={onClose}>
+              {t("common.cancel")}
+            </Button>
+            <Button type="button" leftIcon={<LuCheck />} onClick={handleConfirm}>
+              {selectedCount > 0
+                ? t("budget.pickCategories", { count: selectedCount })
+                : t("budget.pickCategory")}
+            </Button>
+          </ModalActions>
+        }
+      >
+        <div className="flex flex-col gap-4">
+          <div className="grid grid-cols-4 gap-2 sm:gap-2.5">
+            {filteredCategories.map((category) => {
+              const isSelected = selected.has(category.idCategory);
+              return (
+                <button
+                  key={category.idCategory}
+                  type="button"
+                  onClick={() => toggle(category.idCategory)}
+                  aria-pressed={isSelected}
+                  className={cn(
+                    "group flex min-w-0 flex-col items-center gap-2 rounded-control border-[1.5px] px-1 py-3 transition-colors duration-200",
+                    isSelected
+                      ? "border-primary bg-primary-soft"
+                      : "border-transparent bg-surface-2 hover:bg-surface-3",
+                  )}
+                >
+                  <span
+                    className="relative flex size-12 items-center justify-center rounded-full transition-transform duration-300 group-hover:scale-105"
+                    style={{ backgroundColor: `${category.color}26`, color: category.color }}
                   >
-                    <div
-                      className={cn(
-                        "relative flex h-14 w-14 items-center justify-center rounded-2xl transition-transform hover:scale-105",
-                        isSelected && "ring-2 ring-inset ring-primary-500",
-                      )}
-                      style={{ backgroundColor: `${category.color}33` }}
-                    >
-                      {createElement(Icon, { className: "h-6 w-6", style: { color: category.color } })}
+                    {createElement(resolveCategoryIcon(category.icon), { className: "size-5" })}
+                    <AnimatePresence initial={false}>
                       {isSelected && (
-                        <span className="absolute -right-1.5 -bottom-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-primary-500 text-white ring-2 ring-white dark:ring-ink-900">
-                          <HiOutlineCheck className="h-3 w-3" />
-                        </span>
+                        <m.span
+                          initial={{ scale: 0.4, opacity: 0 }}
+                          animate={{ scale: 1, opacity: 1 }}
+                          exit={{ scale: 0.4, opacity: 0 }}
+                          transition={{ type: "spring", stiffness: 520, damping: 30 }}
+                          className="absolute -top-1 -right-1 flex size-5 items-center justify-center rounded-full bg-primary text-primary-fg"
+                        >
+                          <LuCheck className="size-3" strokeWidth={3} />
+                        </m.span>
                       )}
-                    </div>
-                    <Words
-                      type="xs/regular"
-                      className="line-clamp-1 text-center text-ink-700 dark:text-ink-300"
-                    >
-                      {category.nameCategory}
-                    </Words>
-                  </button>
-                );
-              })}
-
-              <button
-                type="button"
-                onClick={() => setIsCreateOpen(true)}
-                className="flex flex-col items-center gap-1.5"
-              >
-                <div className="flex h-14 w-14 items-center justify-center rounded-2xl border-2 border-dashed border-ink-200 text-ink-300 transition-colors hover:border-primary-400 hover:text-primary-500 dark:border-ink-700 dark:text-ink-600 dark:hover:border-primary-500 dark:hover:text-primary-400">
-                  <HiOutlinePlus className="h-6 w-6" />
-                </div>
-              </button>
-            </div>
+                    </AnimatePresence>
+                  </span>
+                  <span
+                    className={cn(
+                      "w-full truncate text-center text-[12px]",
+                      isSelected ? "font-semibold text-primary-text" : "font-medium text-text-2",
+                    )}
+                  >
+                    {category.nameCategory}
+                  </span>
+                </button>
+              );
+            })}
           </div>
 
-          <div className="flex shrink-0 gap-3 border-t border-ink-100 pt-4 dark:border-ink-800">
-            <Button type="button" variant="secondary" className="flex-1" onClick={onClose}>
-              <Words type="sm/bold" as="span">
-                {t("common.cancel")}
-              </Words>
-            </Button>
-            <Button type="button" className="flex-1" onClick={handleConfirm}>
-              <Words type="sm/bold" as="span">
-                {t("common.confirm")}
-              </Words>
-            </Button>
-          </div>
+          <Button
+            type="button"
+            variant="soft"
+            fullWidth
+            leftIcon={<LuPlus />}
+            onClick={() => setIsCreateOpen(true)}
+          >
+            {t("budget.newCategory")}
+          </Button>
         </div>
       </Modal>
 

@@ -1,73 +1,39 @@
-import { createElement, useEffect, useState } from "react";
+import { Fragment, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import {
-  HiOutlinePause,
-  HiOutlinePencil,
-  HiOutlinePlay,
-  HiOutlinePlus,
-  HiOutlineTag,
-  HiOutlineTrash,
-} from "react-icons/hi2";
-import { DashboardLayout } from "@/components/templates/DashboardLayout";
-import { Words } from "@/components/atoms/Words";
+import { LuCalendarClock, LuCalendarX, LuPlus } from "react-icons/lu";
 import { Button } from "@/components/atoms/Button";
-import { IconLoader } from "@/components/atoms/IconLoader";
+import { IconButton } from "@/components/atoms/IconButton";
+import { Reveal } from "@/components/atoms/Reveal";
+import { Skeleton } from "@/components/atoms/Skeleton";
+import { Card } from "@/components/molecules/Card";
+import { EmptyState } from "@/components/molecules/EmptyState";
+import { PageHeader } from "@/components/molecules/PageHeader";
 import { AddScheduleModal } from "@/layouts/schedule/AddScheduleModal";
+import { ScheduleRow } from "@/layouts/schedule/ScheduleRow";
+import { ScheduleSummary, type NextDueInfo } from "@/layouts/schedule/ScheduleSummary";
+import {
+  describeFrequency,
+  formatDueDate,
+  formatLongDate,
+  getNextDueDate,
+  monthlyEquivalent,
+  ruleFromSchedule,
+} from "@/layouts/schedule/schedule-utils";
 import { useSchedules } from "@/hooks/use-schedules";
 import { useCategories } from "@/hooks/use-categories";
-import { useCurrency } from "@/hooks/use-currency";
+import { useWallets } from "@/hooks/use-wallets";
 import { useLanguage } from "@/hooks/use-language";
 import { useConfirmDialog } from "@/hooks/use-confirm-dialog";
 import { useToast } from "@/hooks/use-toast";
-import { resolveCategoryIcon } from "@/constants/category-icons";
+import { toIntlLocale } from "@/utils/locale";
 import type { Schedule } from "@/types/schedule.types";
-import { cn } from "@/utils/cn";
-
-function describeFrequency(
-  schedule: Schedule,
-  t: (key: string, opts?: Record<string, unknown>) => string,
-  locale: string,
-): string {
-  switch (schedule.frequency) {
-    case "daily":
-      return t("schedule.frequencyDaily");
-    case "weekly": {
-      const label = t("schedule.frequencyWeekly");
-      try {
-        const formatter = new Intl.DateTimeFormat(locale, { weekday: "short" });
-        const reference = new Date(2023, 0, 1); // a Sunday
-        const days = [...schedule.weekdays]
-          .sort()
-          .map((day) => formatter.format(new Date(reference.getFullYear(), reference.getMonth(), reference.getDate() + day)))
-          .join(", ");
-        return days ? `${label} · ${days}` : label;
-      } catch {
-        return label;
-      }
-    }
-    case "monthly":
-      return `${t("schedule.frequencyMonthly")} · ${schedule.dayOfMonth}`;
-    case "yearly": {
-      try {
-        const formatter = new Intl.DateTimeFormat(locale, { month: "long" });
-        const monthLabel = schedule.month
-          ? formatter.format(new Date(2023, schedule.month - 1, 1))
-          : "";
-        return `${t("schedule.frequencyYearly")} · ${schedule.dayOfMonth} ${monthLabel}`;
-      } catch {
-        return t("schedule.frequencyYearly");
-      }
-    }
-    default:
-      return schedule.frequency;
-  }
-}
 
 export function SchedulePage() {
   const { t } = useTranslation();
   const { language } = useLanguage();
-  const { format } = useCurrency();
+  const locale = toIntlLocale(language);
   const { categories, status: categoriesStatus, loadCategories } = useCategories();
+  const { wallets, status: walletsStatus, loadWallets } = useWallets();
   const {
     schedules,
     status: schedulesStatus,
@@ -87,6 +53,10 @@ export function SchedulePage() {
   }, [categoriesStatus, loadCategories]);
 
   useEffect(() => {
+    if (walletsStatus === "idle") void loadWallets();
+  }, [walletsStatus, loadWallets]);
+
+  useEffect(() => {
     if (schedulesStatus === "idle") void loadSchedules();
   }, [schedulesStatus, loadSchedules]);
 
@@ -104,6 +74,10 @@ export function SchedulePage() {
     setBusyId(schedule.idSchedule);
     try {
       await setScheduleActive(schedule.idSchedule, !schedule.isActive);
+      showToast(
+        schedule.isActive ? t("schedule.pauseSuccess") : t("schedule.resumeSuccess"),
+        "success",
+      );
     } catch (error) {
       showToast(error instanceof Error ? error.message : t("schedule.genericError"), "error");
     } finally {
@@ -113,11 +87,12 @@ export function SchedulePage() {
 
   async function handleDeleteSchedule(schedule: Schedule) {
     const confirmed = await confirm({
-      title: t("schedule.deleteConfirmTitle"),
+      title: t("schedule.deleteConfirmTitle", { name: schedule.title }),
       description: t("schedule.deleteConfirmDescription"),
-      confirmLabel: t("schedule.deleteConfirmAction"),
+      confirmLabel: t("schedule.deleteScheduleAction"),
       cancelLabel: t("common.cancel"),
       destructive: true,
+      icon: LuCalendarX,
     });
     if (!confirmed) return;
 
@@ -132,144 +107,168 @@ export function SchedulePage() {
     }
   }
 
-  function categoryIconFor(idCategory: string) {
-    const category = categories.find((item) => item.idCategory === idCategory);
-    return {
-      Icon: category ? resolveCategoryIcon(category.icon) : HiOutlineTag,
-      color: category?.color ?? "#71717a",
-    };
+  const dueLabels = { today: t("schedule.today"), tomorrow: t("schedule.tomorrow") };
+
+  const rows = useMemo(
+    () =>
+      schedules.map((schedule) => {
+        const rule = ruleFromSchedule(schedule);
+        const next = schedule.isActive ? getNextDueDate(rule) : null;
+        return { schedule, rule, next };
+      }),
+    [schedules],
+  );
+  const activeRows = rows.filter((row) => row.schedule.isActive);
+  const pausedRows = rows.filter((row) => !row.schedule.isActive);
+
+  const nextDueRow = activeRows
+    .filter((row) => row.next)
+    .sort((a, b) => (a.next as Date).getTime() - (b.next as Date).getTime())[0];
+  const nextDue: NextDueInfo | null = nextDueRow?.next
+    ? {
+        title: nextDueRow.schedule.title,
+        whenLabel: formatDueDate(nextDueRow.next, locale, dueLabels).toLocaleLowerCase(locale),
+        dateLabel: formatLongDate(nextDueRow.next, locale, false),
+        amount: nextDueRow.schedule.amount,
+        isIncome: nextDueRow.schedule.type === "income",
+      }
+    : null;
+
+  let monthlyExpense = 0;
+  let monthlyExpenseCount = 0;
+  let monthlyIncome = 0;
+  let monthlyIncomeCount = 0;
+  for (const { schedule } of activeRows) {
+    const perMonth = monthlyEquivalent(schedule);
+    if (perMonth === null) continue;
+    if (schedule.type === "income") {
+      monthlyIncome += perMonth;
+      monthlyIncomeCount++;
+    } else {
+      monthlyExpense += perMonth;
+      monthlyExpenseCount++;
+    }
   }
 
+  const isInitialLoading = schedulesStatus !== "loaded" && schedules.length === 0;
+  const isEmpty = schedulesStatus === "loaded" && schedules.length === 0;
+  const subtitle = isEmpty
+    ? t("schedule.emptySubtitle")
+    : t("schedule.pageSubtitle", { active: activeRows.length, paused: pausedRows.length });
+
+  const sections = [
+    {
+      key: "active",
+      label: t("schedule.activeSection", { count: activeRows.length }),
+      rows: activeRows,
+    },
+    {
+      key: "paused",
+      label: t("schedule.pausedSection", { count: pausedRows.length }),
+      rows: pausedRows,
+    },
+  ].filter((section) => section.rows.length > 0);
+
   return (
-    <DashboardLayout>
-      <div className="flex flex-col gap-8">
-        <div className="flex flex-col gap-1">
-          <Words as="h1" type="2xl/bold" className="text-ink-900 dark:text-ink-50">
-            {t("schedule.title")}
-          </Words>
-          <Words type="sm/regular" className="text-ink-500 dark:text-ink-400">
-            {t("schedule.subtitle")}
-          </Words>
-        </div>
+    <div className="flex flex-col gap-4 lg:gap-5">
+      <PageHeader
+        title={t("nav.schedule")}
+        subtitle={subtitle}
+        showSubtitleOnMobile={false}
+        actions={
+          <Button type="button" leftIcon={<LuPlus />} onClick={openCreateModal}>
+            {t("schedule.addSchedule")}
+          </Button>
+        }
+        mobileActions={
+          !isEmpty && (
+            <IconButton
+              label={t("schedule.addSchedule")}
+              icon={<LuPlus />}
+              variant="primary"
+              size="lg"
+              tooltip={false}
+              onClick={openCreateModal}
+            />
+          )
+        }
+      />
 
-        <div className="flex flex-col gap-3">
-          <div className="flex items-center justify-between gap-2">
-            <Words type="sm/bold" className="text-ink-900 dark:text-ink-50">
-              {t("schedule.allSchedulesSectionTitle")}
-            </Words>
-            <Button onClick={openCreateModal} className="px-3 py-1.5">
-              <HiOutlinePlus className="h-4 w-4" />
-              <Words type="xs/bold" as="span">
-                {t("schedule.addSchedule")}
-              </Words>
-            </Button>
-          </div>
+      {isEmpty ? (
+        <Reveal immediate>
+          <EmptyState
+            variant="page"
+            icon={<LuCalendarClock />}
+            title={t("schedule.emptyTitle")}
+            description={t("schedule.emptyDescription")}
+            action={
+              <Button type="button" leftIcon={<LuPlus />} onClick={openCreateModal}>
+                {t("schedule.addFirst")}
+              </Button>
+            }
+            className="min-h-[360px] lg:min-h-[520px]"
+          />
+        </Reveal>
+      ) : (
+        <>
+          <Reveal immediate>
+            <ScheduleSummary
+              nextDue={nextDue}
+              monthlyExpense={monthlyExpense}
+              monthlyExpenseCount={monthlyExpenseCount}
+              monthlyIncome={monthlyIncome}
+              monthlyIncomeCount={monthlyIncomeCount}
+              isLoading={isInitialLoading}
+            />
+          </Reveal>
 
-          {schedulesStatus === "loading" && (
-            <div className="flex items-center justify-center py-8">
-              <IconLoader className="h-6 w-6 animate-spin text-primary-500" />
-            </div>
-          )}
-
-          {schedulesStatus === "loaded" && schedules.length === 0 && (
-            <Words type="sm/regular" className="text-ink-400 dark:text-ink-500">
-              {t("schedule.allSchedulesEmpty")}
-            </Words>
-          )}
-
-          {schedules.length > 0 && (
-            <div className="flex flex-col overflow-hidden rounded-2xl border border-ink-200 dark:border-ink-800">
-              <div className="divide-y divide-ink-100 dark:divide-ink-800">
-                {schedules.map((schedule) => {
-                  const { Icon, color } = categoryIconFor(schedule.idCategory);
-                  const isBusy = busyId === schedule.idSchedule;
-
-                  return (
-                    <div
-                      key={schedule.idSchedule}
-                      className="flex flex-wrap items-center gap-3 bg-white px-4 py-3 dark:bg-ink-900"
-                    >
-                      <div
-                        className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full"
-                        style={{ backgroundColor: `${color}33`, opacity: schedule.isActive ? 1 : 0.5 }}
+          <Reveal delay={0.05}>
+            <Card className="flex flex-col gap-3 bg-transparent p-0 shadow-none lg:gap-0 lg:bg-surface lg:p-6 lg:shadow-card">
+              {isInitialLoading
+                ? Array.from({ length: 4 }, (_, index) => (
+                    <Skeleton key={index} className="h-[68px] rounded-control" />
+                  ))
+                : sections.map((section, sectionIndex) => (
+                    <Fragment key={section.key}>
+                      <span
+                        className={
+                          sectionIndex > 0
+                            ? "px-1 pt-2 text-[12px] font-semibold tracking-[0.06em] text-text-3 uppercase lg:px-0 lg:pt-5 lg:pb-1"
+                            : "px-1 text-[12px] font-semibold tracking-[0.06em] text-text-3 uppercase lg:px-0 lg:pb-1"
+                        }
                       >
-                        {createElement(Icon, { className: "h-5 w-5", style: { color } })}
-                      </div>
-                      <div className="flex min-w-0 flex-1 flex-col">
-                        <div className="flex items-center gap-2">
-                          <Words
-                            type="sm/bold"
-                            className={cn(
-                              "truncate",
-                              schedule.isActive
-                                ? "text-ink-900 dark:text-ink-50"
-                                : "text-ink-400 dark:text-ink-500",
+                        {section.label}
+                      </span>
+                      <div className="flex flex-col gap-3 lg:gap-0 lg:divide-y lg:divide-border">
+                        {section.rows.map(({ schedule, rule, next }) => (
+                          <ScheduleRow
+                            key={schedule.idSchedule}
+                            schedule={schedule}
+                            category={categories.find(
+                              (item) => item.idCategory === schedule.idCategory,
                             )}
-                          >
-                            {schedule.title}
-                          </Words>
-                          {!schedule.isActive && (
-                            <span className="shrink-0 rounded-md bg-ink-100 px-1.5 py-0.5 dark:bg-ink-800">
-                              <Words type="xxs/bold" as="span" className="text-ink-500 dark:text-ink-400 flex">
-                                {t("schedule.pausedBadge")}
-                              </Words>
-                            </span>
-                          )}
-                        </div>
-                        <Words type="xs/regular" className="text-ink-400 dark:text-ink-500">
-                          {describeFrequency(schedule, t, language)}
-                        </Words>
+                            wallet={wallets.find((item) => item.idWallet === schedule.idWallet)}
+                            frequencyLabel={describeFrequency(rule, t, locale)}
+                            nextLabel={next ? formatDueDate(next, locale, dueLabels) : null}
+                            isBusy={busyId === schedule.idSchedule}
+                            onToggleActive={() => void handleToggleActive(schedule)}
+                            onEdit={() => openEditModal(schedule)}
+                            onDelete={() => void handleDeleteSchedule(schedule)}
+                          />
+                        ))}
                       </div>
-                      <Words type="sm/bold" className="shrink-0 text-ink-900 dark:text-ink-50">
-                        {format(schedule.amount)}
-                      </Words>
-                      <div className="flex shrink-0 items-center gap-1">
-                        <button
-                          type="button"
-                          disabled={isBusy}
-                          aria-label={schedule.isActive ? t("schedule.pauseButton") : t("schedule.resumeButton")}
-                          onClick={() => void handleToggleActive(schedule)}
-                          className="flex h-8 w-8 items-center justify-center rounded-full text-ink-400 transition-colors hover:bg-ink-100 hover:text-ink-600 disabled:opacity-60 dark:hover:bg-ink-800 dark:hover:text-ink-200"
-                        >
-                          {schedule.isActive ? (
-                            <HiOutlinePause className="h-4 w-4" />
-                          ) : (
-                            <HiOutlinePlay className="h-4 w-4" />
-                          )}
-                        </button>
-                        <button
-                          type="button"
-                          disabled={isBusy}
-                          aria-label={t("schedule.editSchedule")}
-                          onClick={() => openEditModal(schedule)}
-                          className="flex h-8 w-8 items-center justify-center rounded-full text-ink-400 transition-colors hover:bg-ink-100 hover:text-ink-600 disabled:opacity-60 dark:hover:bg-ink-800 dark:hover:text-ink-200"
-                        >
-                          <HiOutlinePencil className="h-4 w-4" />
-                        </button>
-                        <button
-                          type="button"
-                          disabled={isBusy}
-                          aria-label={t("schedule.deleteConfirmAction")}
-                          onClick={() => void handleDeleteSchedule(schedule)}
-                          className="flex h-8 w-8 items-center justify-center rounded-full text-ink-400 transition-colors hover:bg-red-50 hover:text-red-500 disabled:opacity-60 dark:hover:bg-red-500/10 dark:hover:text-red-400"
-                        >
-                          <HiOutlineTrash className="h-4 w-4" />
-                        </button>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          )}
-        </div>
-      </div>
+                    </Fragment>
+                  ))}
+            </Card>
+          </Reveal>
+        </>
+      )}
 
       <AddScheduleModal
         isOpen={isScheduleModalOpen}
         schedule={editingSchedule}
         onClose={() => setIsScheduleModalOpen(false)}
       />
-    </DashboardLayout>
+    </div>
   );
 }

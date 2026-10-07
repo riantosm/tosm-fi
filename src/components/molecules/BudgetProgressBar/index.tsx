@@ -1,85 +1,97 @@
-import { Words } from "@/components/atoms/Words";
+import { m } from "motion/react";
 import { cn } from "@/utils/cn";
 
 interface BudgetProgressBarProps {
+  /** spent / limit — may exceed 1; the fill is capped at the full width. */
+  ratio: number;
+  /** Fill color (budget color, or `var(--expense)` once over the limit). */
+  color: string;
   /** Day-of-month "today" sits on, 1-based. */
   dayOfMonth: number;
   daysInMonth: number;
-  /** spent/limit * 100 — may exceed 100, this is a reminder only, never clamped to a hard cap. */
-  percentage: number;
   todayLabel: string;
-  startLabel: string;
-  endLabel: string;
+  /** Period start/end under the track — omit both to hide the date row. */
+  startLabel?: string;
+  endLabel?: string;
+  /** `hero` sits on the gradient hero block (translucent track, hero colors). */
+  tone?: "card" | "hero";
   className?: string;
+  /** Extra classes for the date row (e.g. `hidden lg:flex`). */
+  datesClassName?: string;
 }
 
-// Purpose-built for a saturated colored card background (BudgetCard /
-// BudgetDetailView headers) — not a generic progress bar, hence the
-// white-tinted track/labels rather than the usual ink-100/800 pairing.
+const EASE = [0.22, 1, 0.36, 1] as const;
+
+/**
+ * Month budget bar: the fill tracks spending, the "Hari ini" pill + tick track
+ * the calendar, so a fill running ahead of the tick reads as "spending too fast".
+ */
 export function BudgetProgressBar({
+  ratio,
+  color,
   dayOfMonth,
   daysInMonth,
-  percentage,
   todayLabel,
   startLabel,
   endLabel,
+  tone = "card",
   className,
+  datesClassName,
 }: BudgetProgressBarProps) {
-  // "Today" (pill + stem) tracks the calendar — how far into the month we are.
-  const elapsedRatio = daysInMonth > 0 ? dayOfMonth / daysInMonth : 0;
-  // The fill itself tracks spending — how much of the limit is used, capped
-  // at 100% of the bar's width even when over limit (the "%" badge below,
-  // and its red color past 100, is what actually communicates the overage).
-  const spentRatio = Math.min(1, Math.max(0, percentage / 100));
-  const roundedPercentage = Math.max(0, Math.round(percentage));
-  const isOverLimit = roundedPercentage > 100;
+  const isHero = tone === "hero";
+  const todayPercent = daysInMonth > 0 ? (dayOfMonth / daysInMonth) * 100 : 0;
+  const fillPercent = Math.min(1, Math.max(0, ratio)) * 100;
 
   return (
     <div className={cn("flex flex-col gap-1.5", className)}>
-      <div className="relative h-11 w-full">
-        <div
-          className="absolute top-0 -translate-x-1/2 whitespace-nowrap rounded-full bg-white px-2 py-0.5 shadow-sm"
-          style={{ left: `${elapsedRatio * 100}%` }}
+      <div className="relative h-[18px]">
+        <span
+          className={cn(
+            "absolute top-0.5 -translate-x-1/2 rounded-full px-[7px] py-px text-[9.5px] leading-[11px] font-semibold whitespace-nowrap",
+            isHero ? "bg-hero-fg text-hero-bg" : "bg-text text-surface",
+          )}
+          // Keeps the pill inside the bar near the first/last day of the month.
+          style={{ left: `clamp(26px, ${todayPercent}%, calc(100% - 26px))` }}
         >
-          <Words type="xxs/bold" as="span" className="flex text-ink-700">
-            {todayLabel}
-          </Words>
-        </div>
+          {todayLabel}
+        </span>
+      </div>
 
-        {/* A thin stem connecting the "Today" pill down to the track — keeps
-            them reading as two distinct elements instead of one merged blob. */}
-        <div
-          className="absolute w-px -translate-x-1/2 bg-white/70"
-          style={{ left: `${elapsedRatio * 100}%`, top: "1.25rem", bottom: "0.375rem" }}
+      <div
+        className={cn(
+          "relative overflow-hidden rounded-full",
+          isHero ? "h-3 bg-surface/60" : "h-2 bg-surface-2 lg:h-2.5",
+        )}
+      >
+        <m.div
+          className="h-full rounded-full"
+          style={{ backgroundColor: color }}
+          initial={{ width: 0 }}
+          animate={{ width: `${fillPercent}%` }}
+          transition={{ duration: 0.8, ease: EASE }}
         />
+        <span
+          className={cn(
+            "absolute inset-y-0 w-0.5 -translate-x-1/2",
+            isHero ? "bg-hero-fg" : "bg-text/70",
+          )}
+          style={{ left: `${todayPercent}%` }}
+          aria-hidden="true"
+        />
+      </div>
 
-        <div className="absolute inset-x-0 bottom-0 h-1.5 overflow-hidden rounded-full bg-white/20">
-          <div
-            className="h-full rounded-full bg-white transition-[width] duration-700 ease-out"
-            style={{ width: `${spentRatio * 100}%` }}
-          />
-        </div>
-
+      {(startLabel || endLabel) && (
         <div
           className={cn(
-            "absolute bottom-[-7px] left-1/2 -translate-x-1/2 rounded-full px-2.5 py-0.5",
-            isOverLimit ? "bg-red-500/90" : "bg-black/20",
+            "flex items-center justify-between",
+            isHero ? "text-[12px] text-hero-fg-2" : "text-[11.5px] text-text-3",
+            datesClassName,
           )}
         >
-          <Words type="xxs/bold" as="span" className="flex text-white">
-            {roundedPercentage}%
-          </Words>
+          <span>{startLabel}</span>
+          <span>{endLabel}</span>
         </div>
-      </div>
-
-      <div className="flex items-center justify-between">
-        <Words type="xxs/bold" as="span" className="text-white/70">
-          {startLabel}
-        </Words>
-        <Words type="xxs/bold" as="span" className="text-white/70">
-          {endLabel}
-        </Words>
-      </div>
+      )}
     </div>
   );
 }

@@ -1,10 +1,12 @@
 import { createElement, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { HiOutlineCalendarDays, HiOutlineClock, HiOutlineTag } from "react-icons/hi2";
-import { Modal } from "@/components/molecules/Modal";
+import { LuCalendarClock, LuCheck } from "react-icons/lu";
 import { Button } from "@/components/atoms/Button";
-import { Words } from "@/components/atoms/Words";
-import { ModalCloseButton } from "@/components/atoms/ModalCloseButton";
+import { AmountCard } from "@/components/molecules/AmountCard";
+import { CategoryPickerRow } from "@/components/molecules/CategoryPickerRow";
+import { Modal, ModalActions } from "@/components/molecules/Modal";
+import { PickerField } from "@/components/molecules/PickerField";
+import { WalletChipGroup } from "@/components/molecules/WalletChipGroup";
 import { SelectCategoryModal } from "@/layouts/transaction/SelectCategoryModal";
 import { SelectSubCategoryModal } from "@/layouts/transaction/SelectSubCategoryModal";
 import { AmountCalculatorModal } from "@/layouts/transaction/AmountCalculatorModal";
@@ -13,13 +15,14 @@ import { useCategories } from "@/hooks/use-categories";
 import { useWallets } from "@/hooks/use-wallets";
 import { useScheduleOccurrences } from "@/hooks/use-schedule-occurrences";
 import { useCurrency } from "@/hooks/use-currency";
+import { useDialogSession } from "@/hooks/use-dialog-session";
 import { useLanguage } from "@/hooks/use-language";
 import { useToast } from "@/hooks/use-toast";
 import { resolveCategoryIcon } from "@/constants/category-icons";
 import type { Category } from "@/types/category.types";
 import type { ScheduleOccurrence } from "@/types/schedule-occurrence.types";
-import type { WalletAccount } from "@/types/wallet.types";
-import { cn } from "@/utils/cn";
+import { toIntlLocale } from "@/utils/locale";
+import { formatDateTimeLabel } from "@/utils/tx-time";
 
 interface PayOccurrenceModalProps {
   isOpen: boolean;
@@ -27,38 +30,44 @@ interface PayOccurrenceModalProps {
   onClose: () => void;
 }
 
-function formatDateLabel(date: Date, locale: string, todayLabel: string): string {
-  const now = new Date();
-  if (date.toDateString() === now.toDateString()) return todayLabel;
-  try {
-    return new Intl.DateTimeFormat(locale, { day: "numeric", month: "short", year: "numeric" }).format(
-      date,
-    );
-  } catch {
-    return date.toDateString();
-  }
-}
-
-function formatTimeLabel(date: Date, locale: string): string {
-  try {
-    return new Intl.DateTimeFormat(locale, { hour: "numeric", minute: "2-digit" }).format(date);
-  } catch {
-    return date.toLocaleTimeString();
-  }
-}
-
 export function PayOccurrenceModal({ isOpen, occurrence, onClose }: PayOccurrenceModalProps) {
+  const session = useDialogSession(isOpen);
   return (
-    <Modal isOpen={isOpen} onClose={onClose} size="2xl">
-      {isOpen && occurrence && <PayOccurrenceFields occurrence={occurrence} onClose={onClose} />}
-    </Modal>
+    <PayOccurrenceDialog
+      key={session}
+      isOpen={isOpen && Boolean(occurrence)}
+      occurrence={occurrence}
+      onClose={onClose}
+    />
   );
 }
 
+function PayOccurrenceDialog({
+  isOpen,
+  occurrence: occurrenceProp,
+  onClose,
+}: {
+  isOpen: boolean;
+  occurrence: ScheduleOccurrence | null;
+  onClose: () => void;
+}) {
+  // Frozen for this dialog's lifetime: the parent clears its own state while we animate out.
+  const [occurrence] = useState(occurrenceProp);
+  if (!occurrence)
+    return (
+      <Modal isOpen={false} onClose={onClose}>
+        {null}
+      </Modal>
+    );
+  return <PayOccurrenceFields isOpen={isOpen} occurrence={occurrence} onClose={onClose} />;
+}
+
 function PayOccurrenceFields({
+  isOpen,
   occurrence,
   onClose,
 }: {
+  isOpen: boolean;
   occurrence: ScheduleOccurrence;
   onClose: () => void;
 }) {
@@ -90,12 +99,22 @@ function PayOccurrenceFields({
     if (walletsStatus === "idle") void loadWallets();
   }, [walletsStatus, loadWallets]);
 
-  const category = categoryId ? (categories.find((item) => item.idCategory === categoryId) ?? null) : null;
+  const category = categoryId
+    ? (categories.find((item) => item.idCategory === categoryId) ?? null)
+    : null;
   const subCategory = subCategoryId
     ? (category?.subCategories.find((sub) => sub.idSubCategory === subCategoryId) ?? null)
     : null;
+  const originalCategory = categories.find((item) => item.idCategory === occurrence.idCategory);
 
-  const CategoryIcon = category ? resolveCategoryIcon(category.icon) : HiOutlineTag;
+  const due = new Date(occurrence.dueDate);
+  const dueLabel =
+    due.toDateString() === new Date().toDateString()
+      ? t("schedule.dueToday")
+      : t("schedule.dueOn", {
+          date: due.toLocaleDateString(toIntlLocale(language), { day: "numeric", month: "short" }),
+        });
+  const isIncome = occurrence.type === "income";
 
   function handleCategorySelect(selected: Category) {
     setCategoryId(selected.idCategory);
@@ -138,106 +157,93 @@ function PayOccurrenceFields({
 
   return (
     <>
-      <div className="flex flex-col gap-5">
-        <div className="flex items-center justify-between gap-2">
-          <Words as="h2" type="xl/bold" className="text-ink-900 dark:text-ink-50">
-            {t("schedule.payConfirmTitle")}
-          </Words>
-          <ModalCloseButton onClose={onClose} />
-        </div>
-
-        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
-          <div className="flex flex-col gap-4">
-            <div
-              className={cn(
-                "flex flex-wrap items-center gap-3 rounded-2xl p-4",
-                !category && "bg-ink-100 dark:bg-ink-800",
-              )}
-              style={category ? { backgroundColor: `${category.color}26` } : undefined}
-            >
-              <button
-                type="button"
-                onClick={() => setIsCategoryPickerOpen(true)}
-                className="flex min-w-0 flex-1 items-center gap-3 text-left"
-              >
-                <div
-                  className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full"
-                  style={category ? { backgroundColor: `${category.color}40` } : undefined}
-                >
-                  {createElement(CategoryIcon, {
-                    className: cn("h-6 w-6", !category && "text-ink-400 dark:text-ink-500"),
-                    style: category ? { color: category.color } : undefined,
-                  })}
-                </div>
-                <div className="flex min-w-0 flex-col">
-                  <Words type="sm/bold" className="truncate text-ink-900 dark:text-ink-50">
-                    {category ? category.nameCategory : t("transaction.selectCategoryPlaceholder")}
-                  </Words>
-                  {subCategory && (
-                    <Words type="xs/regular" className="truncate text-ink-500 dark:text-ink-400">
-                      {subCategory.nameSubCategory}
-                    </Words>
-                  )}
-                </div>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setIsAmountPickerOpen(true)}
-                className="ml-auto min-w-0 shrink-0"
-              >
-                <Words
-                  type={format(amount).length > 12 ? "sm/bold" : "xl/bold"}
-                  className="break-words text-right text-ink-900 dark:text-ink-50"
-                >
-                  {format(amount)}
-                </Words>
-              </button>
-            </div>
-
-            <Words type="sm/bold" className="text-ink-900 dark:text-ink-50">
-              {occurrence.title}
-            </Words>
-          </div>
-
-          <div className="flex flex-col gap-4">
-            <button
+      <Modal
+        isOpen={isOpen}
+        onClose={onClose}
+        size="lg"
+        title={t("schedule.payTitle")}
+        subtitle={isIncome ? t("schedule.payIncomeSubtitle") : t("schedule.payExpenseSubtitle")}
+        footer={
+          <ModalActions>
+            <Button type="button" variant="outline" onClick={onClose} disabled={isSaving}>
+              {t("schedule.later")}
+            </Button>
+            <Button
               type="button"
-              onClick={() => setIsDateTimePickerOpen(true)}
-              className="flex items-center gap-3 rounded-2xl border border-ink-200 p-3 transition-colors hover:bg-ink-50 dark:border-ink-800 dark:hover:bg-ink-800"
+              leftIcon={<LuCheck />}
+              onClick={() => void handleConfirm()}
+              isLoading={isSaving}
             >
-              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-ink-100 dark:bg-ink-800">
-                <HiOutlineCalendarDays className="h-4 w-4 text-ink-500 dark:text-ink-400" />
-              </div>
-              <Words type="sm/bold" className="text-ink-900 dark:text-ink-50">
-                {formatDateLabel(date, language, t("transaction.today"))}
-              </Words>
-              <span className="flex-1" />
-              <HiOutlineClock className="h-4 w-4 shrink-0 text-ink-400 dark:text-ink-500" />
-              <Words type="sm/bold" className="text-ink-900 dark:text-ink-50">
-                {formatTimeLabel(date, language)}
-              </Words>
-            </button>
-
-            <WalletPickerGroup
-              label={t("transaction.walletLabel")}
-              wallets={wallets}
-              selectedId={walletId}
-              onSelect={setWalletId}
-            />
+              <span className="truncate">
+                {t(isIncome ? "schedule.receiveAmount" : "schedule.payAmount", {
+                  amount: format(amount),
+                })}
+              </span>
+            </Button>
+          </ModalActions>
+        }
+      >
+        <div className="flex flex-col gap-[18px]">
+          <div className="flex items-center gap-3 rounded-[18px] bg-investment-soft p-3.5">
+            <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-surface text-investment-text">
+              {createElement(
+                originalCategory ? resolveCategoryIcon(originalCategory.icon) : LuCalendarClock,
+                {
+                  className: "size-[18px]",
+                },
+              )}
+            </span>
+            <span className="flex min-w-0 flex-1 flex-col gap-px">
+              <span className="truncate text-[14px] font-semibold text-text">
+                {occurrence.title}
+              </span>
+              <span className="truncate text-[12.5px] text-text-2">
+                {[originalCategory?.nameCategory, dueLabel].filter(Boolean).join(" · ")}
+              </span>
+            </span>
+            <span className="shrink-0 rounded-full bg-surface px-2.5 py-1 text-[11.5px] font-semibold text-investment-text">
+              {t("schedule.scheduledBadge")}
+            </span>
           </div>
-        </div>
 
-        <Button onClick={() => void handleConfirm()} isLoading={isSaving} className="w-full">
-          <Words type="sm/bold" as="span">
-            {t("schedule.payButton")}
-          </Words>
-        </Button>
-      </div>
+          <AmountCard
+            amount={amount}
+            onPickAmount={() => setIsAmountPickerOpen(true)}
+            pickAmountLabel={t("transaction.amountTitle")}
+            header={
+              <CategoryPickerRow
+                category={category}
+                subCategory={subCategory}
+                placeholder={t("transaction.selectCategoryPlaceholder")}
+                onClick={() => setIsCategoryPickerOpen(true)}
+              />
+            }
+          />
+
+          <PickerField
+            id="pay-date"
+            label={t("transaction.dateTimeLabel")}
+            icon={<LuCalendarClock />}
+            value={formatDateTimeLabel(date, language, {
+              today: t("transaction.today"),
+              yesterday: t("transaction.yesterday"),
+            })}
+            onClick={() => setIsDateTimePickerOpen(true)}
+          />
+
+          <WalletChipGroup
+            label={isIncome ? t("schedule.receiveTo") : t("schedule.payFrom")}
+            wallets={wallets}
+            selectedId={walletId}
+            onSelect={setWalletId}
+          />
+        </div>
+      </Modal>
 
       <SelectCategoryModal
         isOpen={isCategoryPickerOpen}
         type={occurrence.type}
+        selectedId={categoryId}
         onClose={() => setIsCategoryPickerOpen(false)}
         onSelect={handleCategorySelect}
       />
@@ -245,6 +251,11 @@ function PayOccurrenceFields({
       <SelectSubCategoryModal
         isOpen={isSubCategoryPickerOpen}
         category={category}
+        selectedId={subCategoryId}
+        onBack={() => {
+          setIsSubCategoryPickerOpen(false);
+          setIsCategoryPickerOpen(true);
+        }}
         onClose={() => setIsSubCategoryPickerOpen(false)}
         onSelect={(selected) => {
           setSubCategoryId(selected ? selected.idSubCategory : null);
@@ -269,44 +280,5 @@ function PayOccurrenceFields({
         onConfirm={setDate}
       />
     </>
-  );
-}
-
-interface WalletPickerGroupProps {
-  label: string;
-  wallets: WalletAccount[];
-  selectedId: string | null;
-  onSelect: (id: string) => void;
-}
-
-function WalletPickerGroup({ label, wallets, selectedId, onSelect }: WalletPickerGroupProps) {
-  return (
-    <div className="flex flex-col gap-2">
-      <Words type="xs/bold" className="uppercase tracking-wide text-ink-400 dark:text-ink-500">
-        {label}
-      </Words>
-      <div className="flex flex-wrap gap-2">
-        {wallets.map((wallet) => (
-          <button
-            key={wallet.idWallet}
-            type="button"
-            onClick={() => onSelect(wallet.idWallet)}
-            className={cn(
-              "rounded-full border-2 px-3 py-1.5 transition-colors",
-              selectedId === wallet.idWallet ? "" : "border-ink-200 dark:border-ink-700",
-            )}
-            style={selectedId === wallet.idWallet ? { borderColor: wallet.color } : undefined}
-          >
-            <Words
-              type="xs/bold"
-              as="span"
-              className="text-ink-700 dark:text-ink-300 flex shrink-0 items-center justify-center"
-            >
-              {wallet.nameWallet}
-            </Words>
-          </button>
-        ))}
-      </div>
-    </div>
   );
 }

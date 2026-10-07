@@ -98,7 +98,7 @@ export function Tooltip({ content, children, side = "top", wrapperClassName }: T
               left: position?.left ?? 0,
               visibility: position ? "visible" : "hidden",
             }}
-            className="pointer-events-none z-50 whitespace-nowrap rounded-lg dark:bg-ink-900 px-2.5 py-1.5 text-[12px] font-bold dark:text-white shadow-lg bg-white text-ink-900 border border-ink-200 dark:border-ink-800"
+            className="pointer-events-none z-[70] whitespace-nowrap rounded-[10px] bg-text px-2.5 py-1.5 text-[12px] font-semibold text-surface shadow-float animate-scale-in"
           >
             {content}
           </div>,

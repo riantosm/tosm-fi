@@ -1,16 +1,15 @@
 import { useState, type SubmitEvent } from "react";
 import { useTranslation } from "react-i18next";
-import { HiOutlineTrash } from "react-icons/hi2";
-import { Modal } from "@/components/molecules/Modal";
+import { LuCheck, LuTrash2, LuType } from "react-icons/lu";
 import { Button } from "@/components/atoms/Button";
+import { IconButton } from "@/components/atoms/IconButton";
 import { Input } from "@/components/atoms/Input";
-import { IconLoader } from "@/components/atoms/IconLoader";
-import { FormField } from "@/components/molecules/FormField";
-import { Words } from "@/components/atoms/Words";
-import { Tooltip } from "@/components/atoms/Tooltip";
-import { ModalCloseButton } from "@/components/atoms/ModalCloseButton";
+import { Monogram } from "@/components/atoms/Monogram";
 import { ColorPicker } from "@/components/molecules/ColorPicker";
+import { FormField } from "@/components/molecules/FormField";
+import { Modal, ModalActions } from "@/components/molecules/Modal";
 import { WALLET_COLOR_PRESETS } from "@/constants/wallet-colors";
+import { useDialogSession } from "@/hooks/use-dialog-session";
 import type { Instrument, InstrumentInput } from "@/types/instrument.types";
 
 interface InstrumentFormModalProps {
@@ -23,51 +22,30 @@ interface InstrumentFormModalProps {
   onDelete?: (id: string) => void;
 }
 
-export function InstrumentFormModal({
+const FORM_ID = "instrument-form";
+
+export function InstrumentFormModal(props: InstrumentFormModalProps) {
+  const session = useDialogSession(props.isOpen);
+  return <InstrumentFormDialog key={session} {...props} />;
+}
+
+function InstrumentFormDialog({
   isOpen,
-  instrument,
+  instrument: instrumentProp,
   isSubmitting,
   isDeleting,
   onClose,
   onSubmit,
   onDelete,
 }: InstrumentFormModalProps) {
-  return (
-    <Modal isOpen={isOpen} onClose={onClose}>
-      {isOpen && (
-        <InstrumentFormFields
-          instrument={instrument}
-          isSubmitting={isSubmitting}
-          isDeleting={isDeleting}
-          onClose={onClose}
-          onSubmit={onSubmit}
-          onDelete={onDelete}
-        />
-      )}
-    </Modal>
-  );
-}
-
-interface InstrumentFormFieldsProps {
-  instrument?: Instrument | null;
-  isSubmitting?: boolean;
-  isDeleting?: boolean;
-  onClose: () => void;
-  onSubmit: (input: InstrumentInput) => void;
-  onDelete?: (id: string) => void;
-}
-
-function InstrumentFormFields({
-  instrument,
-  isSubmitting,
-  isDeleting,
-  onClose,
-  onSubmit,
-  onDelete,
-}: InstrumentFormFieldsProps) {
   const { t } = useTranslation();
+  // Frozen for this dialog's lifetime so the exit animation keeps the same content.
+  const [instrument] = useState(instrumentProp ?? null);
   const [name, setName] = useState(instrument?.nameInstrument ?? "");
   const [color, setColor] = useState(instrument?.color ?? WALLET_COLOR_PRESETS[0]);
+  const isBusy = Boolean(isSubmitting || isDeleting);
+  const accountCount =
+    instrument?.investmentAccounts.filter((account) => !account.isDeleted).length ?? 0;
 
   function handleSubmit(event: SubmitEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -76,63 +54,83 @@ function InstrumentFormFields({
   }
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col gap-5">
-      <div className="flex items-center justify-between gap-2">
-        <Words as="h2" type="lg/bold" className="text-ink-900 dark:text-ink-50">
-          {instrument ? t("investment.editTitle") : t("investment.addTitle")}
-        </Words>
-
-        <div className="flex shrink-0 items-center gap-1">
-          {instrument && (
-            <Tooltip content={t("investment.deleteButton")}>
-              <button
-                type="button"
-                onClick={() => onDelete?.(instrument.idInstrument)}
-                disabled={isDeleting}
-                aria-label={t("investment.deleteButton")}
-                className="flex h-8 w-8 items-center justify-center rounded-md text-ink-400 transition-colors hover:bg-red-50 hover:text-red-500 disabled:opacity-60 dark:hover:bg-red-500/10 dark:hover:text-red-400"
-              >
-                {isDeleting ? (
-                  <IconLoader className="h-4 w-4 animate-spin" />
-                ) : (
-                  <HiOutlineTrash className="h-4 w-4" />
-                )}
-              </button>
-            </Tooltip>
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      size="md"
+      title={instrument ? t("investment.editTitle") : t("investment.addTitle")}
+      subtitle={
+        instrument
+          ? `${instrument.nameInstrument} · ${t("investment.accountsShort", { count: accountCount })}`
+          : t("investment.addInstrumentSubtitle")
+      }
+      footer={
+        <div className="flex items-center gap-2.5">
+          {instrument && onDelete && (
+            <IconButton
+              label={t("investment.deleteInstrument")}
+              icon={<LuTrash2 />}
+              variant="danger"
+              size="lg"
+              className="size-[50px]"
+              onClick={() => onDelete(instrument.idInstrument)}
+              disabled={isBusy}
+            />
           )}
-          <ModalCloseButton onClose={onClose} />
+          <ModalActions className="flex-1">
+            <Button type="button" variant="outline" onClick={onClose} disabled={isBusy}>
+              {t("common.cancel")}
+            </Button>
+            <Button
+              type="submit"
+              form={FORM_ID}
+              leftIcon={<LuCheck />}
+              isLoading={isSubmitting}
+              disabled={isBusy || !name.trim()}
+            >
+              {t("investment.save")}
+            </Button>
+          </ModalActions>
         </div>
-      </div>
+      }
+    >
+      <form id={FORM_ID} onSubmit={handleSubmit} className="flex flex-col gap-[18px]">
+        <FormField label={t("investment.nameLabel")} htmlFor="instrument-name">
+          <Input
+            id="instrument-name"
+            value={name}
+            onChange={(event) => setName(event.target.value)}
+            placeholder={t("investment.namePlaceholder")}
+            startIcon={<LuType />}
+            required
+            autoFocus={!instrument}
+          />
+        </FormField>
 
-      <FormField label={t("investment.nameLabel")} htmlFor="instrument-name">
-        <Input
-          id="instrument-name"
-          value={name}
-          onChange={(event) => setName(event.target.value)}
-          placeholder={t("investment.namePlaceholder")}
-          required
-        />
-      </FormField>
+        <div className="flex flex-col gap-2">
+          <span className="text-[13px] font-semibold text-text-2">
+            {t("investment.colorLabel")}
+          </span>
+          <ColorPicker value={color} onChange={setColor} presets={WALLET_COLOR_PRESETS} />
+        </div>
 
-      <div className="flex flex-col gap-2">
-        <Words type="sm/bold" className="text-ink-700 dark:text-ink-300">
-          {t("investment.colorLabel")}
-        </Words>
-        <ColorPicker value={color} onChange={setColor} presets={WALLET_COLOR_PRESETS} />
-      </div>
-
-      <div className="flex gap-3">
-        <Button type="button" variant="secondary" className="flex-1" onClick={onClose}>
-          <Words type="sm/bold" as="span">
-            {t("common.cancel")}
-          </Words>
-        </Button>
-        <Button type="submit" className="flex-1" isLoading={isSubmitting}>
-          <Words type="sm/bold" as="span">
-            {t("common.confirm")}
-          </Words>
-        </Button>
-      </div>
-    </form>
+        <div className="flex items-center gap-3 rounded-[18px] border border-border px-3.5 py-3">
+          <Monogram
+            name={name.trim() || t("investment.namePreview")}
+            color={color}
+            variant="solid"
+            shape="square"
+            size="md"
+            className="transition-colors duration-300"
+          />
+          <span className="flex min-w-0 flex-col gap-px">
+            <span className="truncate text-[14px] font-semibold text-text">
+              {name.trim() || t("investment.namePreview")}
+            </span>
+            <span className="text-[12px] text-text-3">{t("investment.cardPreview")}</span>
+          </span>
+        </div>
+      </form>
+    </Modal>
   );
 }

@@ -13,7 +13,7 @@ export const categoryService = {
       const { data } = await httpClient.get("/categories");
       return data.data as Category[];
     } catch (error) {
-      throw new Error(getApiErrorMessage(error, i18n.t("category.genericError")));
+      throw new Error(getApiErrorMessage(error, i18n.t("category.genericError")), { cause: error });
     }
   },
 
@@ -22,7 +22,7 @@ export const categoryService = {
       const { data } = await httpClient.post("/categories", input);
       return data.data as Category;
     } catch (error) {
-      throw new Error(getApiErrorMessage(error, i18n.t("category.genericError")));
+      throw new Error(getApiErrorMessage(error, i18n.t("category.genericError")), { cause: error });
     }
   },
 
@@ -31,7 +31,7 @@ export const categoryService = {
       const { data } = await httpClient.patch(`/categories/${idCategory}`, input);
       return data.data as Category;
     } catch (error) {
-      throw new Error(getApiErrorMessage(error, i18n.t("category.genericError")));
+      throw new Error(getApiErrorMessage(error, i18n.t("category.genericError")), { cause: error });
     }
   },
 
@@ -39,7 +39,7 @@ export const categoryService = {
     try {
       await httpClient.delete(`/categories/${idCategory}`);
     } catch (error) {
-      throw new Error(getApiErrorMessage(error, i18n.t("category.genericError")));
+      throw new Error(getApiErrorMessage(error, i18n.t("category.genericError")), { cause: error });
     }
   },
 
@@ -48,7 +48,7 @@ export const categoryService = {
       const { data } = await httpClient.patch("/categories/reorder", { orderedIds });
       return data.data as Category[];
     } catch (error) {
-      throw new Error(getApiErrorMessage(error, i18n.t("category.genericError")));
+      throw new Error(getApiErrorMessage(error, i18n.t("category.genericError")), { cause: error });
     }
   },
 
@@ -57,7 +57,7 @@ export const categoryService = {
       const { data } = await httpClient.post(`/categories/${idCategory}/subcategories`, input);
       return data.data as SubCategory;
     } catch (error) {
-      throw new Error(getApiErrorMessage(error, i18n.t("category.genericError")));
+      throw new Error(getApiErrorMessage(error, i18n.t("category.genericError")), { cause: error });
     }
   },
 
@@ -73,7 +73,7 @@ export const categoryService = {
       );
       return data.data as SubCategory;
     } catch (error) {
-      throw new Error(getApiErrorMessage(error, i18n.t("category.genericError")));
+      throw new Error(getApiErrorMessage(error, i18n.t("category.genericError")), { cause: error });
     }
   },
 
@@ -81,19 +81,18 @@ export const categoryService = {
     try {
       await httpClient.delete(`/categories/${idCategory}/subcategories/${idSubCategory}`);
     } catch (error) {
-      throw new Error(getApiErrorMessage(error, i18n.t("category.genericError")));
+      throw new Error(getApiErrorMessage(error, i18n.t("category.genericError")), { cause: error });
     }
   },
 
   async reorderSubCategories(idCategory: string, orderedIds: string[]): Promise<SubCategory[]> {
     try {
-      const { data } = await httpClient.patch(
-        `/categories/${idCategory}/subcategories/reorder`,
-        { orderedIds },
-      );
+      const { data } = await httpClient.patch(`/categories/${idCategory}/subcategories/reorder`, {
+        orderedIds,
+      });
       return data.data as SubCategory[];
     } catch (error) {
-      throw new Error(getApiErrorMessage(error, i18n.t("category.genericError")));
+      throw new Error(getApiErrorMessage(error, i18n.t("category.genericError")), { cause: error });
     }
   },
 };

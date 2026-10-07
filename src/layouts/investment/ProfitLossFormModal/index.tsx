@@ -1,66 +1,69 @@
 import { useState, type SubmitEvent } from "react";
 import { useTranslation } from "react-i18next";
-import { Modal } from "@/components/molecules/Modal";
+import { LuCheck, LuTrendingDown, LuTrendingUp } from "react-icons/lu";
 import { Button } from "@/components/atoms/Button";
-import { Input } from "@/components/atoms/Input";
-import { FormField } from "@/components/molecules/FormField";
-import { Words } from "@/components/atoms/Words";
-import { ModalCloseButton } from "@/components/atoms/ModalCloseButton";
+import { Modal, ModalActions } from "@/components/molecules/Modal";
+import { InvestmentAccountSummary } from "@/layouts/investment/InvestmentAccountSummary";
+import { formatPercent } from "@/layouts/investment/investment-ui";
+import { useDialogSession } from "@/hooks/use-dialog-session";
 import { useInvestmentTransactions } from "@/hooks/use-investment-transactions";
-import { useCurrency } from "@/hooks/use-currency";
+import { useLanguage } from "@/hooks/use-language";
+import { useMoneyFormat } from "@/hooks/use-money-format";
 import { useToast } from "@/hooks/use-toast";
 import { formatNumberInput, parseFormattedNumber } from "@/utils/number-input";
-import { CURRENCIES } from "@/constants/currencies";
+import { cn } from "@/utils/cn";
 import type { Instrument, InvestmentAccount } from "@/types/instrument.types";
 
 interface ProfitLossFormModalProps {
   isOpen: boolean;
-  instrument: Instrument;
-  account: InvestmentAccount;
+  instrument: Instrument | null;
+  account: InvestmentAccount | null;
   onClose: () => void;
 }
 
-export function ProfitLossFormModal({
+const FORM_ID = "profit-loss-form";
+
+/** Sizes the centered amount input to its text (separators are narrower than digits). */
+function inputWidth(value: string): string {
+  const separators = (value.match(/[.,]/g) ?? []).length;
+  const digits = Math.max(1, value.length - separators);
+  return `${digits + separators * 0.45 + 0.3}ch`;
+}
+
+export function ProfitLossFormModal(props: ProfitLossFormModalProps) {
+  const session = useDialogSession(props.isOpen);
+  return <ProfitLossFormDialog key={session} {...props} />;
+}
+
+function ProfitLossFormDialog({
   isOpen,
-  instrument,
-  account,
+  instrument: instrumentProp,
+  account: accountProp,
   onClose,
 }: ProfitLossFormModalProps) {
-  return (
-    <Modal isOpen={isOpen} onClose={onClose}>
-      {isOpen && (
-        <ProfitLossFormFields instrument={instrument} account={account} onClose={onClose} />
-      )}
-    </Modal>
-  );
-}
-
-function ProfitLossFormFields({
-  instrument,
-  account,
-  onClose,
-}: {
-  instrument: Instrument;
-  account: InvestmentAccount;
-  onClose: () => void;
-}) {
   const { t } = useTranslation();
-  const { currency, format } = useCurrency();
-  const currencySymbol = CURRENCIES.find((option) => option.code === currency)?.symbol ?? "IDR";
+  const { language } = useLanguage();
+  const { symbol, formatNumber } = useMoneyFormat();
   const { createProfitLoss } = useInvestmentTransactions();
   const { showToast } = useToast();
 
+  // Frozen for this dialog's lifetime so the exit animation keeps the same account.
+  const [instrument] = useState(instrumentProp);
+  const [account] = useState(accountProp);
+  const recordedValue = account?.currentValue ?? 0;
   const [newValueInput, setNewValueInput] = useState(
-    formatNumberInput(String(account.currentValue)),
+    formatNumberInput(String(recordedValue).replace(".", ",")),
   );
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const newValue = parseFormattedNumber(newValueInput);
-  const delta = newValue - account.currentValue;
-  const isPositive = delta >= 0;
+  const delta = newValue - recordedValue;
+  const isLoss = delta < 0;
+  const deltaPercent = recordedValue > 0 ? (delta / recordedValue) * 100 : 0;
 
   async function handleSubmit(event: SubmitEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (!instrument || !account) return;
     if (newValue < 0) {
       showToast(t("investment.negativeValueError"), "error");
       return;
@@ -88,68 +91,110 @@ function ProfitLossFormFields({
   }
 
   return (
-    <form onSubmit={(event) => void handleSubmit(event)} className="flex flex-col gap-5">
-      <div className="flex items-start justify-between gap-2">
-        <div className="flex flex-col gap-1">
-          <Words as="h2" type="lg/bold" className="text-ink-900 dark:text-ink-50">
-            {t("investment.profitLossTitle")}
-          </Words>
-          <Words type="sm/regular" className="text-ink-500 dark:text-ink-400">
-            {instrument.nameInstrument} — {account.nameInvestmentAccount} ·{" "}
-            {t("investment.investedAmount")}: {format(account.investedAmount)}
-          </Words>
-        </div>
-        <ModalCloseButton onClose={onClose} />
-      </div>
-
-      <FormField label={t("investment.newCurrentValueLabel")} htmlFor="pl-new-value">
-        <Input
-          id="pl-new-value"
-          type="text"
-          inputMode="decimal"
-          value={newValueInput}
-          onChange={(event) => setNewValueInput(formatNumberInput(event.target.value))}
-          placeholder="0"
-          startIcon={
-            <Words type="sm/bold" as="span" className="text-ink-400 dark:text-ink-500">
-              {currencySymbol}
-            </Words>
-          }
-        />
-      </FormField>
-
-      {delta !== 0 && (
-        <div className="flex items-center gap-2 rounded-xl border border-ink-100 p-3 dark:border-ink-800">
-          <Words type="xs/regular" className="text-ink-400 dark:text-ink-500">
-            {t("investment.profitLossPreviewLabel")}
-          </Words>
-          <Words
-            type="sm/bold"
-            as="span"
-            className={
-              isPositive
-                ? "text-primary-600 dark:text-primary-400"
-                : "text-red-500 dark:text-red-400"
-            }
-          >
-            {isPositive ? "+" : ""}
-            {format(delta)}
-          </Words>
-        </div>
-      )}
-
-      <div className="flex gap-3">
-        <Button type="button" variant="secondary" className="flex-1" onClick={onClose}>
-          <Words type="sm/bold" as="span">
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      size="md"
+      title={t("investment.profitLossTitle")}
+      subtitle={t("investment.profitLossSubtitle")}
+      footer={
+        <ModalActions>
+          <Button type="button" variant="outline" onClick={onClose} disabled={isSubmitting}>
             {t("common.cancel")}
-          </Words>
-        </Button>
-        <Button type="submit" className="flex-1" isLoading={isSubmitting}>
-          <Words type="sm/bold" as="span">
-            {t("common.confirm")}
-          </Words>
-        </Button>
-      </div>
-    </form>
+          </Button>
+          <Button
+            type="submit"
+            form={FORM_ID}
+            leftIcon={<LuCheck />}
+            isLoading={isSubmitting}
+            disabled={isSubmitting || delta === 0}
+          >
+            {t("investment.saveValue")}
+          </Button>
+        </ModalActions>
+      }
+    >
+      <form
+        id={FORM_ID}
+        onSubmit={(event) => void handleSubmit(event)}
+        className="flex flex-col gap-[18px]"
+      >
+        {account && (
+          <InvestmentAccountSummary
+            title={account.nameInvestmentAccount}
+            subtitle={t("investment.recordedValue", { amount: formatNumber(account.currentValue) })}
+          />
+        )}
+
+        <label
+          htmlFor="pl-new-value"
+          className="flex cursor-text flex-col items-center gap-1 rounded-[20px] border-[1.5px] border-border bg-surface px-5 py-4 transition-[border-color,box-shadow] duration-200 focus-within:border-primary focus-within:shadow-[0_0_0_4px_color-mix(in_oklab,var(--primary)_14%,transparent)]"
+        >
+          <span className="text-[12.5px] text-text-3">{t("investment.newCurrentValueLabel")}</span>
+          <span className="flex max-w-full items-baseline justify-center gap-2">
+            <span className="shrink-0 font-display text-[18px] font-medium text-text-3">
+              {symbol}
+            </span>
+            <input
+              id="pl-new-value"
+              type="text"
+              inputMode="decimal"
+              value={newValueInput}
+              onChange={(event) => setNewValueInput(formatNumberInput(event.target.value))}
+              onFocus={(event) => event.target.select()}
+              placeholder="0"
+              autoFocus
+              style={{ width: inputWidth(newValueInput) }}
+              className="max-w-[260px] min-w-0 bg-transparent text-center font-num text-[36px] leading-[1.15] font-semibold tracking-[-0.02em] text-text tabular outline-none placeholder:text-text-3"
+            />
+          </span>
+        </label>
+
+        <div
+          className={cn(
+            "flex items-center gap-3 rounded-[18px] px-3.5 py-3 transition-colors duration-300",
+            delta === 0 ? "bg-surface-2" : isLoss ? "bg-expense-soft" : "bg-income-soft",
+          )}
+        >
+          <span
+            className={cn(
+              "flex size-9 shrink-0 items-center justify-center rounded-full bg-surface",
+              delta === 0 ? "text-text-3" : isLoss ? "text-expense-text" : "text-income-text",
+            )}
+          >
+            {isLoss ? (
+              <LuTrendingDown className="size-[18px]" />
+            ) : (
+              <LuTrendingUp className="size-[18px]" />
+            )}
+          </span>
+          {delta === 0 ? (
+            <span className="text-[13px] text-text-2">{t("investment.profitLossNoChange")}</span>
+          ) : (
+            <span
+              className={cn(
+                "flex min-w-0 flex-col gap-px",
+                isLoss ? "text-expense-text" : "text-income-text",
+              )}
+            >
+              <span className="font-num text-[14px] font-semibold tabular">
+                {isLoss
+                  ? t("investment.lossAmount", { amount: formatNumber(Math.abs(delta)) })
+                  : t("investment.profitAmount", { amount: formatNumber(delta) })}
+              </span>
+              <span className="text-[12.5px]">
+                {isLoss
+                  ? t("investment.downFromRecorded", {
+                      percent: formatPercent(deltaPercent, language),
+                    })
+                  : t("investment.upFromRecorded", {
+                      percent: formatPercent(deltaPercent, language),
+                    })}
+              </span>
+            </span>
+          )}
+        </div>
+      </form>
+    </Modal>
   );
 }

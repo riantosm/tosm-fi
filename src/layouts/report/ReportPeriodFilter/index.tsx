@@ -1,23 +1,23 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { HiOutlineCalendarDays, HiOutlineChevronLeft } from "react-icons/hi2";
-import { Words } from "@/components/atoms/Words";
-import { Button } from "@/components/atoms/Button";
-import { DateTimePickerFields } from "@/layouts/transaction/DateTimePickerModal";
-import { useLanguage } from "@/hooks/use-language";
+import { LuCalendarRange } from "react-icons/lu";
+import { IconButton } from "@/components/atoms/IconButton";
+import { Popover } from "@/components/molecules/Popover";
+import { SegmentedControl } from "@/components/molecules/SegmentedControl";
+import { DateRangeFields } from "@/layouts/transaction/DateRangeFilterPopover";
 import { useFirstTransactionMonth } from "@/hooks/use-first-transaction-month";
+import { useLanguage } from "@/hooks/use-language";
+import { formatShortDate, parseIsoDate } from "@/utils/calendar";
 import { cn } from "@/utils/cn";
+import { toIntlLocale } from "@/utils/locale";
 import { addMonths, formatMonthParam, startOfMonth } from "@/utils/month";
-import { parseIsoDateLocal, toIsoDateString } from "@/utils/report-period";
-import type { ReportPeriodFilter as ReportPeriodFilterValue, ReportPeriodPreset } from "@/types/report.types";
+import type {
+  ReportPeriodFilter as ReportPeriodFilterValue,
+  ReportPeriodPreset,
+} from "@/types/report.types";
 
 const FIXED_PRESETS: ReportPeriodPreset[] = ["today", "week", "month", "year"];
-
-type ActiveField = "from" | "to" | null;
-
-function resolveDraftDate(value: string): Date {
-  return value ? parseIsoDateLocal(value) : new Date();
-}
+const DEFAULT_PRESET: ReportPeriodPreset = "month";
 
 /** "YYYY-MM" presets for every month from the user's first transaction up to (excluding) the current month. */
 function generatePastMonthPresets(firstMonth: string, referenceDate: Date): string[] {
@@ -35,20 +35,9 @@ function generatePastMonthPresets(firstMonth: string, referenceDate: Date): stri
 
 function formatMonthLabel(month: string, locale: string): string {
   const [year, monthNum] = month.split("-").map(Number);
-  return new Intl.DateTimeFormat(locale, { month: "short" }).format(new Date(year, monthNum - 1, 1));
-}
-
-function formatDisplayDate(value: string, locale: string): string {
-  if (!value) return "-";
-  try {
-    return new Intl.DateTimeFormat(locale, {
-      day: "numeric",
-      month: "short",
-      year: "numeric",
-    }).format(parseIsoDateLocal(value));
-  } catch {
-    return value;
-  }
+  return new Intl.DateTimeFormat(locale, { month: "short" }).format(
+    new Date(year, monthNum - 1, 1),
+  );
 }
 
 interface ReportPeriodFilterProps {
@@ -56,180 +45,148 @@ interface ReportPeriodFilterProps {
   onChange: (value: ReportPeriodFilterValue) => void;
 }
 
+/**
+ * Period strip: past months (from the first transaction) + Hari/Minggu/Bulan/Tahun ini,
+ * plus "Custom Range". Phones keep only the four presets and a calendar button.
+ */
 export function ReportPeriodFilter({ value, onChange }: ReportPeriodFilterProps) {
   const { t } = useTranslation();
   const { language } = useLanguage();
-  const [isOpen, setIsOpen] = useState(false);
-  const [activeField, setActiveField] = useState<ActiveField>(null);
-  const [draftRange, setDraftRange] = useState({ from: value.dateFrom, to: value.dateTo });
-  const containerRef = useRef<HTMLDivElement>(null);
-  const presetScrollRef = useRef<HTMLDivElement>(null);
+  const locale = toIntlLocale(language);
+  const stripRef = useRef<HTMLDivElement>(null);
 
   const firstTransactionMonth = useFirstTransactionMonth();
   const pastMonthPresets = useMemo(
-    () => (firstTransactionMonth ? generatePastMonthPresets(firstTransactionMonth, new Date()) : []),
+    () =>
+      firstTransactionMonth ? generatePastMonthPresets(firstTransactionMonth, new Date()) : [],
     [firstTransactionMonth],
   );
-  const presets = useMemo(
-    () => [...pastMonthPresets.map((month): ReportPeriodPreset => `month:${month}`), ...FIXED_PRESETS],
-    [pastMonthPresets],
-  );
 
+  // Newest months sit next to "Hari ini" — start scrolled to the end.
   useEffect(() => {
-    if (!isOpen) return;
+    const strip = stripRef.current?.querySelector<HTMLElement>("[role=tablist]");
+    strip?.scrollTo({ left: strip.scrollWidth });
+  }, [pastMonthPresets.length]);
 
-    function handleClickOutside(event: MouseEvent) {
-      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
-        setIsOpen(false);
-        setActiveField(null);
-      }
-    }
+  const isCustom = value.preset === "custom";
+  const desktopOptions = [
+    ...pastMonthPresets.map((month) => ({
+      value: `month:${month}` as ReportPeriodPreset,
+      label: formatMonthLabel(month, locale),
+    })),
+    ...FIXED_PRESETS.map((preset) => ({ value: preset, label: t(`reports.period.${preset}`) })),
+  ];
+  const phoneOptions = FIXED_PRESETS.map((preset) => ({
+    value: preset,
+    label: t(`reports.periodShort.${preset}`),
+  }));
 
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, [isOpen]);
-
-  useEffect(() => {
-    presetScrollRef.current?.scrollTo({ left: presetScrollRef.current.scrollWidth });
-  }, [presets.length]);
-
-  function openCustomPopover() {
-    setDraftRange(
-      value.preset === "custom" ? { from: value.dateFrom, to: value.dateTo } : { from: "", to: "" },
-    );
-    setActiveField(null);
-    setIsOpen((prev) => !prev);
-  }
-
-  function applyCustomRange() {
-    if (!draftRange.from || !draftRange.to) return;
-    onChange({ preset: "custom", dateFrom: draftRange.from, dateTo: draftRange.to });
-    setIsOpen(false);
+  function selectPreset(preset: ReportPeriodPreset) {
+    onChange({ preset, dateFrom: "", dateTo: "" });
   }
 
   return (
-    <div className="flex min-w-0 max-w-full flex-wrap items-center gap-2">
-      <div
-        ref={presetScrollRef}
-        className="flex w-[300px] max-w-full items-center gap-1 overflow-x-auto scrollbar-hide rounded-full bg-ink-100 p-1 dark:bg-ink-800"
-      >
-        {presets.map((preset) => {
-          const isActive = value.preset === preset;
-          const label = preset.startsWith("month:")
-            ? formatMonthLabel(preset.slice("month:".length), language)
-            : t(`reports.period.${preset}`);
-          return (
-            <button
-              key={preset}
-              type="button"
-              onClick={() => onChange({ preset, dateFrom: "", dateTo: "" })}
-              className={cn(
-                "shrink-0 whitespace-nowrap rounded-full px-3.5 py-1.5 transition-colors",
-                isActive
-                  ? "bg-white text-ink-900 shadow-sm dark:bg-ink-950 dark:text-ink-50"
-                  : "text-ink-500 hover:text-ink-700 dark:text-ink-400 dark:hover:text-ink-200",
-              )}
-            >
-              <Words type={isActive ? "sm/bold" : "sm/regular"} as="span">
-                {label}
-              </Words>
-            </button>
-          );
-        })}
+    <div className="flex min-w-0 items-center gap-2.5">
+      <div ref={stripRef} className="hidden min-w-0 flex-1 lg:block">
+        <SegmentedControl
+          options={desktopOptions}
+          value={value.preset}
+          onChange={selectPreset}
+          variant="solid"
+          size="md"
+          fill
+          className="[&>button]:min-w-[88px]"
+          ariaLabel={t("reports.periodLabel")}
+        />
       </div>
-
-      <div ref={containerRef} className="relative">
-        <button
-          type="button"
-          onClick={openCustomPopover}
-          className={cn(
-            "flex items-center gap-1.5 rounded-full border px-3.5 py-1.5 transition-colors",
-            value.preset === "custom"
-              ? "border-primary-500 bg-primary-50 text-primary-700 dark:border-primary-400 dark:bg-primary-500/10 dark:text-primary-400"
-              : "border-ink-200 text-ink-500 hover:bg-ink-100 dark:border-ink-700 dark:text-ink-400 dark:hover:bg-ink-800",
-          )}
-        >
-          <HiOutlineCalendarDays className="h-4 w-4 shrink-0" />
-          <Words type={value.preset === "custom" ? "sm/bold" : "sm/regular"} as="span" className="whitespace-nowrap">
-            {value.preset === "custom"
-              ? `${formatDisplayDate(value.dateFrom, language)} - ${formatDisplayDate(value.dateTo, language)}`
-              : t("reports.period.custom")}
-          </Words>
-        </button>
-
-        {isOpen && (
-          <div className="absolute left-0 top-full z-20 mt-2 w-72 max-w-[calc(100vw-2rem)] rounded-2xl border border-ink-200 bg-white p-4 shadow-lg sm:left-auto sm:right-0 dark:border-ink-800 dark:bg-ink-900">
-            {activeField ? (
-              <div className="flex flex-col gap-3">
-                <button
-                  type="button"
-                  onClick={() => setActiveField(null)}
-                  className="flex items-center gap-1 self-start text-ink-500 dark:text-ink-400"
-                >
-                  <HiOutlineChevronLeft className="h-4 w-4" />
-                  <Words type="xs/bold" as="span">
-                    {t("common.back")}
-                  </Words>
-                </button>
-                <DateTimePickerFields
-                  dateOnly
-                  value={resolveDraftDate(activeField === "from" ? draftRange.from : draftRange.to)}
-                  title={activeField === "from" ? t("transaction.dateFrom") : t("transaction.dateTo")}
-                  onClose={() => setActiveField(null)}
-                  onConfirm={(date) => {
-                    setDraftRange((prev) => ({ ...prev, [activeField]: toIsoDateString(date) }));
-                    setActiveField(null);
-                  }}
-                />
-              </div>
-            ) : (
-              <div className="flex flex-col gap-3">
-                <Words type="xs/bold" className="uppercase tracking-wide text-ink-400 dark:text-ink-500">
-                  {t("reports.period.custom")}
-                </Words>
-
-                <div className="flex flex-col gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setActiveField("from")}
-                    className="flex items-center justify-between rounded-lg border border-ink-200 px-3 py-2 transition-colors hover:bg-ink-50 dark:border-ink-700 dark:hover:bg-ink-800"
-                  >
-                    <Words type="xs/regular" className="text-ink-500 dark:text-ink-400">
-                      {t("transaction.dateFrom")}
-                    </Words>
-                    <Words type="sm/bold" as="span" className="text-ink-900 dark:text-ink-50">
-                      {formatDisplayDate(draftRange.from, language)}
-                    </Words>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setActiveField("to")}
-                    className="flex items-center justify-between rounded-lg border border-ink-200 px-3 py-2 transition-colors hover:bg-ink-50 dark:border-ink-700 dark:hover:bg-ink-800"
-                  >
-                    <Words type="xs/regular" className="text-ink-500 dark:text-ink-400">
-                      {t("transaction.dateTo")}
-                    </Words>
-                    <Words type="sm/bold" as="span" className="text-ink-900 dark:text-ink-50">
-                      {formatDisplayDate(draftRange.to, language)}
-                    </Words>
-                  </button>
-                </div>
-
-                <Button
-                  type="button"
-                  onClick={applyCustomRange}
-                  disabled={!draftRange.from || !draftRange.to}
-                  className="w-full"
-                >
-                  <Words type="sm/bold" as="span">
-                    {t("transaction.applyDateFilter")}
-                  </Words>
-                </Button>
-              </div>
-            )}
-          </div>
-        )}
+      <div className="min-w-0 flex-1 lg:hidden">
+        <SegmentedControl
+          options={phoneOptions}
+          value={value.preset}
+          onChange={selectPreset}
+          variant="solid"
+          size="sm"
+          fill
+          ariaLabel={t("reports.periodLabel")}
+        />
       </div>
+      <CustomRangeButton
+        value={value}
+        isActive={isCustom}
+        label={
+          isCustom
+            ? `${formatShortDate(parseIsoDate(value.dateFrom), locale)} – ${formatShortDate(parseIsoDate(value.dateTo), locale)}`
+            : t("reports.period.custom")
+        }
+        onApply={(from, to) => onChange({ preset: "custom", dateFrom: from, dateTo: to })}
+        onClear={() => selectPreset(DEFAULT_PRESET)}
+      />
     </div>
+  );
+}
+
+interface CustomRangeButtonProps {
+  value: ReportPeriodFilterValue;
+  isActive: boolean;
+  label: string;
+  onApply: (from: string, to: string) => void;
+  onClear: () => void;
+}
+
+function CustomRangeButton({ value, isActive, label, onApply, onClear }: CustomRangeButtonProps) {
+  const { t } = useTranslation();
+  const [isOpen, setIsOpen] = useState(false);
+
+  const trigger = (
+    <>
+      <button
+        type="button"
+        onClick={() => setIsOpen((prev) => !prev)}
+        aria-expanded={isOpen}
+        className={cn(
+          "pressable hidden h-[46px] max-w-[260px] shrink-0 items-center gap-2 rounded-full border px-4 text-[13.5px] font-medium shadow-card transition-colors lg:flex",
+          isActive
+            ? "border-primary bg-primary-soft text-primary-text"
+            : "border-transparent bg-surface text-text-2 hover:text-text",
+        )}
+      >
+        <LuCalendarRange className="size-4 shrink-0" />
+        <span className="truncate">{label}</span>
+      </button>
+      <IconButton
+        label={t("reports.period.custom")}
+        icon={<LuCalendarRange />}
+        variant="surface"
+        size="md"
+        tooltip={false}
+        className={cn("lg:hidden", isActive && "bg-primary-soft text-primary-text")}
+        onClick={() => setIsOpen((prev) => !prev)}
+      />
+    </>
+  );
+
+  return (
+    <Popover
+      isOpen={isOpen}
+      onClose={() => setIsOpen(false)}
+      trigger={trigger}
+      align="end"
+      panelClassName="w-[400px] p-5"
+    >
+      {isOpen && (
+        <DateRangeFields
+          value={isActive ? { from: value.dateFrom, to: value.dateTo } : { from: "", to: "" }}
+          onClose={() => setIsOpen(false)}
+          onApply={(range) => {
+            if (range.from) onApply(range.from, range.to || range.from);
+            setIsOpen(false);
+          }}
+          onClear={() => {
+            onClear();
+            setIsOpen(false);
+          }}
+        />
+      )}
+    </Popover>
   );
 }

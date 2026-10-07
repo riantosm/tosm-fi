@@ -1,14 +1,16 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { HiOutlineChevronLeft, HiOutlineChevronRight } from "react-icons/hi2";
-import { Modal } from "@/components/molecules/Modal";
+import { AnimatePresence, m } from "motion/react";
+import { LuCheck, LuChevronLeft, LuChevronRight, LuClock } from "react-icons/lu";
 import { Button } from "@/components/atoms/Button";
-import { Input } from "@/components/atoms/Input";
-import { Words } from "@/components/atoms/Words";
-import { Tooltip } from "@/components/atoms/Tooltip";
+import { IconButton } from "@/components/atoms/IconButton";
 import { ModalCloseButton } from "@/components/atoms/ModalCloseButton";
+import { Chip } from "@/components/molecules/Chip";
+import { Modal, ModalActions } from "@/components/molecules/Modal";
+import { SegmentedControl } from "@/components/molecules/SegmentedControl";
 import { useLanguage } from "@/hooks/use-language";
 import { cn } from "@/utils/cn";
+import { toIntlLocale } from "@/utils/locale";
 
 interface DateTimePickerModalProps {
   isOpen: boolean;
@@ -17,18 +19,20 @@ interface DateTimePickerModalProps {
   onConfirm: (date: Date) => void;
 }
 
-const WEEKDAY_REFERENCE_SUNDAY = new Date(2023, 0, 1);
+const EASE = [0.22, 1, 0.36, 1] as const;
+/** A Monday, so weekday labels start on Monday (design: Sen … Min). */
+const WEEKDAY_REFERENCE_MONDAY = new Date(2023, 0, 2);
 
 function getWeekdayLabels(locale: string): string[] {
   try {
-    const formatter = new Intl.DateTimeFormat(locale, { weekday: "narrow" });
+    const formatter = new Intl.DateTimeFormat(locale, { weekday: "short" });
     return Array.from({ length: 7 }, (_, index) => {
-      const date = new Date(WEEKDAY_REFERENCE_SUNDAY);
-      date.setDate(WEEKDAY_REFERENCE_SUNDAY.getDate() + index);
-      return formatter.format(date);
+      const date = new Date(WEEKDAY_REFERENCE_MONDAY);
+      date.setDate(WEEKDAY_REFERENCE_MONDAY.getDate() + index);
+      return formatter.format(date).replace(".", "");
     });
   } catch {
-    return ["S", "M", "T", "W", "T", "F", "S"];
+    return ["M", "T", "W", "T", "F", "S", "S"];
   }
 }
 
@@ -51,15 +55,41 @@ function to24Hour(hour12: number, meridiem: "AM" | "PM"): number {
   return meridiem === "PM" ? normalized + 12 : normalized;
 }
 
+function isSameDay(a: Date, b: Date): boolean {
+  return (
+    a.getFullYear() === b.getFullYear() &&
+    a.getMonth() === b.getMonth() &&
+    a.getDate() === b.getDate()
+  );
+}
+
+/** Six-week Monday-first grid for the month of `viewDate`, including leading/trailing days. */
+function buildMonthGrid(viewDate: Date): Date[] {
+  const year = viewDate.getFullYear();
+  const month = viewDate.getMonth();
+  const offset = (new Date(year, month, 1).getDay() + 6) % 7;
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const cells = Math.ceil((offset + daysInMonth) / 7) * 7;
+  return Array.from({ length: cells }, (_, index) => new Date(year, month, index - offset + 1));
+}
+
 export function DateTimePickerModal({
   isOpen,
   value,
   onClose,
   onConfirm,
 }: DateTimePickerModalProps) {
+  const { t } = useTranslation();
   return (
-    <Modal isOpen={isOpen} onClose={onClose} size="md">
-      {isOpen && <DateTimePickerFields value={value} onClose={onClose} onConfirm={onConfirm} />}
+    <Modal isOpen={isOpen} onClose={onClose} size="sm" title={t("transaction.dateTimeLabel")}>
+      {isOpen && (
+        <DateTimePickerFields
+          value={value}
+          onClose={onClose}
+          onConfirm={onConfirm}
+          showHeader={false}
+        />
+      )}
     </Modal>
   );
 }
@@ -67,6 +97,8 @@ export function DateTimePickerModal({
 interface DateTimePickerFieldsProps extends Omit<DateTimePickerModalProps, "isOpen"> {
   dateOnly?: boolean;
   title?: string;
+  /** Renders its own title + close row (when embedded in a popover/dialog without a Modal title). */
+  showHeader?: boolean;
 }
 
 export function DateTimePickerFields({
@@ -75,38 +107,51 @@ export function DateTimePickerFields({
   onConfirm,
   dateOnly = false,
   title,
+  showHeader = true,
 }: DateTimePickerFieldsProps) {
   const { t } = useTranslation();
   const { language } = useLanguage();
+  const locale = toIntlLocale(language);
 
-  const [viewDate, setViewDate] = useState(value);
+  const [viewDate, setViewDate] = useState(
+    () => new Date(value.getFullYear(), value.getMonth(), 1),
+  );
+  const [direction, setDirection] = useState(0);
   const [selectedDate, setSelectedDate] = useState(value);
   const [hour12, setHour12] = useState(() => to12Hour(value.getHours()).hour12);
   const [minute, setMinute] = useState(value.getMinutes());
   const [meridiem, setMeridiem] = useState<"AM" | "PM">(() => to12Hour(value.getHours()).meridiem);
 
-  const weekdayLabels = getWeekdayLabels(language);
-  const year = viewDate.getFullYear();
-  const month = viewDate.getMonth();
-  const firstWeekday = new Date(year, month, 1).getDay();
-  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const weekdayLabels = getWeekdayLabels(locale);
+  const grid = buildMonthGrid(viewDate);
+  const today = new Date();
 
   function goToMonth(offset: number) {
-    setViewDate(new Date(year, month + offset, 1));
+    setDirection(offset);
+    setViewDate((current) => new Date(current.getFullYear(), current.getMonth() + offset, 1));
+  }
+
+  function selectDay(day: Date) {
+    setSelectedDate(day);
+    if (day.getMonth() !== viewDate.getMonth()) {
+      setDirection(day < viewDate ? -1 : 1);
+      setViewDate(new Date(day.getFullYear(), day.getMonth(), 1));
+    }
   }
 
   function goToToday() {
     const now = new Date();
-    setViewDate(now);
+    setDirection(0);
+    setViewDate(new Date(now.getFullYear(), now.getMonth(), 1));
     setSelectedDate(now);
   }
 
-  function isSameDay(a: Date, b: Date): boolean {
-    return (
-      a.getFullYear() === b.getFullYear() &&
-      a.getMonth() === b.getMonth() &&
-      a.getDate() === b.getDate()
-    );
+  function goToNow() {
+    goToToday();
+    const { hour12: nextHour, meridiem: nextMeridiem } = to12Hour(new Date().getHours());
+    setHour12(nextHour);
+    setMinute(new Date().getMinutes());
+    setMeridiem(nextMeridiem);
   }
 
   function handleConfirm() {
@@ -123,148 +168,154 @@ export function DateTimePickerFields({
     onClose();
   }
 
+  const timeBoxClass =
+    "h-11 w-12 rounded-control bg-surface text-center font-num text-[18px] font-semibold text-text tabular outline-none transition-shadow focus:shadow-[0_0_0_3px_color-mix(in_oklab,var(--primary)_25%,transparent)] [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none";
+
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex items-center justify-between">
-        <Words as="h2" type="lg/bold" className="text-ink-900 dark:text-ink-50">
-          {title ?? t("transaction.selectDateTimeTitle")}
-        </Words>
-        <div className="flex shrink-0 items-center gap-1">
-          <button
-            type="button"
-            onClick={goToToday}
-            className="rounded-full bg-ink-100 px-3 py-1 text-ink-600 transition-colors hover:bg-ink-200 dark:bg-ink-800 dark:text-ink-300 dark:hover:bg-ink-700"
-          >
-            <Words type="xs/bold" as="span">
-              {t("transaction.today")}
-            </Words>
-          </button>
+      {showHeader && (
+        <div className="flex items-center justify-between gap-3">
+          <h2 className="truncate font-display text-[19px] font-semibold text-text">
+            {title ?? t("transaction.dateTimeLabel")}
+          </h2>
           <ModalCloseButton onClose={onClose} />
-        </div>
-      </div>
-
-      <div className="flex items-center justify-between">
-        <Tooltip content="Previous month">
-          <button
-            type="button"
-            onClick={() => goToMonth(-1)}
-            aria-label="Previous month"
-            className="flex h-8 w-8 items-center justify-center rounded-full text-ink-400 hover:bg-ink-100 dark:hover:bg-ink-800"
-          >
-            <HiOutlineChevronLeft className="h-4 w-4" />
-          </button>
-        </Tooltip>
-        <Words type="sm/bold" className="text-ink-900 dark:text-ink-50">
-          {formatMonthYear(viewDate, language)}
-        </Words>
-        <Tooltip content="Next month">
-          <button
-            type="button"
-            onClick={() => goToMonth(1)}
-            aria-label="Next month"
-            className="flex h-8 w-8 items-center justify-center rounded-full text-ink-400 hover:bg-ink-100 dark:hover:bg-ink-800"
-          >
-            <HiOutlineChevronRight className="h-4 w-4" />
-          </button>
-        </Tooltip>
-      </div>
-
-      <div className="grid grid-cols-7 gap-1">
-        {weekdayLabels.map((label, index) => (
-          <Words
-            key={index}
-            type="xs/bold"
-            className="py-1 text-center text-ink-400 dark:text-ink-500"
-          >
-            {label}
-          </Words>
-        ))}
-
-        {Array.from({ length: firstWeekday }, (_, index) => (
-          <div key={`empty-${index}`} />
-        ))}
-
-        {Array.from({ length: daysInMonth }, (_, index) => {
-          const day = index + 1;
-          const dayDate = new Date(year, month, day);
-          const isSelected = isSameDay(dayDate, selectedDate);
-
-          return (
-            <button
-              key={day}
-              type="button"
-              onClick={() => setSelectedDate(dayDate)}
-              className={cn(
-                "flex h-9 w-9 items-center justify-center rounded-full transition-colors",
-                isSelected
-                  ? "bg-primary-500 text-white dark:bg-primary-500 dark:text-ink-950"
-                  : "text-ink-700 hover:bg-ink-100 dark:text-ink-300 dark:hover:bg-ink-800",
-              )}
-            >
-              <Words type="sm/regular" as="span">
-                {day}
-              </Words>
-            </button>
-          );
-        })}
-      </div>
-
-      {!dateOnly && (
-        <div className="flex items-center justify-center gap-2 border-t border-ink-100 pt-4 dark:border-ink-800">
-          <Input
-            type="number"
-            min={1}
-            max={12}
-            value={hour12}
-            onChange={(event) => setHour12(Number(event.target.value))}
-            className="w-14 text-center"
-          />
-          <Words type="lg/bold" className="text-ink-400 dark:text-ink-500">
-            :
-          </Words>
-          <Input
-            type="number"
-            min={0}
-            max={59}
-            value={minute}
-            onChange={(event) => setMinute(Number(event.target.value))}
-            className="w-14 text-center"
-          />
-
-          <div className="flex overflow-hidden rounded-xl border border-ink-200 dark:border-ink-700">
-            {(["AM", "PM"] as const).map((option) => (
-              <button
-                key={option}
-                type="button"
-                onClick={() => setMeridiem(option)}
-                className={cn(
-                  "px-3 py-2.5 transition-colors",
-                  meridiem === option
-                    ? "bg-primary-500 text-white dark:bg-primary-500 dark:text-ink-950"
-                    : "text-ink-500 hover:bg-ink-100 dark:text-ink-400 dark:hover:bg-ink-800",
-                )}
-              >
-                <Words type="xs/bold" as="span">
-                  {option}
-                </Words>
-              </button>
-            ))}
-          </div>
         </div>
       )}
 
-      <div className="flex gap-3">
-        <Button type="button" variant="secondary" className="flex-1" onClick={onClose}>
-          <Words type="sm/bold" as="span">
-            {t("common.cancel")}
-          </Words>
-        </Button>
-        <Button type="button" className="flex-1" onClick={handleConfirm}>
-          <Words type="sm/bold" as="span">
-            {t("common.confirm")}
-          </Words>
-        </Button>
+      <div className="flex items-center justify-between gap-2">
+        <IconButton
+          label={t("common.previous")}
+          icon={<LuChevronLeft />}
+          size="sm"
+          tooltip={false}
+          onClick={() => goToMonth(-1)}
+        />
+        <span className="font-display text-[16px] font-semibold text-text first-letter:uppercase">
+          {formatMonthYear(viewDate, locale)}
+        </span>
+        <IconButton
+          label={t("common.next")}
+          icon={<LuChevronRight />}
+          size="sm"
+          tooltip={false}
+          onClick={() => goToMonth(1)}
+        />
       </div>
+
+      <div className="overflow-hidden">
+        <div className="grid grid-cols-7 pb-1">
+          {weekdayLabels.map((label, index) => (
+            <span key={index} className="py-1 text-center text-[12px] font-medium text-text-3">
+              {label}
+            </span>
+          ))}
+        </div>
+        <AnimatePresence mode="popLayout" initial={false} custom={direction}>
+          <m.div
+            key={`${viewDate.getFullYear()}-${viewDate.getMonth()}`}
+            custom={direction}
+            initial={{ opacity: 0, x: direction * 24 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: direction * -24 }}
+            transition={{ duration: 0.25, ease: EASE }}
+            className="grid grid-cols-7 gap-y-1"
+          >
+            {grid.map((day) => {
+              const isOutside = day.getMonth() !== viewDate.getMonth();
+              const isSelected = isSameDay(day, selectedDate);
+              const isToday = isSameDay(day, today);
+              return (
+                <button
+                  key={day.toISOString()}
+                  type="button"
+                  onClick={() => selectDay(day)}
+                  aria-pressed={isSelected}
+                  className="group flex h-10 items-center justify-center"
+                >
+                  <span
+                    className={cn(
+                      "flex size-10 items-center justify-center rounded-full text-[14px] tabular transition-[background-color,color,transform] duration-200",
+                      isSelected
+                        ? "scale-100 bg-primary font-semibold text-primary-fg shadow-[0_4px_12px_color-mix(in_oklab,var(--primary)_35%,transparent)]"
+                        : cn(
+                            "group-hover:bg-surface-2",
+                            isOutside ? "text-text-3/60" : "font-medium text-text",
+                            isToday &&
+                              "font-semibold text-primary-text ring-1 ring-primary/40 ring-inset",
+                          ),
+                    )}
+                  >
+                    {day.getDate()}
+                  </span>
+                </button>
+              );
+            })}
+          </m.div>
+        </AnimatePresence>
+      </div>
+
+      {!dateOnly && (
+        <div className="flex items-center gap-2 rounded-[16px] bg-surface-2 py-2.5 pr-2.5 pl-4">
+          <LuClock className="size-4 shrink-0 text-text-3" />
+          <span className="flex-1 text-[13.5px] font-medium text-text-2">
+            {t("transaction.timeLabel")}
+          </span>
+          <input
+            type="number"
+            inputMode="numeric"
+            min={1}
+            max={12}
+            value={String(hour12).padStart(2, "0")}
+            aria-label={t("transaction.hourLabel")}
+            onChange={(event) => setHour12(Number(event.target.value))}
+            onFocus={(event) => event.target.select()}
+            className={timeBoxClass}
+          />
+          <span className="font-num text-[18px] font-semibold text-text-3">:</span>
+          <input
+            type="number"
+            inputMode="numeric"
+            min={0}
+            max={59}
+            value={String(minute).padStart(2, "0")}
+            aria-label={t("transaction.minuteLabel")}
+            onChange={(event) => setMinute(Number(event.target.value))}
+            onFocus={(event) => event.target.select()}
+            className={timeBoxClass}
+          />
+          <SegmentedControl
+            options={[
+              { value: "AM", label: "AM" },
+              { value: "PM", label: "PM" },
+            ]}
+            value={meridiem}
+            onChange={setMeridiem}
+            className="ml-1 bg-surface"
+            activeClassName="text-primary-text"
+            thumbClassName="bg-primary-soft shadow-none"
+          />
+        </div>
+      )}
+
+      <div className="flex flex-wrap gap-2">
+        <Chip size="sm" onClick={goToToday}>
+          {t("transaction.today")}
+        </Chip>
+        {!dateOnly && (
+          <Chip size="sm" onClick={goToNow}>
+            {t("transaction.now")}
+          </Chip>
+        )}
+      </div>
+
+      <ModalActions className="pt-1">
+        <Button type="button" variant="outline" onClick={onClose}>
+          {t("common.cancel")}
+        </Button>
+        <Button type="button" leftIcon={<LuCheck />} onClick={handleConfirm}>
+          {t("common.select")}
+        </Button>
+      </ModalActions>
     </div>
   );
 }

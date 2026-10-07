@@ -1,46 +1,59 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { AnimatePresence, m } from "motion/react";
 import {
-  HiChevronLeft,
-  HiChevronRight,
-  HiOutlineArrowsRightLeft,
-  HiOutlinePlus,
-} from "react-icons/hi2";
-import { DashboardLayout } from "@/components/templates/DashboardLayout";
+  LuArrowLeftRight,
+  LuChartPie,
+  LuCoins,
+  LuPlus,
+  LuSearch,
+  LuTrash2,
+  LuTrendingUp,
+} from "react-icons/lu";
+import { Button } from "@/components/atoms/Button";
+import { IconButton } from "@/components/atoms/IconButton";
 import { IconLoader } from "@/components/atoms/IconLoader";
-import { Words } from "@/components/atoms/Words";
-import { Tooltip } from "@/components/atoms/Tooltip";
-import { AnimatedHeight } from "@/components/atoms/AnimatedHeight";
-import { NetWorthChart } from "@/layouts/investment/NetWorthChart";
+import { Reveal } from "@/components/atoms/Reveal";
+import { Skeleton } from "@/components/atoms/Skeleton";
+import { Card } from "@/components/molecules/Card";
+import { PageHeader } from "@/components/molecules/PageHeader";
+import { NetWorthChart, NetWorthHeroEmpty } from "@/layouts/investment/NetWorthChart";
 import { InstrumentFilterChips } from "@/layouts/investment/InstrumentFilterChips";
-import { InstrumentCard } from "@/layouts/investment/InstrumentCard";
-import { AddInstrumentCard } from "@/layouts/investment/AddInstrumentCard";
+import {
+  AddInstrumentTile,
+  InstrumentCard,
+  InstrumentListRow,
+} from "@/layouts/investment/InstrumentCard";
 import { InstrumentViewModeToggle } from "@/layouts/investment/InstrumentViewModeToggle";
 import {
-  InstrumentSortDropdown,
+  InstrumentSortMenu,
   type InstrumentSortOption,
-} from "@/layouts/investment/InstrumentSortDropdown";
+} from "@/layouts/investment/InstrumentSortMenu";
+import { InstrumentDetailView } from "@/layouts/investment/InstrumentDetailView";
 import { InstrumentFormModal } from "@/layouts/investment/InstrumentFormModal";
-import { InstrumentDetailPanel } from "@/layouts/investment/InstrumentDetailPanel";
 import { InvestmentAccountFormModal } from "@/layouts/investment/InvestmentAccountFormModal";
 import { WithdrawalFormModal } from "@/layouts/investment/WithdrawalFormModal";
 import { TransferFormModal } from "@/layouts/investment/TransferFormModal";
 import { ProfitLossFormModal } from "@/layouts/investment/ProfitLossFormModal";
-import { InvestmentTransactionToolbar } from "@/layouts/investment/InvestmentTransactionToolbar";
+import {
+  InvestmentFilterChips,
+  type InvestmentTypeFilter,
+} from "@/layouts/investment/InvestmentTransactionToolbar";
 import { InvestmentTransactionList } from "@/layouts/investment/InvestmentTransactionList";
 import { EditInvestmentTransactionModal } from "@/layouts/investment/EditInvestmentTransactionModal";
+import { TransactionSearchField } from "@/layouts/transaction/TransactionToolbar";
 import { useInstruments } from "@/hooks/use-instruments";
 import { useInstrumentViewMode } from "@/hooks/use-instrument-view-mode";
 import { useInvestmentTransactions } from "@/hooks/use-investment-transactions";
 import { useFirstInvestmentDate } from "@/hooks/use-first-investment-date";
 import { useNetWorthTimeline } from "@/hooks/use-net-worth-timeline";
 import { useConfirmDialog } from "@/hooks/use-confirm-dialog";
+import { DESKTOP_QUERY, useMediaQuery } from "@/hooks/use-media-query";
 import { useToast } from "@/hooks/use-toast";
 import { getInstrumentTotals, getPortfolioTotals } from "@/utils/investment";
 import { resolveNetWorthPeriod, type NetWorthPeriodPreset } from "@/utils/net-worth-period";
 import { cn } from "@/utils/cn";
 import type {
-  Instrument,
   InstrumentInput,
   InvestmentAccount,
   InvestmentAccountInput,
@@ -49,12 +62,24 @@ import type {
   InvestmentTimelinesResult,
   InvestmentTransaction,
   InvestmentTransactionListParams,
-  InvestmentTransactionType,
   NetWorthTimelineGranularity,
 } from "@/types/investment-transaction.types";
 
 const SEARCH_DEBOUNCE_MS = 2000;
 const PAGE_SIZE = 20;
+const EASE = [0.22, 1, 0.36, 1] as const;
+const VIEW_MOTION = {
+  initial: { opacity: 0, y: 8 },
+  animate: { opacity: 1, y: 0 },
+  exit: { opacity: 0, y: -4 },
+  transition: { duration: 0.25, ease: EASE },
+} as const;
+/** Phones have no granularity toggle — each period gets a sensible bucket size. */
+const PHONE_GRANULARITY: Record<NetWorthPeriodPreset, NetWorthTimelineGranularity> = {
+  month: "day",
+  year: "month",
+  all: "month",
+};
 
 interface AccountModalState {
   idInstrument: string;
@@ -81,17 +106,15 @@ export function InvestmentPage() {
   } = useInstruments();
   const { investmentTransactions, queryInvestmentTransactions, fetchTimelines } =
     useInvestmentTransactions();
-  const isLoading = status === "loading";
   const { confirm } = useConfirmDialog();
   const { showToast } = useToast();
+  const isDesktop = useMediaQuery(DESKTOP_QUERY);
 
-  const scrollRef = useRef<HTMLDivElement>(null);
   const { viewMode: instrumentViewMode, setViewMode: setInstrumentViewMode } =
     useInstrumentViewMode();
   const [instrumentSortOption, setInstrumentSortOption] = useState<InstrumentSortOption>("amount");
   const [selectedInstrumentIds, setSelectedInstrumentIds] = useState<string[]>([]);
-  const [selectedInstrumentId, setSelectedInstrumentId] = useState<string | null>(null);
-  const [selectedAccountId, setSelectedAccountId] = useState<string | null>(null);
+  const [detailInstrumentId, setDetailInstrumentId] = useState<string | null>(null);
   const [editingTransaction, setEditingTransaction] = useState<InvestmentTransaction | null>(null);
 
   const [instrumentModalState, setInstrumentModalState] = useState<{
@@ -108,18 +131,18 @@ export function InvestmentPage() {
   const [profitLossState, setProfitLossState] = useState<AccountActionState | null>(null);
   const [isTransferOpen, setIsTransferOpen] = useState(false);
 
-  // const [hasAutoSelected, setHasAutoSelected] = useState(false);
-
   const [netWorthGranularity, setNetWorthGranularity] =
-    useState<NetWorthTimelineGranularity>("day");
-  const [netWorthPeriod, setNetWorthPeriod] = useState<NetWorthPeriodPreset>("all");
+    useState<NetWorthTimelineGranularity>("month");
+  const [netWorthPeriod, setNetWorthPeriod] = useState<NetWorthPeriodPreset>("year");
 
   const [searchQuery, setSearchQuery] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
-  const [typeFilter, setTypeFilter] = useState<InvestmentTransactionType | "all">("all");
+  const [isPhoneSearchOpen, setIsPhoneSearchOpen] = useState(false);
+  const [typeFilter, setTypeFilter] = useState<InvestmentTypeFilter>("all");
   const [instrumentFilter, setInstrumentFilter] = useState("all");
 
   const [displayedTransactions, setDisplayedTransactions] = useState<InvestmentTransaction[]>([]);
+  const [totalTransactions, setTotalTransactions] = useState<number | null>(null);
   const [completedQueryKey, setCompletedQueryKey] = useState<string | null>(null);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(0);
@@ -144,11 +167,9 @@ export function InvestmentPage() {
   const [completedTimelinesFor, setCompletedTimelinesFor] = useState(investmentTransactions);
   const isTimelinesLoading = completedTimelinesFor !== investmentTransactions;
 
-  // investmentTransactions is only ever a mutation signal here (see the
-  // filterKey/prevTransactions effect below) — its reference changes after
-  // any create/edit/delete anywhere in the app, so refetching timelines when
-  // it changes keeps every sparkline/history chart in sync without a
-  // dedicated invalidation call site.
+  // investmentTransactions is only ever a mutation signal here — its reference
+  // changes after any create/edit/delete anywhere in the app, so refetching
+  // timelines when it changes keeps every sparkline/history chart in sync.
   useEffect(() => {
     let cancelled = false;
     void fetchTimelines().then((result) => {
@@ -161,85 +182,35 @@ export function InvestmentPage() {
     };
   }, [fetchTimelines, investmentTransactions]);
 
-  const [accountTransactions, setAccountTransactions] = useState<InvestmentTransaction[]>([]);
-  const [completedAccountTransactionsFor, setCompletedAccountTransactionsFor] = useState<{
-    selectedAccountId: string | null;
-    investmentTransactions: InvestmentTransaction[];
-  } | null>(null);
-  const isAccountTransactionsLoading =
-    Boolean(selectedAccountId) &&
-    (completedAccountTransactionsFor?.selectedAccountId !== selectedAccountId ||
-      completedAccountTransactionsFor?.investmentTransactions !== investmentTransactions);
-
-  // Only the selected account's ledger rows are ever rendered (by
-  // InvestmentTransactionList inside InstrumentDetailPanel, gated on
-  // selectedAccount being set), so fetch just that scope instead of
-  // filtering it out of a full-history array. No fetch when nothing's
-  // selected — accountTransactions just goes unused until then.
-  useEffect(() => {
-    if (!selectedAccountId) return;
-    let cancelled = false;
-    void queryInvestmentTransactions({
-      idInvestmentAccount: selectedAccountId,
-      sort: "dateDesc",
-    }).then((result) => {
-      if (cancelled) return;
-      setAccountTransactions(result.investmentTransactions);
-      setCompletedAccountTransactionsFor({ selectedAccountId, investmentTransactions });
-    });
-    return () => {
-      cancelled = true;
-    };
-  }, [selectedAccountId, queryInvestmentTransactions, investmentTransactions]);
-
   useEffect(() => {
     const timer = setTimeout(() => setDebouncedSearch(searchQuery.trim()), SEARCH_DEBOUNCE_MS);
     return () => clearTimeout(timer);
   }, [searchQuery]);
 
-  function selectInstrument(id: string | null) {
-    setSelectedInstrumentId(id);
-    setSelectedAccountId(null);
+  const detailInstrument = detailInstrumentId
+    ? (instruments.find((instrument) => instrument.idInstrument === detailInstrumentId) ?? null)
+    : null;
+
+  function openDetail(idInstrument: string | null) {
+    setDetailInstrumentId(idInstrument);
+    window.scrollTo({ top: 0 });
   }
 
-  // Auto-select the first instrument only once, right after instruments
-  // first become available — never re-trigger this after the user
-  // deliberately closes the detail panel (which also sets id to null).
-  // if (!hasAutoSelected && instruments.length > 0) {
-  //   setHasAutoSelected(true);
-  //   if (selectedInstrumentId === null) selectInstrument(instruments[0].idInstrument);
-  // } else if (
-  //   selectedInstrumentId !== null &&
-  //   instruments.length > 0 &&
-  //   !instruments.some((instrument) => instrument.idInstrument === selectedInstrumentId)
-  // ) {
-  //   selectInstrument(instruments[0].idInstrument);
-  // }
-
+  // Drop ids of instruments that no longer exist (e.g. deleted from the detail view).
+  const activeFilterIds = useMemo(
+    () =>
+      selectedInstrumentIds.filter((id) =>
+        instruments.some((instrument) => instrument.idInstrument === id),
+      ),
+    [selectedInstrumentIds, instruments],
+  );
   const visibleInstruments = useMemo(
     () =>
-      selectedInstrumentIds.length === 0
+      activeFilterIds.length === 0
         ? instruments
-        : instruments.filter((instrument) =>
-            selectedInstrumentIds.includes(instrument.idInstrument),
-          ),
-    [instruments, selectedInstrumentIds],
+        : instruments.filter((instrument) => activeFilterIds.includes(instrument.idInstrument)),
+    [instruments, activeFilterIds],
   );
-
-  // If the instrument filter narrows the visible set and the currently
-  // selected/detailed instrument falls outside of it, close the detail panel
-  // instead of leaving it open on a now-hidden instrument.
-  if (
-    selectedInstrumentId !== null &&
-    visibleInstruments.length > 0 &&
-    !visibleInstruments.some((instrument) => instrument.idInstrument === selectedInstrumentId)
-  ) {
-    selectInstrument(null);
-  }
-
-  const selectedInstrument =
-    visibleInstruments.find((instrument) => instrument.idInstrument === selectedInstrumentId) ??
-    null;
 
   const portfolioTotals = useMemo(
     () => getPortfolioTotals(visibleInstruments),
@@ -266,21 +237,24 @@ export function InvestmentPage() {
     netWorthGranularity,
     resolvedNetWorthPeriod.dateFrom,
     resolvedNetWorthPeriod.dateTo,
-    selectedInstrumentIds,
+    activeFilterIds,
   );
+
+  function handlePeriodChange(period: NetWorthPeriodPreset) {
+    setNetWorthPeriod(period);
+    if (!isDesktop) setNetWorthGranularity(PHONE_GRANULARITY[period]);
+  }
 
   const editingInstrument = instrumentModalState?.idInstrument
     ? (instruments.find(
         (instrument) => instrument.idInstrument === instrumentModalState.idInstrument,
       ) ?? null)
     : null;
-
   const accountModalInstrument = accountModalState
     ? (instruments.find(
         (instrument) => instrument.idInstrument === accountModalState.idInstrument,
       ) ?? null)
     : null;
-
   const editingAccount = accountModalState?.idInvestmentAccount
     ? (accountModalInstrument?.investmentAccounts.find(
         (account) => account.idInvestmentAccount === accountModalState.idInvestmentAccount,
@@ -300,18 +274,6 @@ export function InvestmentPage() {
   const withdrawalTarget = resolveAccountAction(withdrawalState);
   const profitLossTarget = resolveAccountAction(profitLossState);
 
-  function scrollByAmount(amount: number) {
-    scrollRef.current?.scrollBy({ left: amount, behavior: "smooth" });
-  }
-
-  function openCreateInstrumentModal() {
-    setInstrumentModalState({ idInstrument: null });
-  }
-
-  function openEditInstrumentModal(instrument: Instrument) {
-    setInstrumentModalState({ idInstrument: instrument.idInstrument });
-  }
-
   async function handleInstrumentSubmit(input: InstrumentInput) {
     setIsSubmittingInstrument(true);
     try {
@@ -319,7 +281,7 @@ export function InvestmentPage() {
         await editInstrument(instrumentModalState.idInstrument, input);
       } else {
         const created = await createInstrument(input);
-        selectInstrument(created.idInstrument);
+        openDetail(created.idInstrument);
       }
       setInstrumentModalState(null);
     } catch (error) {
@@ -330,12 +292,14 @@ export function InvestmentPage() {
   }
 
   async function handleDeleteInstrument(id: string) {
+    const instrument = instruments.find((item) => item.idInstrument === id);
     const confirmed = await confirm({
-      title: t("investment.deleteConfirmTitle"),
+      title: t("investment.deleteConfirmTitle", { name: instrument?.nameInstrument ?? "" }),
       description: t("investment.deleteConfirmDescription"),
-      confirmLabel: t("investment.deleteConfirmAction"),
+      confirmLabel: t("investment.deleteInstrument"),
       cancelLabel: t("common.cancel"),
       destructive: true,
+      icon: LuTrash2,
     });
     if (!confirmed) return;
 
@@ -343,6 +307,7 @@ export function InvestmentPage() {
     try {
       await deleteInstrument(id);
       setInstrumentModalState(null);
+      if (detailInstrumentId === id) openDetail(null);
     } catch (error) {
       showToast(error instanceof Error ? error.message : t("investment.genericError"), "error");
     } finally {
@@ -351,9 +316,9 @@ export function InvestmentPage() {
   }
 
   function openCreateAccountModal() {
-    if (!selectedInstrument) return;
+    if (!detailInstrument) return;
     setAccountModalState({
-      idInstrument: selectedInstrument.idInstrument,
+      idInstrument: detailInstrument.idInstrument,
       idInvestmentAccount: null,
     });
   }
@@ -389,11 +354,14 @@ export function InvestmentPage() {
   async function handleDeleteAccount(id: string) {
     if (!accountModalState) return;
     const confirmed = await confirm({
-      title: t("investment.deleteAccountConfirmTitle"),
+      title: t("investment.deleteAccountConfirmTitle", {
+        name: editingAccount?.nameInvestmentAccount ?? "",
+      }),
       description: t("investment.deleteAccountConfirmDescription"),
-      confirmLabel: t("investment.deleteAccountConfirmAction"),
+      confirmLabel: t("investment.deleteAccount"),
       cancelLabel: t("common.cancel"),
       destructive: true,
+      icon: LuTrash2,
     });
     if (!confirmed) return;
 
@@ -444,6 +412,7 @@ export function InvestmentPage() {
         page === 1 ? result.investmentTransactions : [...prev, ...result.investmentTransactions],
       );
       setTotalPages(result.totalPages ?? 0);
+      setTotalTransactions(result.total);
       setCompletedQueryKey(queryKey);
     });
 
@@ -472,225 +441,338 @@ export function InvestmentPage() {
 
   const hasActiveTransactionFilter =
     typeFilter !== "all" || instrumentFilter !== "all" || Boolean(searchQuery);
+  const isInitialLoading = status !== "loaded" && instruments.length === 0;
+  const isEmpty = status === "loaded" && instruments.length === 0;
+  const accountCount = instruments.reduce(
+    (sum, instrument) =>
+      sum + instrument.investmentAccounts.filter((account) => !account.isDeleted).length,
+    0,
+  );
+  const subtitle = isEmpty
+    ? t("investment.noInstruments")
+    : `${t("investment.instrumentCount", { count: instruments.length })} · ${t("investment.accountsShort", { count: accountCount })}`;
+  const openCreateInstrument = () => setInstrumentModalState({ idInstrument: null });
+
+  const transactionList = (
+    <InvestmentTransactionList
+      transactions={displayedTransactions}
+      instruments={instruments}
+      emptyMessage={
+        hasActiveTransactionFilter
+          ? t("investment.noDataForFilter")
+          : t("investment.allTransactionsEmpty")
+      }
+      onEditTransaction={setEditingTransaction}
+      isLoading={isQueryLoading && displayedTransactions.length === 0}
+      isRefreshing={isQueryLoading && displayedTransactions.length > 0}
+    />
+  );
 
   return (
-    <DashboardLayout>
-      <div className="flex flex-col gap-6">
-        <div className="flex items-center justify-between gap-2">
-          <Words as="h1" type="2xl/bold" className="text-ink-900 dark:text-ink-50">
-            {t("nav.investment")}
-          </Words>
-
-          <div className="flex shrink-0 items-center gap-2">
-            <button
-              type="button"
-              onClick={() => setIsTransferOpen(true)}
-              className="flex items-center gap-1.5 rounded-full border border-ink-200 px-3 py-1.5 text-ink-500 transition-colors hover:bg-ink-100 dark:border-ink-800 dark:text-ink-400 dark:hover:bg-ink-800"
-            >
-              <HiOutlineArrowsRightLeft className="h-4 w-4" />
-              <Words type="xs/bold" as="span">
-                {t("investment.transferTitle")}
-              </Words>
-            </button>
-            <button
-              type="button"
-              onClick={openCreateInstrumentModal}
-              className="flex items-center gap-1.5 rounded-full border border-ink-200 px-3 py-1.5 text-ink-500 transition-colors hover:bg-ink-100 dark:border-ink-800 dark:text-ink-400 dark:hover:bg-ink-800"
-            >
-              <HiOutlinePlus className="h-4 w-4" />
-              <Words type="xs/bold" as="span">
-                {t("investment.addInstrument")}
-              </Words>
-            </button>
-          </div>
-        </div>
-
-        {instruments.length === 0 ? (
-          isLoading ? (
-            <div className="flex flex-col items-center gap-2 rounded-2xl border border-dashed border-ink-200 p-10 text-center dark:border-ink-800">
-              <IconLoader className="h-6 w-6 animate-spin text-primary-500" />
-            </div>
-          ) : (
-            <div className="flex flex-col items-center gap-2 rounded-2xl border border-dashed border-ink-200 p-10 text-center dark:border-ink-800">
-              <Words type="sm/bold" className="text-ink-500 dark:text-ink-400">
-                {t("investment.noInstruments")}
-              </Words>
-              <Words type="xs/regular" className="max-w-sm text-ink-400 dark:text-ink-500">
-                {t("investment.noInstrumentsHint")}
-              </Words>
-            </div>
-          )
+    <>
+      <AnimatePresence mode="wait" initial={false}>
+        {detailInstrument ? (
+          <m.div key={`detail-${detailInstrument.idInstrument}`} {...VIEW_MOTION}>
+            <InstrumentDetailView
+              instrument={detailInstrument}
+              instruments={instruments}
+              timelines={timelines}
+              isTimelinesLoading={isTimelinesLoading}
+              onBack={() => openDetail(null)}
+              onEditInstrument={() =>
+                setInstrumentModalState({ idInstrument: detailInstrument.idInstrument })
+              }
+              onAddAccount={openCreateAccountModal}
+              onEditAccount={openEditAccountModal}
+              onWithdrawAccount={(account) =>
+                setWithdrawalState({
+                  idInstrument: account.idInstrument,
+                  idInvestmentAccount: account.idInvestmentAccount,
+                })
+              }
+              onProfitLossAccount={(account) =>
+                setProfitLossState({
+                  idInstrument: account.idInstrument,
+                  idInvestmentAccount: account.idInvestmentAccount,
+                })
+              }
+              onEditTransaction={setEditingTransaction}
+            />
+          </m.div>
         ) : (
-          <>
-            {instruments.length > 1 && (
-              <InstrumentFilterChips
-                instruments={instruments}
-                selectedIds={selectedInstrumentIds}
-                onChange={setSelectedInstrumentIds}
-              />
-            )}
-
-            <NetWorthChart
-              data={netWorthTimeline}
-              total={portfolioTotals.currentValue}
-              granularity={netWorthGranularity}
-              onGranularityChange={setNetWorthGranularity}
-              period={netWorthPeriod}
-              onPeriodChange={setNetWorthPeriod}
-              isLoading={isNetWorthLoading}
+          <m.div key="overview" {...VIEW_MOTION} className="flex flex-col gap-4 lg:gap-5">
+            <PageHeader
+              title={t("nav.investment")}
+              subtitle={subtitle}
+              showSubtitleOnMobile={!isEmpty}
+              actions={
+                <>
+                  {!isEmpty && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      leftIcon={<LuArrowLeftRight />}
+                      onClick={() => setIsTransferOpen(true)}
+                    >
+                      {t("investment.transferShort")}
+                    </Button>
+                  )}
+                  <Button type="button" leftIcon={<LuPlus />} onClick={openCreateInstrument}>
+                    {t("investment.addInstrument")}
+                  </Button>
+                </>
+              }
+              mobileActions={
+                !isEmpty && (
+                  <>
+                    <IconButton
+                      label={t("investment.transferTitle")}
+                      icon={<LuArrowLeftRight />}
+                      variant="surface"
+                      size="lg"
+                      tooltip={false}
+                      onClick={() => setIsTransferOpen(true)}
+                    />
+                    <IconButton
+                      label={t("investment.addInstrument")}
+                      icon={<LuPlus />}
+                      variant="primary"
+                      size="lg"
+                      tooltip={false}
+                      onClick={openCreateInstrument}
+                    />
+                  </>
+                )
+              }
             />
 
-            <div className="flex flex-col gap-3">
-              <div className="flex items-center justify-between gap-2">
-                <Words type="sm/bold" className="text-ink-700 dark:text-ink-300">
-                  {t("investment.instrumentLabel")}
-                </Words>
-                <div className="flex shrink-0 items-center gap-1">
-                  <div
-                    className={cn(
-                      "flex items-center gap-1 overflow-hidden transition-all duration-300 ease-in-out",
-                      instrumentViewMode === "grid"
-                        ? "w-0 opacity-0 pointer-events-none"
-                        : "w-[68px] opacity-100",
-                    )}
-                  >
-                    <Tooltip content={t("common.previous")}>
-                      <button
-                        type="button"
-                        onClick={() => scrollByAmount(-240)}
-                        aria-label={t("common.previous")}
-                        className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-ink-200 text-ink-500 transition-colors hover:bg-ink-100 dark:border-ink-800 dark:text-ink-400 dark:hover:bg-ink-800"
-                      >
-                        <HiChevronLeft className="h-4 w-4" />
-                      </button>
-                    </Tooltip>
-                    <Tooltip content={t("common.next")}>
-                      <button
-                        type="button"
-                        onClick={() => scrollByAmount(240)}
-                        aria-label={t("common.next")}
-                        className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-ink-200 text-ink-500 transition-colors hover:bg-ink-100 dark:border-ink-800 dark:text-ink-400 dark:hover:bg-ink-800"
-                      >
-                        <HiChevronRight className="h-4 w-4" />
-                      </button>
-                    </Tooltip>
-                  </div>
-                  <InstrumentSortDropdown
-                    value={instrumentSortOption}
-                    onChange={setInstrumentSortOption}
-                  />
-                  <InstrumentViewModeToggle
-                    value={instrumentViewMode}
-                    onChange={setInstrumentViewMode}
-                  />
+            {isEmpty ? (
+              <>
+                <Reveal immediate>
+                  <NetWorthHeroEmpty />
+                </Reveal>
+                <Reveal delay={0.05}>
+                  <Card className="flex min-h-[360px] flex-col items-center justify-center gap-3 px-6 py-12 text-center lg:min-h-[440px]">
+                    <EmptyIllustration />
+                    <h2 className="mt-3 font-display text-[20px] font-semibold text-text lg:text-[22px]">
+                      {t("investment.emptyTitle")}
+                    </h2>
+                    <p className="max-w-[460px] text-[13.5px] leading-[1.55] text-text-2">
+                      {t("investment.noInstrumentsHint")}
+                    </p>
+                    <Button
+                      type="button"
+                      leftIcon={<LuPlus />}
+                      onClick={openCreateInstrument}
+                      className="mt-2"
+                    >
+                      {t("investment.addInstrument")}
+                    </Button>
+                  </Card>
+                </Reveal>
+              </>
+            ) : isInitialLoading ? (
+              <div className="flex flex-col gap-4 lg:gap-5">
+                <Skeleton className="h-[330px] rounded-[24px] lg:h-[393px] lg:rounded-[28px]" />
+                <div className="grid gap-3 lg:grid-cols-3 lg:gap-4">
+                  {Array.from({ length: 3 }, (_, index) => (
+                    <Skeleton key={index} className="h-[168px] rounded-card" />
+                  ))}
                 </div>
               </div>
+            ) : (
+              <>
+                <Reveal immediate>
+                  <NetWorthChart
+                    data={netWorthTimeline}
+                    totals={portfolioTotals}
+                    granularity={netWorthGranularity}
+                    onGranularityChange={setNetWorthGranularity}
+                    period={netWorthPeriod}
+                    onPeriodChange={handlePeriodChange}
+                    isLoading={isNetWorthLoading}
+                  />
+                </Reveal>
 
-              <AnimatedHeight className="relative">
-                <div
-                  ref={scrollRef}
-                  className={cn(
-                    "gap-3 pb-1 transition-all duration-300 ease-in-out",
-                    instrumentViewMode === "grid"
-                      ? "grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5"
-                      : "flex overflow-x-auto scrollbar-hide",
-                  )}
-                >
-                  {sortedInstruments.map((instrument) => (
-                    <InstrumentCard
-                      key={instrument.idInstrument}
-                      instrument={instrument}
-                      sparkline={timelines.instruments[instrument.idInstrument] ?? []}
-                      isSelected={instrument.idInstrument === selectedInstrumentId}
-                      layout={instrumentViewMode}
-                      onClick={() => {
-                        if (instrument.idInstrument === selectedInstrumentId) {
-                          selectInstrument(null);
-                        } else {
-                          selectInstrument(instrument.idInstrument);
-                        }
-                      }}
-                    />
-                  ))}
-                  <AddInstrumentCard onClick={openCreateInstrumentModal} layout={instrumentViewMode} />
-                </div>
-
-                {(isLoading || isTimelinesLoading) && (
-                  <div className="absolute inset-0 flex items-start justify-center rounded-2xl bg-white/60 pt-6 backdrop-blur-[2px] dark:bg-ink-950/60">
-                    <IconLoader className="h-6 w-6 animate-spin text-primary-500" />
+                {/* Desktop: filter chips + sort + view toggle, then cards */}
+                <Reveal delay={0.04} className="hidden flex-col gap-4 lg:flex">
+                  <div className="flex items-center justify-between gap-4">
+                    {instruments.length > 1 ? (
+                      <InstrumentFilterChips
+                        instruments={instruments}
+                        selectedIds={activeFilterIds}
+                        onChange={setSelectedInstrumentIds}
+                      />
+                    ) : (
+                      <span />
+                    )}
+                    <div className="flex shrink-0 items-center gap-2">
+                      <InstrumentSortMenu
+                        value={instrumentSortOption}
+                        onChange={setInstrumentSortOption}
+                      />
+                      <InstrumentViewModeToggle
+                        value={instrumentViewMode}
+                        onChange={setInstrumentViewMode}
+                      />
+                    </div>
                   </div>
-                )}
-              </AnimatedHeight>
-            </div>
+                  <AnimatePresence mode="wait" initial={false}>
+                    <m.div
+                      key={instrumentViewMode}
+                      {...VIEW_MOTION}
+                      className={cn(
+                        "transition-opacity duration-300",
+                        isTimelinesLoading && "opacity-80",
+                        instrumentViewMode === "grid"
+                          ? "grid grid-cols-3 gap-4 xl:grid-cols-4"
+                          : "-mx-2 flex snap-x gap-4 overflow-x-auto px-2 pt-1 pb-3 scrollbar-hide",
+                      )}
+                    >
+                      {sortedInstruments.map((instrument) => (
+                        <InstrumentCard
+                          key={instrument.idInstrument}
+                          instrument={instrument}
+                          sparkline={timelines.instruments[instrument.idInstrument] ?? []}
+                          layout={instrumentViewMode}
+                          onOpen={() => openDetail(instrument.idInstrument)}
+                        />
+                      ))}
+                      <AddInstrumentTile
+                        onClick={openCreateInstrument}
+                        layout={instrumentViewMode}
+                      />
+                    </m.div>
+                  </AnimatePresence>
+                </Reveal>
 
-            {selectedInstrument && (
-              <InstrumentDetailPanel
-                instrument={selectedInstrument}
-                instruments={instruments}
-                timelines={timelines}
-                accountTransactions={accountTransactions}
-                isAccountTransactionsLoading={isAccountTransactionsLoading}
-                selectedAccountId={selectedAccountId}
-                onSelectAccount={setSelectedAccountId}
-                onEdit={() => openEditInstrumentModal(selectedInstrument)}
-                onClose={() => selectInstrument(null)}
-                onAddAccount={openCreateAccountModal}
-                onEditAccount={openEditAccountModal}
-                onWithdrawAccount={(account) =>
-                  setWithdrawalState({
-                    idInstrument: account.idInstrument,
-                    idInvestmentAccount: account.idInvestmentAccount,
-                  })
-                }
-                onProfitLossAccount={(account) =>
-                  setProfitLossState({
-                    idInstrument: account.idInstrument,
-                    idInvestmentAccount: account.idInvestmentAccount,
-                  })
-                }
-                onEditTransaction={setEditingTransaction}
-                isLoading={isLoading || isTimelinesLoading}
-              />
-            )}
-
-            <div className="flex flex-col gap-3">
-              <Words type="sm/bold" className="text-ink-700 dark:text-ink-300">
-                {t("investment.allTransactionsTitle")}
-              </Words>
-
-              <InvestmentTransactionToolbar
-                instruments={instruments}
-                searchQuery={searchQuery}
-                onSearchChange={setSearchQuery}
-                typeFilter={typeFilter}
-                onTypeFilterChange={setTypeFilter}
-                instrumentFilter={instrumentFilter}
-                onInstrumentFilterChange={setInstrumentFilter}
-              />
-
-              <InvestmentTransactionList
-                transactions={displayedTransactions}
-                instruments={instruments}
-                emptyMessage={
-                  hasActiveTransactionFilter
-                    ? t("investment.noDataForFilter")
-                    : t("investment.allTransactionsEmpty")
-                }
-                onEditTransaction={setEditingTransaction}
-                isLoading={isQueryLoading}
-              />
-
-              {hasMore && (
-                <div ref={sentinelRef} className="flex justify-center py-4">
-                  {isLoadingMore && (
-                    <IconLoader className="h-5 w-5 animate-spin text-primary-500" />
+                {/* Phone: instrument list card */}
+                <Reveal delay={0.04} className="flex flex-col gap-2.5 lg:hidden">
+                  <div className="flex items-center justify-between px-1">
+                    <h2 className="font-display text-[17px] font-semibold text-text">
+                      {t("investment.instrumentLabel")}
+                    </h2>
+                    <InstrumentSortMenu
+                      value={instrumentSortOption}
+                      onChange={setInstrumentSortOption}
+                      variant="text"
+                    />
+                  </div>
+                  {instruments.length > 1 && (
+                    <InstrumentFilterChips
+                      instruments={instruments}
+                      selectedIds={activeFilterIds}
+                      onChange={setSelectedInstrumentIds}
+                    />
                   )}
-                </div>
-              )}
-            </div>
-          </>
+                  <Card padding="none" className="flex flex-col px-4 pb-1">
+                    <div className="flex flex-col divide-y divide-border">
+                      {sortedInstruments.map((instrument) => (
+                        <InstrumentListRow
+                          key={instrument.idInstrument}
+                          instrument={instrument}
+                          sparkline={timelines.instruments[instrument.idInstrument] ?? []}
+                          onOpen={() => openDetail(instrument.idInstrument)}
+                        />
+                      ))}
+                    </div>
+                    <button
+                      type="button"
+                      onClick={openCreateInstrument}
+                      className="flex items-center justify-center gap-2 border-t border-border py-3.5 text-[13.5px] font-semibold text-primary-text"
+                    >
+                      <LuPlus className="size-4" />
+                      {t("investment.addInstrument")}
+                    </button>
+                  </Card>
+                </Reveal>
+
+                {/* Ledger */}
+                <Reveal delay={0.06} className="flex flex-col gap-2.5 lg:gap-0">
+                  <div className="flex items-center justify-between gap-3 px-1 lg:hidden">
+                    <h2 className="font-display text-[17px] font-semibold text-text">
+                      {t("investment.ledgerTitleShort")}
+                    </h2>
+                    <IconButton
+                      label={t("investment.searchPlaceholder")}
+                      icon={<LuSearch />}
+                      variant="surface"
+                      size="sm"
+                      tooltip={false}
+                      className={cn(isPhoneSearchOpen && "bg-primary-soft text-primary-text")}
+                      onClick={() => setIsPhoneSearchOpen((open) => !open)}
+                    />
+                  </div>
+                  <AnimatePresence initial={false}>
+                    {isPhoneSearchOpen && (
+                      <m.div
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: "auto" }}
+                        exit={{ opacity: 0, height: 0 }}
+                        transition={{ duration: 0.22, ease: EASE }}
+                        className="overflow-hidden lg:hidden"
+                      >
+                        <TransactionSearchField
+                          value={searchQuery}
+                          onChange={setSearchQuery}
+                          placeholder={t("investment.searchPlaceholder")}
+                          autoFocus
+                        />
+                      </m.div>
+                    )}
+                  </AnimatePresence>
+                  <InvestmentFilterChips
+                    typeFilter={typeFilter}
+                    onTypeFilterChange={setTypeFilter}
+                    instruments={instruments}
+                    instrumentFilter={instrumentFilter}
+                    onInstrumentFilterChange={setInstrumentFilter}
+                    surface="page"
+                    className="lg:hidden"
+                  />
+
+                  <Card className="flex flex-col gap-3 px-4 py-3 lg:gap-4 lg:p-6">
+                    <div className="hidden items-center justify-between gap-4 lg:flex">
+                      <div className="flex min-w-0 flex-col gap-0.5">
+                        <h2 className="font-display text-[19px] font-semibold text-text">
+                          {t("investment.allTransactionsTitle")}
+                        </h2>
+                        {totalTransactions !== null && (
+                          <span className="text-[12.5px] text-text-3">
+                            {t("investment.transactionCount", { count: totalTransactions })}
+                          </span>
+                        )}
+                      </div>
+                      <TransactionSearchField
+                        value={searchQuery}
+                        onChange={setSearchQuery}
+                        placeholder={t("investment.searchPlaceholder")}
+                        className="w-[300px] border-transparent bg-surface-2"
+                      />
+                    </div>
+                    <InvestmentFilterChips
+                      typeFilter={typeFilter}
+                      onTypeFilterChange={setTypeFilter}
+                      instruments={instruments}
+                      instrumentFilter={instrumentFilter}
+                      onInstrumentFilterChange={setInstrumentFilter}
+                      className="hidden lg:flex"
+                    />
+                    {transactionList}
+                    {hasMore && (
+                      <div ref={sentinelRef} className="flex justify-center py-3">
+                        {isLoadingMore && (
+                          <IconLoader className="size-5 animate-spin text-primary" />
+                        )}
+                      </div>
+                    )}
+                  </Card>
+                </Reveal>
+              </>
+            )}
+          </m.div>
         )}
-      </div>
+      </AnimatePresence>
 
       <InstrumentFormModal
         isOpen={instrumentModalState !== null}
@@ -704,6 +786,7 @@ export function InvestmentPage() {
 
       <InvestmentAccountFormModal
         isOpen={accountModalState !== null}
+        instrument={accountModalInstrument}
         account={editingAccount}
         isSubmitting={isSubmittingAccount}
         isDeleting={isDeletingAccount}
@@ -712,23 +795,19 @@ export function InvestmentPage() {
         onDelete={handleDeleteAccount}
       />
 
-      {withdrawalTarget && (
-        <WithdrawalFormModal
-          isOpen={withdrawalState !== null}
-          instrument={withdrawalTarget.instrument}
-          account={withdrawalTarget.account}
-          onClose={() => setWithdrawalState(null)}
-        />
-      )}
+      <WithdrawalFormModal
+        isOpen={withdrawalTarget !== null}
+        instrument={withdrawalTarget?.instrument ?? null}
+        account={withdrawalTarget?.account ?? null}
+        onClose={() => setWithdrawalState(null)}
+      />
 
-      {profitLossTarget && (
-        <ProfitLossFormModal
-          isOpen={profitLossState !== null}
-          instrument={profitLossTarget.instrument}
-          account={profitLossTarget.account}
-          onClose={() => setProfitLossState(null)}
-        />
-      )}
+      <ProfitLossFormModal
+        isOpen={profitLossTarget !== null}
+        instrument={profitLossTarget?.instrument ?? null}
+        account={profitLossTarget?.account ?? null}
+        onClose={() => setProfitLossState(null)}
+      />
 
       <TransferFormModal isOpen={isTransferOpen} onClose={() => setIsTransferOpen(false)} />
 
@@ -738,6 +817,31 @@ export function InvestmentPage() {
         instruments={instruments}
         onClose={() => setEditingTransaction(null)}
       />
-    </DashboardLayout>
+    </>
+  );
+}
+
+/** Three tilted instrument tiles (Investasi · Kosong). */
+function EmptyIllustration() {
+  const tiles: { icon: typeof LuCoins; color: string; className: string }[] = [
+    { icon: LuCoins, color: "#C29A4E", className: "-rotate-[8deg] translate-x-3 translate-y-2" },
+    { icon: LuTrendingUp, color: "#5FA398", className: "z-10 -translate-y-1" },
+    { icon: LuChartPie, color: "#8B8EE0", className: "rotate-[8deg] -translate-x-3 translate-y-1" },
+  ];
+  return (
+    <div className="flex items-center" aria-hidden="true">
+      {tiles.map(({ icon: Icon, color, className }, index) => (
+        <span
+          key={index}
+          className={cn(
+            "flex size-[68px] items-center justify-center rounded-[18px] text-white shadow-pop transition-transform duration-500 hover:scale-105",
+            className,
+          )}
+          style={{ backgroundColor: color, opacity: index === 2 ? 0.9 : 1 }}
+        >
+          <Icon className="size-7" />
+        </span>
+      ))}
+    </div>
   );
 }

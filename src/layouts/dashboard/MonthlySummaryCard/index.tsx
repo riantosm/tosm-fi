@@ -1,19 +1,15 @@
-import type { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
-import {
-  HiChevronRight,
-  HiOutlineArrowDownCircle,
-  HiOutlineArrowUpCircle,
-  HiOutlineArrowsRightLeft,
-  HiOutlineChartPie,
-  HiOutlineListBullet,
-} from "react-icons/hi2";
-import { IconLoader } from "@/components/atoms/IconLoader";
-import { Words } from "@/components/atoms/Words";
-import { useCurrency } from "@/hooks/use-currency";
-import type { DashboardSummary } from "@/types/report.types";
 import { useNavigate } from "react-router-dom";
+import { m } from "motion/react";
+import { Skeleton } from "@/components/atoms/Skeleton";
+import { Card } from "@/components/molecules/Card";
+import { SectionHead } from "@/components/molecules/SectionHead";
 import { ROUTES } from "@/constants/routes";
+import { useLanguage } from "@/hooks/use-language";
+import { useMoneyFormat } from "@/hooks/use-money-format";
+import { toIntlLocale } from "@/utils/locale";
+import type { DashboardSummary } from "@/types/report.types";
+import { cn } from "@/utils/cn";
 
 interface MonthlySummaryCardProps {
   summary: DashboardSummary | null;
@@ -21,128 +17,158 @@ interface MonthlySummaryCardProps {
   isLoading: boolean;
 }
 
-function SummaryRow({
-  icon,
-  iconClassName,
-  label,
-  value,
-  valueClassName,
-  onClick,
-}: {
-  icon: ReactNode;
-  iconClassName: string;
+const EASE = [0.22, 1, 0.36, 1] as const;
+const MAX_BAR_HEIGHT = 150;
+const MIN_BAR_HEIGHT = 6;
+
+interface Column {
+  key: string;
   label: string;
-  value: string;
+  value: number;
+  barClassName: string;
   valueClassName: string;
   onClick: () => void;
-}) {
-  return (
-    <button
-      className="flex items-center gap-3 hover:bg-ink-100 dark:hover:bg-ink-800 rounded-lg p-2"
-      onClick={onClick}
-    >
-      <div
-        className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full ${iconClassName}`}
-      >
-        {icon}
-      </div>
-      <Words type="sm/regular" className="flex-1 text-ink-600 dark:text-ink-300 text-left">
-        {label}
-      </Words>
-      <Words type="sm/bold" className={valueClassName}>
-        {value}
-      </Words>
-      <HiChevronRight className="h-4 w-4 shrink-0 text-ink-300 dark:text-ink-600" />
-    </button>
-  );
 }
 
-function StatItem({ icon, label, value }: { icon: React.ReactNode; label: string; value: string }) {
-  return (
-    <div className="flex flex-1 items-center gap-2 px-5 first:pl-0 last:pr-0">
-      <div className="shrink-0 text-ink-400 dark:text-ink-500">{icon}</div>
-      <div className="flex min-w-0 flex-col gap-0.5">
-        <Words type="xxs/regular" className="truncate text-ink-500 dark:text-ink-400">
-          {label}
-        </Words>
-        <Words type="xs/bold" className="truncate text-ink-900 dark:text-ink-50">
-          {value}
-        </Words>
-      </div>
-    </div>
-  );
-}
-
+/** "Ringkasan · <bulan>" — income / expense / investment bars + this month's net. */
 export function MonthlySummaryCard({
   summary,
   transactionCount,
   isLoading,
 }: MonthlySummaryCardProps) {
   const { t } = useTranslation();
-  const { format } = useCurrency();
   const navigate = useNavigate();
+  const { language } = useLanguage();
+  const { formatCompact, formatSigned } = useMoneyFormat();
 
   const income = summary?.monthly.income ?? 0;
   const expense = summary?.monthly.expense ?? 0;
   const savings = summary?.monthly.savings ?? 0;
   const investmentInflow = summary?.monthly.investmentInflow ?? 0;
+  const isInitialLoading = isLoading && !summary;
+
+  const monthLabel = new Intl.DateTimeFormat(toIntlLocale(language), {
+    month: "long",
+    year: "numeric",
+  }).format(new Date());
+
+  const columns: Column[] = [
+    {
+      key: "income",
+      label: t("dashboard.income"),
+      value: income,
+      barClassName: "bg-income",
+      valueClassName: "text-income-text",
+      onClick: () => navigate(ROUTES.TRANSACTIONS, { state: { typeFilter: "income" } }),
+    },
+    {
+      key: "expense",
+      label: t("dashboard.expense"),
+      value: expense,
+      barClassName: "bg-expense",
+      valueClassName: "text-expense-text",
+      onClick: () => navigate(ROUTES.TRANSACTIONS, { state: { typeFilter: "expense" } }),
+    },
+    {
+      key: "investment",
+      label: t("nav.investment"),
+      value: investmentInflow,
+      barClassName: "bg-investment",
+      valueClassName: "text-investment-text",
+      onClick: () => navigate(ROUTES.INVESTMENT),
+    },
+  ];
+  const max = Math.max(...columns.map((column) => Math.abs(column.value)), 1);
+  const isNegative = savings < 0;
 
   return (
-    <div className="flex h-full flex-col gap-2 rounded-2xl border border-ink-200 bg-white p-5 dark:border-ink-800 dark:bg-ink-900">
-      <Words type="base/bold" className="text-ink-900 dark:text-ink-50">
-        {t("dashboard.monthlySummaryTitle")}
-      </Words>
+    <Card className="flex h-full flex-col gap-[18px]">
+      <SectionHead
+        eyebrow={t("dashboard.summaryEyebrow")}
+        title={<span className="first-letter:uppercase">{monthLabel}</span>}
+      />
 
-      <div className="relative flex flex-col gap-2">
-        <div className="flex flex-col gap-1">
-          <SummaryRow
-            icon={
-              <HiOutlineArrowDownCircle className="h-4.5 w-4.5 text-primary-600 dark:text-primary-400" />
-            }
-            iconClassName="bg-primary-100 dark:bg-primary-500/15"
-            label={t("dashboard.income")}
-            value={format(income)}
-            valueClassName="text-primary-600 dark:text-primary-400"
-            onClick={() => navigate(ROUTES.TRANSACTIONS, { state: { typeFilter: "income" } })}
-          />
-          <SummaryRow
-            icon={<HiOutlineArrowUpCircle className="h-4.5 w-4.5 text-red-600 dark:text-red-400" />}
-            iconClassName="bg-red-100 dark:bg-red-500/15"
-            label={t("dashboard.expense")}
-            value={format(expense)}
-            valueClassName="text-red-600 dark:text-red-400"
-            onClick={() => navigate(ROUTES.TRANSACTIONS, { state: { typeFilter: "expense" } })}
-          />
-          <SummaryRow
-            icon={<HiOutlineChartPie className="h-4.5 w-4.5 text-amber-600 dark:text-amber-400" />}
-            iconClassName="bg-amber-100 dark:bg-amber-500/15"
-            label={t("nav.investment")}
-            value={format(investmentInflow)}
-            valueClassName="text-amber-600 dark:text-amber-400"
-            onClick={() => navigate(ROUTES.INVESTMENT)}
-          />
-        </div>
-
-        <div className="flex items-center rounded-xl bg-ink-50 py-2.5 dark:bg-ink-800/50 px-4">
-          <StatItem
-            icon={<HiOutlineArrowsRightLeft className="h-4 w-4" />}
-            label={t("dashboard.difference")}
-            value={format(savings)}
-          />
-          <div className="h-8 w-px shrink-0 bg-ink-200 dark:bg-ink-800" />
-          <StatItem
-            icon={<HiOutlineListBullet className="h-4 w-4" />}
-            label={t("dashboard.totalTransactions")}
-            value={String(transactionCount)}
-          />
-        </div>
-
-        {isLoading && (
-          <div className="absolute inset-0 flex items-center justify-center rounded-2xl bg-white/60 backdrop-blur-[2px] dark:bg-ink-950/60">
-            <IconLoader className="h-6 w-6 animate-spin text-primary-500" />
-          </div>
+      <div
+        className={cn(
+          "flex flex-col transition-opacity duration-300",
+          isLoading && !isInitialLoading && "opacity-60",
         )}
+      >
+        <div className="flex h-[200px] items-end gap-2 border-b border-border px-1 sm:gap-5 sm:px-2">
+          {columns.map((column, index) => {
+            const height =
+              column.value > 0
+                ? Math.max(MIN_BAR_HEIGHT, (Math.abs(column.value) / max) * MAX_BAR_HEIGHT)
+                : 0;
+            return (
+              <button
+                key={column.key}
+                type="button"
+                onClick={column.onClick}
+                aria-label={column.label}
+                className="group flex h-full min-w-0 flex-1 flex-col items-center justify-end gap-2 rounded-t-[14px] outline-offset-4"
+              >
+                {isInitialLoading ? (
+                  <Skeleton
+                    className={cn(
+                      "w-12 rounded-[12px_12px_4px_4px] sm:w-14",
+                      ["h-[120px]", "h-[80px]", "h-[44px]"][index],
+                    )}
+                  />
+                ) : (
+                  <>
+                    <span
+                      className={cn(
+                        "font-num text-[14px] font-semibold tabular",
+                        column.valueClassName,
+                      )}
+                    >
+                      {formatCompact(column.value)}
+                    </span>
+                    <m.span
+                      className={cn(
+                        "block w-12 rounded-[12px_12px_4px_4px] transition-[filter,transform] duration-200 group-hover:brightness-[1.04] group-hover:-translate-y-0.5 sm:w-14",
+                        column.barClassName,
+                      )}
+                      initial={{ height: 0 }}
+                      animate={{ height }}
+                      transition={{ duration: 0.7, ease: EASE, delay: index * 0.06 }}
+                    />
+                  </>
+                )}
+              </button>
+            );
+          })}
+        </div>
+        <div className="flex gap-2 px-1 pt-2.5 sm:gap-5 sm:px-2">
+          {columns.map((column) => (
+            <span
+              key={column.key}
+              className="min-w-0 flex-1 truncate text-center text-[12px] text-text-3"
+            >
+              {column.label}
+            </span>
+          ))}
+        </div>
       </div>
-    </div>
+
+      {isInitialLoading ? (
+        <Skeleton className="h-11 rounded-control" />
+      ) : (
+        <div
+          className={cn(
+            "mt-auto flex items-center justify-between gap-3 rounded-control px-3.5 py-3",
+            isNegative ? "bg-expense-soft text-expense-text" : "bg-income-soft text-income-text",
+          )}
+        >
+          <span className="truncate text-[12.5px]">
+            {t("dashboard.differenceFooter", { count: transactionCount })}
+          </span>
+          <span className="shrink-0 font-num text-[16px] font-semibold tabular">
+            {formatSigned(savings)}
+          </span>
+        </div>
+      )}
+    </Card>
   );
 }

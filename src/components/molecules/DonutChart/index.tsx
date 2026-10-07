@@ -50,10 +50,14 @@ export function DonutChart({
   const innerRadius = outerRadius - thickness;
   const effectiveActiveId = activeId ?? hoveredId;
 
-  const activeDatum = effectiveActiveId ? data.find((item) => item.id === effectiveActiveId) : undefined;
+  const activeDatum = effectiveActiveId
+    ? data.find((item) => item.id === effectiveActiveId)
+    : undefined;
   const displayLabel = activeDatum ? activeDatum.label : centerLabel;
   const displayValue = activeDatum
-    ? (formatValue ? formatValue(activeDatum.value) : String(activeDatum.value))
+    ? formatValue
+      ? formatValue(activeDatum.value)
+      : String(activeDatum.value)
     : centerValue;
 
   function renderSlice(props: PieSectorDataItem) {
@@ -78,7 +82,7 @@ export function DonutChart({
         outerRadius={sectorOuterRadius}
         startAngle={props.startAngle}
         endAngle={props.endAngle}
-        cornerRadius={6}
+        cornerRadius={10}
         fill={props.fill ?? datum?.color}
         style={{
           transform: `translate(${dx}px, ${dy}px) scale(${scale})`,
@@ -113,7 +117,9 @@ export function DonutChart({
             isAnimationActive
             shape={renderSlice}
             style={{ cursor: onSliceClick ? "pointer" : "default" }}
-            onMouseEnter={(entry) => setHoveredId((entry.payload as DonutChartDatum | undefined)?.id ?? null)}
+            onMouseEnter={(entry) =>
+              setHoveredId((entry.payload as DonutChartDatum | undefined)?.id ?? null)
+            }
             onMouseLeave={() => setHoveredId(null)}
             onClick={
               onSliceClick
@@ -131,13 +137,16 @@ export function DonutChart({
 
       {!disableCenterOverlay && (displayLabel || displayValue) && (
         <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center gap-0.5 px-4 text-center">
-          {displayLabel && (
-            <span className="line-clamp-1 text-xs text-ink-500 dark:text-ink-400">{displayLabel}</span>
-          )}
           {displayValue && (
-            <span className="text-lg leading-tight font-bold text-ink-900 dark:text-ink-50">
+            <span
+              key={displayValue}
+              className="animate-fade-in font-display text-[22px] leading-tight font-semibold text-text tabular sm:text-[24px]"
+            >
               {displayValue}
             </span>
+          )}
+          {displayLabel && (
+            <span className="line-clamp-1 text-[12px] text-text-3">{displayLabel}</span>
           )}
         </div>
       )}

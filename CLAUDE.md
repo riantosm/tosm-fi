@@ -101,7 +101,7 @@ Preferences that are genuinely local-only and not meant to sync to a future back
 
 ### Component layers
 
-- `src/components/atoms/`, `molecules/`, `organisms/`, `templates/` — generic, feature-agnostic UI primitives (atomic design). `Words` is the text primitive (use it instead of raw `<p>`/`<span>` for anything user-facing so type scale/weight stay consistent); `Modal` is the shared dialog shell every feature modal wraps.
+- `src/components/atoms/`, `molecules/`, `organisms/`, `templates/` — generic, feature-agnostic UI primitives (atomic design). `Modal` is the shared dialog shell every feature modal wraps. `DESIGN_SYSTEM.md` ("Mist") lists every component, token and page pattern — build UI only from those pieces.
 - `src/layouts/<feature>/` — composite, feature-specific components (e.g. `layouts/transaction/AddTransactionModal`, `layouts/wallet/BalanceCorrectionModal`). This is where most feature work happens; `src/app/pages/*Page` components stay thin and mostly just wire hooks to layout components.
 - Amount entry (calculator-style keypad with `+ - × ÷`, keyboard input, and an expression preview) is shared via `src/hooks/use-amount-calculator.ts` + `src/components/molecules/AmountCalculatorKeypad`, reused by both `AmountCalculatorModal` (transaction amount) and `BalanceCorrectionModal` (new balance).
 
@@ -111,7 +111,7 @@ Routes are centralized in `src/constants/routes.ts` (`ROUTES`) and wired in `src
 
 ### Styling
 
-Tailwind v4, configured entirely in CSS (`src/css/index.css`) via `@theme` — there is no `tailwind.config.js`. Custom color tokens (`primary-*`, `ink-*`) and the font face are defined there. Dark mode is a class variant (`@custom-variant dark (&:where(.dark, .dark *))`) toggled by `use-theme.tsx` adding/removing a `.dark` class, not a media query — always pair `dark:` classes rather than relying on `prefers-color-scheme`.
+Tailwind v4, configured entirely in CSS (`src/css/index.css`) via `@theme` — there is no `tailwind.config.js`. Semantic color tokens (`bg`, `surface`, `text-2`, `primary-soft`, `income-text`, …) and the font faces are defined there as CSS variables, with a `.dark` block that swaps their values. Dark mode is toggled by `use-theme.tsx` adding/removing a `.dark` class, not a media query — because the tokens swap themselves, components use the semantic classes and never need `dark:` color variants (see `DESIGN_SYSTEM.md`).
 
 ### i18n
 

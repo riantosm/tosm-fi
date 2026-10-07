@@ -1,26 +1,24 @@
 import { useEffect, useRef, useState } from "react";
-import { HiCheck, HiChevronDown, HiOutlineGlobeAlt } from "react-icons/hi2";
-import { Words } from "@/components/atoms/Words";
+import { AnimatePresence, m } from "motion/react";
+import { LuCheck, LuChevronUp, LuLanguages } from "react-icons/lu";
 import { LANGUAGES } from "@/constants/languages";
 import { useLanguage } from "@/hooks/use-language";
 import { cn } from "@/utils/cn";
 
+/** Pill language picker opening upward (auth pages). */
 export function LanguageMenuButton() {
   const { language, changeLanguage } = useLanguage();
   const [isOpen, setIsOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
-
   const current = LANGUAGES.find((option) => option.code === language) ?? LANGUAGES[0];
 
   useEffect(() => {
     if (!isOpen) return;
-
     function handleClickOutside(event: MouseEvent) {
       if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
         setIsOpen(false);
       }
     }
-
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [isOpen]);
@@ -31,57 +29,53 @@ export function LanguageMenuButton() {
         type="button"
         onClick={() => setIsOpen((prev) => !prev)}
         aria-expanded={isOpen}
-        className="flex items-center gap-2 rounded-full border border-ink-200 px-3 py-1.5 text-ink-600 transition-colors hover:bg-ink-50 dark:border-ink-700 dark:text-ink-300 dark:hover:bg-ink-800"
+        className="pressable flex h-9 shrink-0 items-center gap-2 whitespace-nowrap rounded-full border border-border bg-surface px-3.5 text-[13px] font-medium text-text-2 hover:border-border-strong hover:text-text"
       >
-        <HiOutlineGlobeAlt className="h-4 w-4 text-ink-400 dark:text-ink-500" />
-        <Words type="sm/bold" as="span" className="leading-none">
-          {current.flag}
-        </Words>
-        <Words type="sm/bold" as="span">
-          {current.nativeLabel}
-        </Words>
-        <HiChevronDown
+        <LuLanguages className="size-4 text-text-3" />
+        {current.nativeLabel}
+        <LuChevronUp
           className={cn(
-            "h-3.5 w-3.5 text-ink-400 transition-transform dark:text-ink-500",
-            isOpen && "rotate-180",
+            "size-3.5 text-text-3 transition-transform duration-200",
+            !isOpen && "rotate-180",
           )}
         />
       </button>
 
-      {isOpen && (
-        <div className="absolute bottom-full left-1/2 z-10 mb-2 w-48 -translate-x-1/2 overflow-hidden rounded-xl border border-ink-200 bg-white shadow-lg dark:border-ink-800 dark:bg-ink-900">
-          {LANGUAGES.map((option) => {
-            const isActive = option.code === language;
-
-            return (
-              <button
-                key={option.code}
-                type="button"
-                onClick={() => {
-                  changeLanguage(option.code);
-                  setIsOpen(false);
-                }}
-                className={cn(
-                  "flex w-full items-center gap-3 px-4 py-2.5 transition-colors",
-                  isActive
-                    ? "text-primary-700 dark:text-primary-400"
-                    : "text-ink-600 hover:bg-ink-50 dark:text-ink-300 dark:hover:bg-ink-800",
-                )}
-              >
-                <span className="text-base leading-none">{option.flag}</span>
-                <Words
-                  type={isActive ? "sm/bold" : "sm/regular"}
-                  as="span"
-                  className="flex-1 text-left"
+      <AnimatePresence>
+        {isOpen && (
+          <m.div
+            initial={{ opacity: 0, y: 6, scale: 0.97 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 4, scale: 0.98 }}
+            transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
+            className="absolute bottom-full left-1/2 z-20 mb-2 w-52 -translate-x-1/2 rounded-[18px] bg-surface p-1.5 shadow-pop"
+          >
+            {LANGUAGES.map((option) => {
+              const isActive = option.code === language;
+              return (
+                <button
+                  key={option.code}
+                  type="button"
+                  onClick={() => {
+                    changeLanguage(option.code);
+                    setIsOpen(false);
+                  }}
+                  className={cn(
+                    "flex w-full items-center gap-3 rounded-control px-3 py-2.5 text-left text-[13.5px] transition-colors",
+                    isActive
+                      ? "bg-primary-soft font-semibold text-primary-text"
+                      : "text-text-2 hover:bg-surface-2 hover:text-text",
+                  )}
                 >
-                  {option.nativeLabel}
-                </Words>
-                {isActive && <HiCheck className="h-4 w-4 shrink-0" />}
-              </button>
-            );
-          })}
-        </div>
-      )}
+                  <span className="text-base leading-none">{option.flag}</span>
+                  <span className="flex-1">{option.nativeLabel}</span>
+                  {isActive && <LuCheck className="size-4" />}
+                </button>
+              );
+            })}
+          </m.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

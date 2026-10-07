@@ -1,24 +1,26 @@
 import { useTranslation } from "react-i18next";
-import { HiCheckCircle, HiOutlineExclamationCircle, HiOutlineShieldCheck } from "react-icons/hi2";
-import { IconLoader } from "@/components/atoms/IconLoader";
-import { Words } from "@/components/atoms/Words";
-import { cn } from "@/utils/cn";
+import { LuCircleCheck, LuCircleDashed } from "react-icons/lu";
+import { Skeleton } from "@/components/atoms/Skeleton";
+import { Card } from "@/components/molecules/Card";
+import { SectionHead } from "@/components/molecules/SectionHead";
+import { ProgressRing } from "@/layouts/dashboard/ProgressRing";
 import type {
   DashboardSummary,
   FinancialHealth,
   FinancialHealthStatus,
 } from "@/types/report.types";
+import { cn } from "@/utils/cn";
 
 interface FinancialHealthCardProps {
   summary: DashboardSummary | null;
   isLoading: boolean;
 }
 
-const STATUS_COLOR: Record<FinancialHealthStatus, string> = {
-  excellent: "#10B981",
-  good: "#34D399",
-  fair: "#F59E0B",
-  needsAttention: "#EF4444",
+const STATUS_TONE: Record<FinancialHealthStatus, { ring: string; badge: string }> = {
+  excellent: { ring: "var(--income)", badge: "bg-income-soft text-income-text" },
+  good: { ring: "var(--primary)", badge: "bg-primary-soft text-primary-text" },
+  fair: { ring: "var(--investment)", badge: "bg-investment-soft text-investment-text" },
+  needsAttention: { ring: "var(--expense)", badge: "bg-expense-soft text-expense-text" },
 };
 
 const STATUS_LABEL_KEY: Record<FinancialHealthStatus, string> = {
@@ -35,61 +37,6 @@ const STATUS_SUBTITLE_KEY: Record<FinancialHealthStatus, string> = {
   needsAttention: "dashboard.healthSubtitle.needsAttention",
 };
 
-const GAUGE_SIZE = 76;
-const GAUGE_THICKNESS = 8;
-const GAUGE_RADIUS = (GAUGE_SIZE - GAUGE_THICKNESS) / 2;
-const GAUGE_CIRCUMFERENCE = 2 * Math.PI * GAUGE_RADIUS;
-
-function ScoreGauge({ score, color }: { score: number; color: string }) {
-  const offset = GAUGE_CIRCUMFERENCE * (1 - score / 100);
-
-  return (
-    <div className="relative shrink-0" style={{ width: GAUGE_SIZE, height: GAUGE_SIZE }}>
-      <svg width={GAUGE_SIZE} height={GAUGE_SIZE} className="-rotate-90">
-        <circle
-          cx={GAUGE_SIZE / 2}
-          cy={GAUGE_SIZE / 2}
-          r={GAUGE_RADIUS}
-          strokeWidth={GAUGE_THICKNESS}
-          className="fill-none stroke-ink-100 dark:stroke-ink-800"
-        />
-        <circle
-          cx={GAUGE_SIZE / 2}
-          cy={GAUGE_SIZE / 2}
-          r={GAUGE_RADIUS}
-          strokeWidth={GAUGE_THICKNESS}
-          strokeLinecap="round"
-          fill="none"
-          stroke={color}
-          strokeDasharray={GAUGE_CIRCUMFERENCE}
-          strokeDashoffset={offset}
-          style={{ transition: "stroke-dashoffset 600ms ease-out" }}
-        />
-      </svg>
-      <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
-        <Words type="lg/bold" style={{ color }}>
-          {score}
-        </Words>
-        <Words type="xxs/regular" className="text-ink-400 dark:text-ink-500">
-          /100
-        </Words>
-      </div>
-    </div>
-  );
-}
-
-function ChecklistItem({ isGood, label }: { isGood: boolean; label: string }) {
-  const Icon = isGood ? HiCheckCircle : HiOutlineExclamationCircle;
-  return (
-    <div className="flex items-center gap-1.5">
-      <Icon className={cn("h-4 w-4 shrink-0", isGood ? "text-emerald-500" : "text-amber-500")} />
-      <Words type="xs/regular" className="text-ink-600 dark:text-ink-300">
-        {label}
-      </Words>
-    </div>
-  );
-}
-
 const EMPTY_FINANCIAL_HEALTH: FinancialHealth = {
   score: 0,
   status: "fair",
@@ -98,63 +45,78 @@ const EMPTY_FINANCIAL_HEALTH: FinancialHealth = {
   isExpenseStable: false,
 };
 
+function Check({ isGood, label }: { isGood: boolean; label: string }) {
+  const Icon = isGood ? LuCircleCheck : LuCircleDashed;
+  return (
+    <li className="flex items-center gap-2 text-[13px] text-text-2">
+      <Icon
+        className={cn("size-4 shrink-0", isGood ? "text-income-text" : "text-investment-text")}
+      />
+      <span className="truncate">{label}</span>
+    </li>
+  );
+}
+
+/** "Skor · Kesehatan finansial" — score ring + the three checks behind it. */
 export function FinancialHealthCard({ summary, isLoading }: FinancialHealthCardProps) {
   const { t } = useTranslation();
-
-  const financialHealth = summary?.financialHealth ?? EMPTY_FINANCIAL_HEALTH;
-  const color = STATUS_COLOR[financialHealth.status];
+  const health = summary?.financialHealth ?? EMPTY_FINANCIAL_HEALTH;
+  const tone = STATUS_TONE[health.status];
+  const isInitialLoading = isLoading && !summary;
 
   return (
-    <div className="flex h-full flex-col gap-4 rounded-2xl border border-ink-200 bg-white p-5 dark:border-ink-800 dark:bg-ink-900">
-      <div className="flex items-center justify-between">
-        <Words type="base/bold" className="text-ink-900 dark:text-ink-50">
-          {t("dashboard.financialHealth")}
-        </Words>
-        <HiOutlineShieldCheck className="h-5 w-5 text-emerald-500" />
-      </div>
+    <Card className="flex h-full flex-col gap-4">
+      <SectionHead eyebrow={t("dashboard.healthEyebrow")} title={t("dashboard.financialHealth")} />
 
-      <div className="relative flex flex-1 flex-col gap-4">
-        <div className="flex items-center gap-4">
-          <ScoreGauge score={financialHealth.score} color={color} />
-          <div className="flex flex-col gap-0.5">
-            <Words type="sm/bold" style={{ color }}>
-              {t(STATUS_LABEL_KEY[financialHealth.status])}
-            </Words>
-            <Words type="xxs/regular" className="text-ink-500 dark:text-ink-400">
-              {t(STATUS_SUBTITLE_KEY[financialHealth.status])}
-            </Words>
+      {isInitialLoading ? (
+        <>
+          <Skeleton className="mx-auto size-[150px] rounded-full" />
+          <div className="flex flex-col gap-2.5">
+            <Skeleton className="h-3.5 w-3/5 rounded-full" />
+            <Skeleton className="h-3.5 w-2/3 rounded-full" />
+            <Skeleton className="h-3.5 w-1/2 rounded-full" />
           </div>
-        </div>
-
-        <div className="flex flex-col gap-2">
-          <ChecklistItem
-            isGood={financialHealth.isCashFlowPositive}
-            label={t(
-              financialHealth.isCashFlowPositive
-                ? "dashboard.cashFlowPositive"
-                : "dashboard.cashFlowNegative",
-            )}
-          />
-          <ChecklistItem
-            isGood={financialHealth.savingRate >= 0}
-            label={t("dashboard.savingRateLabel", { rate: financialHealth.savingRate })}
-          />
-          <ChecklistItem
-            isGood={financialHealth.isExpenseStable}
-            label={t(
-              financialHealth.isExpenseStable
-                ? "dashboard.expenseStable"
-                : "dashboard.expenseUnstable",
-            )}
-          />
-        </div>
-
-        {isLoading && (
-          <div className="absolute inset-0 flex items-center justify-center rounded-2xl bg-white/60 backdrop-blur-[2px] dark:bg-ink-950/60">
-            <IconLoader className="h-6 w-6 animate-spin text-primary-500" />
+        </>
+      ) : (
+        <>
+          <div className="flex justify-center" title={t(STATUS_SUBTITLE_KEY[health.status])}>
+            <ProgressRing size={150} thickness={14} value={health.score / 100} color={tone.ring}>
+              <span className="font-display text-[40px] leading-none font-semibold text-text tabular">
+                {health.score}
+              </span>
+              <span
+                className={cn(
+                  "mt-1.5 rounded-full px-2 py-0.5 text-[11px] font-semibold",
+                  tone.badge,
+                )}
+              >
+                {t(STATUS_LABEL_KEY[health.status])}
+              </span>
+            </ProgressRing>
           </div>
-        )}
-      </div>
-    </div>
+
+          <ul className="flex flex-col gap-2.5">
+            <Check
+              isGood={health.isCashFlowPositive}
+              label={t(
+                health.isCashFlowPositive
+                  ? "dashboard.cashFlowPositive"
+                  : "dashboard.cashFlowNegative",
+              )}
+            />
+            <Check
+              isGood={health.savingRate >= 0}
+              label={t("dashboard.savingRateLabel", { rate: health.savingRate })}
+            />
+            <Check
+              isGood={health.isExpenseStable}
+              label={t(
+                health.isExpenseStable ? "dashboard.expenseStable" : "dashboard.expenseUnstable",
+              )}
+            />
+          </ul>
+        </>
+      )}
+    </Card>
   );
 }

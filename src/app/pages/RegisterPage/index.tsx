@@ -6,7 +6,11 @@ export function RegisterPage() {
   const { t } = useTranslation();
 
   return (
-    <AuthLayout title={t("auth.registerTitle")} subtitle={t("auth.registerSubtitle")}>
+    <AuthLayout
+      title={t("auth.registerTitle")}
+      subtitle={t("auth.registerSubtitle")}
+      heroTitle={t("auth.registerHeroTitle")}
+    >
       <RegisterForm />
     </AuthLayout>
   );

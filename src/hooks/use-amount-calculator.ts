@@ -49,7 +49,10 @@ interface UseAmountCalculatorOptions {
   onEnter?: (value: number) => void;
 }
 
-export function useAmountCalculator(initialValue: number, options: UseAmountCalculatorOptions = {}) {
+export function useAmountCalculator(
+  initialValue: number,
+  options: UseAmountCalculatorOptions = {},
+) {
   const { onEnter } = options;
   const { format, currency } = useCurrency();
   const locale = CURRENCIES.find((item) => item.code === currency)?.locale ?? "en-US";
@@ -119,6 +122,9 @@ export function useAmountCalculator(initialValue: number, options: UseAmountCalc
 
   useEffect(() => {
     function handleKeyDown(event: KeyboardEvent) {
+      // Typing in a text field of the same dialog (notes, title) must not drive the calculator.
+      const target = event.target as HTMLElement | null;
+      if (target?.closest?.("input, textarea, select, [contenteditable='true']")) return;
       if (event.key >= "0" && event.key <= "9") {
         event.preventDefault();
         handleDigit(event.key);
@@ -173,6 +179,8 @@ export function useAmountCalculator(initialValue: number, options: UseAmountCalc
     formattedValue: format(value),
     expressionDisplay,
     hasExpression: terms.length > 1,
+    /** Locale decimal separator, for the keypad's decimal key label. */
+    decimalSeparator: getDecimalSeparator(locale),
     handleDigit,
     handleDecimal,
     handleTripleZero,

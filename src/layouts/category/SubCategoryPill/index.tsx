@@ -1,36 +1,40 @@
 import { createElement } from "react";
-import { Words } from "@/components/atoms/Words";
 import { resolveCategoryIcon } from "@/constants/category-icons";
 import type { SubCategory } from "@/types/category.types";
+import { cn } from "@/utils/cn";
 
 interface SubCategoryPillProps {
-  subCategory: SubCategory; 
+  subCategory: SubCategory;
   categoryColor: string;
   onClick: () => void;
+  className?: string;
+  tabIndex?: number;
 }
 
+/** Subcategory chip tinted with its category color (icon + name, one line). */
 export function SubCategoryPill({
-  subCategory, 
+  subCategory,
   categoryColor,
   onClick,
+  className,
+  tabIndex,
 }: SubCategoryPillProps) {
-  const icon = resolveCategoryIcon(subCategory.icon);
-
   return (
     <button
       type="button"
       onClick={onClick}
-      className="flex shrink-0 items-center gap-2 rounded-lg border px-3 py-2 transition-colors hover:bg-ink-50 dark:hover:bg-ink-800"
-      style={{ borderColor: categoryColor }}
+      tabIndex={tabIndex}
+      className={cn(
+        "pressable flex h-8 max-w-[180px] shrink-0 items-center gap-1.5 rounded-full border px-3 text-[13px] font-medium text-text transition-[filter] hover:brightness-[0.97]",
+        className,
+      )}
+      style={{ borderColor: `${categoryColor}59`, backgroundColor: `${categoryColor}14` }}
     >
-      {createElement(icon, { className: "h-4 w-4 shrink-0", style: { color: categoryColor } })}
-      <Words
-        type="sm/regular"
-        as="span"
-        className="whitespace-nowrap text-ink-800 dark:text-ink-200"
-      >
-        {subCategory.nameSubCategory}
-      </Words> 
+      {createElement(resolveCategoryIcon(subCategory.icon), {
+        className: "size-3.5 shrink-0",
+        style: { color: categoryColor },
+      })}
+      <span className="truncate">{subCategory.nameSubCategory}</span>
     </button>
   );
 }

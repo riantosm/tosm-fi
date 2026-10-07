@@ -1,11 +1,15 @@
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
-import { IconLoader } from "@/components/atoms/IconLoader";
-import { Words } from "@/components/atoms/Words";
-import { useCurrency } from "@/hooks/use-currency";
+import { LuPin } from "react-icons/lu";
+import { Skeleton } from "@/components/atoms/Skeleton";
+import { Card } from "@/components/molecules/Card";
+import { EmptyState } from "@/components/molecules/EmptyState";
+import { SectionHead } from "@/components/molecules/SectionHead";
+import { ROUTES } from "@/constants/routes";
+import { ProgressRing } from "@/layouts/dashboard/ProgressRing";
+import { useMoneyFormat } from "@/hooks/use-money-format";
 import { computeBudgetSpent } from "@/utils/budget-breakdown";
 import { cn } from "@/utils/cn";
-import { ROUTES } from "@/constants/routes";
 import type { Budget } from "@/types/budget.types";
 import type { TransactionCategoryBreakdown } from "@/types/transaction.types";
 
@@ -19,37 +23,45 @@ interface BudgetsSummaryProps {
 export function BudgetsSummary({ budgets, categoryBreakdown, isLoading }: BudgetsSummaryProps) {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const { format } = useCurrency();
+  const { format, formatNumber } = useMoneyFormat();
 
   const pinnedBudgets = budgets.filter((budget) => budget.isPinned);
+  const isInitialLoading = isLoading && pinnedBudgets.length === 0;
 
   return (
-    <div className="relative flex h-full flex-col gap-4 rounded-2xl border border-ink-200 bg-white p-5 dark:border-ink-800 dark:bg-ink-900">
-      <div className="flex items-center justify-between gap-2">
-        <Words type="base/bold" className="text-ink-900 dark:text-ink-50">
-          {t("dashboard.budgetsTitle")}
-        </Words>
-        <button
-          type="button"
-          onClick={() => navigate(ROUTES.BUDGETS)}
-          className="text-[13px] font-bold text-primary-600 hover:underline dark:text-primary-400"
-        >
-          {t("dashboard.viewAll")}
-        </button>
-      </div>
+    <Card className="flex flex-col gap-3.5">
+      <SectionHead
+        eyebrow={t("dashboard.budgetsEyebrow")}
+        title={t("dashboard.budgetsTitle")}
+        actionLabel={t("dashboard.seeAllShort")}
+        onAction={() => navigate(ROUTES.BUDGETS)}
+      />
 
-      {pinnedBudgets.length === 0 ? (
-        <div className="flex flex-col items-center justify-center gap-1 rounded-2xl border border-dashed border-ink-200 py-8 dark:border-ink-800">
-          <Words type="sm/bold" className="text-ink-500 dark:text-ink-400">
-            {t("dashboard.noPinnedBudgets")}
-          </Words>
-        </div>
+      {isInitialLoading ? (
+        Array.from({ length: 2 }, (_, index) => (
+          <div key={index} className="flex items-center gap-3.5 py-1.5">
+            <Skeleton className="size-[52px] shrink-0 rounded-full" />
+            <div className="flex flex-1 flex-col gap-1.5">
+              <Skeleton className="h-3.5 w-2/5 rounded-full" />
+              <Skeleton className="h-3 w-3/5 rounded-full" />
+            </div>
+          </div>
+        ))
+      ) : pinnedBudgets.length === 0 ? (
+        <EmptyState icon={<LuPin />} title={t("dashboard.noPinnedBudgets")} />
       ) : (
-        <div className="flex flex-col gap-1">
+        <div
+          className={cn(
+            "-mx-2 flex flex-col transition-opacity duration-300",
+            isLoading && "opacity-60",
+          )}
+        >
           {pinnedBudgets.map((budget) => {
             const spent = computeBudgetSpent(budget, categoryBreakdown);
-            const percentage = budget.limitAmount > 0 ? (spent / budget.limitAmount) * 100 : 0;
-            const isOverLimit = percentage > 100;
+            const ratio = budget.limitAmount > 0 ? spent / budget.limitAmount : 0;
+            const percent = Math.round(ratio * 100);
+            const isOverLimit = ratio > 1;
+            const remaining = budget.limitAmount - spent;
 
             return (
               <button
@@ -58,43 +70,47 @@ export function BudgetsSummary({ budgets, categoryBreakdown, isLoading }: Budget
                 onClick={() =>
                   navigate(ROUTES.BUDGETS, { state: { viewingBudgetId: budget.idBudget } })
                 }
-                className="flex flex-col gap-1.5 rounded-xl p-2 text-left transition-colors hover:bg-ink-50 dark:hover:bg-ink-800"
+                className="group flex w-full items-center gap-3.5 rounded-control px-2 py-1.5 text-left transition-colors duration-200 hover:bg-surface-2"
               >
-                <div className="flex items-center justify-between gap-2">
-                  <Words type="sm/bold" as="span" className="truncate text-ink-900 dark:text-ink-50">
-                    {budget.name}
-                  </Words>
-                  <Words
-                    type="xs/bold"
-                    as="span"
+                <ProgressRing
+                  size={52}
+                  thickness={6}
+                  value={isOverLimit ? 1 : ratio}
+                  color={isOverLimit ? "var(--expense)" : budget.color}
+                  className="transition-transform duration-300 group-hover:scale-105"
+                >
+                  <span
                     className={cn(
-                      "shrink-0 whitespace-nowrap text-ink-400 dark:text-ink-500",
-                      isOverLimit && "text-red-500 dark:text-red-400",
+                      "text-[11.5px] font-semibold tabular",
+                      isOverLimit ? "text-expense-text" : "text-text",
                     )}
                   >
-                    {format(spent)} / {format(budget.limitAmount)}
-                  </Words>
-                </div>
-                <div className="h-1.5 overflow-hidden rounded-full bg-ink-100 dark:bg-ink-800">
-                  <div
-                    className="h-full rounded-full transition-[width] duration-700 ease-out"
-                    style={{
-                      width: `${Math.min(100, percentage)}%`,
-                      backgroundColor: isOverLimit ? "#EF4444" : budget.color,
-                    }}
-                  />
-                </div>
+                    {percent}%
+                  </span>
+                </ProgressRing>
+                <span className="flex min-w-0 flex-1 flex-col gap-0.5">
+                  <span className="truncate text-[14px] font-semibold text-text">
+                    {budget.name}
+                  </span>
+                  <span className="truncate font-num text-[12.5px] text-text-2 tabular">
+                    {format(spent)} / {formatNumber(budget.limitAmount)}
+                  </span>
+                  <span
+                    className={cn(
+                      "truncate text-[12px]",
+                      isOverLimit ? "text-expense-text" : "text-text-3",
+                    )}
+                  >
+                    {isOverLimit
+                      ? t("dashboard.budgetOver", { amount: format(Math.abs(remaining)) })
+                      : t("dashboard.budgetRemaining", { amount: format(remaining) })}
+                  </span>
+                </span>
               </button>
             );
           })}
         </div>
       )}
-
-      {isLoading && (
-        <div className="absolute inset-0 flex items-center justify-center rounded-2xl bg-white/60 backdrop-blur-[2px] dark:bg-ink-950/60">
-          <IconLoader className="h-6 w-6 animate-spin text-primary-500" />
-        </div>
-      )}
-    </div>
+    </Card>
   );
 }

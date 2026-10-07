@@ -1,345 +1,481 @@
-import { createElement, useState } from "react";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { HiOutlineChevronDown, HiOutlineTag } from "react-icons/hi2";
-import { IconLoader } from "@/components/atoms/IconLoader";
-import { Words } from "@/components/atoms/Words";
+import { AnimatePresence, m } from "motion/react";
+import { LuChevronDown, LuChevronRight, LuInfo, LuTags } from "react-icons/lu";
+import { Skeleton } from "@/components/atoms/Skeleton";
+import { Card } from "@/components/molecules/Card";
 import { DonutChart, type DonutChartDatum } from "@/components/molecules/DonutChart";
-import { resolveCategoryIcon } from "@/constants/category-icons";
-import { useCurrency } from "@/hooks/use-currency";
+import { EmptyState } from "@/components/molecules/EmptyState";
+import { BudgetPercentBadge } from "@/layouts/budget/BudgetPercentBadge";
+import { useMoneyFormat } from "@/hooks/use-money-format";
+import type { BudgetSlice, BudgetStatus } from "@/utils/budget-breakdown";
 import { cn } from "@/utils/cn";
-import type { BudgetSlice } from "@/utils/budget-breakdown";
 
 interface BudgetBreakdownListProps {
   /** Already-aggregated rows from `buildBudgetSlices` — this component never reduces raw data itself. */
   slices: BudgetSlice[];
-  title: string;
-  periodLabel: string;
+  /** First load only (spending or categories not in yet) — shows skeleton rows. */
   isLoading?: boolean;
   /** `parentSlice` is present only when the clicked row is a subcategory nested under an expanded category row. */
   onSelectSlice: (slice: BudgetSlice, parentSlice?: BudgetSlice) => void;
-  /** Sum of every category-level limit set under the budget — omitted (or 0) hides the hint. */
+  /** Sum of every category-level limit set under the budget — 0 hides the banner. */
   allocatedLimit?: number;
-  /** The budget's own overall limit, paired with `allocatedLimit` in the hint. */
+  /** The budget's own overall limit, paired with `allocatedLimit` in the banner. */
   totalLimit?: number;
 }
 
-interface BudgetSliceRowProps {
-  slice: BudgetSlice;
-  formatAmount: (value: number) => string;
-  /** Always available — opens the limit editor for this exact row (category or subcategory), independent of expand/collapse. */
-  onSelect: () => void;
-  /** Present only when this row has subcategories to drill into; renders as its own chevron button, separate from `onSelect`. */
-  onToggle?: () => void;
-  isExpanded?: boolean;
-  onHoverChange?: (isHovering: boolean) => void;
-  isSubCategory?: boolean;
+const EASE = [0.22, 1, 0.36, 1] as const;
+
+interface RowMetrics {
+  hasLimit: boolean;
+  ratio: number;
+  percent: number;
+  status: BudgetStatus;
 }
 
-function BudgetSliceRow({
-  slice,
-  formatAmount,
-  onSelect,
-  onToggle,
-  isExpanded,
-  onHoverChange,
-  isSubCategory,
-}: BudgetSliceRowProps) {
-  const { t } = useTranslation();
-  const Icon = slice.icon ? resolveCategoryIcon(slice.icon) : HiOutlineTag;
-  const name = slice.name ?? t("dashboard.otherSubCategory");
+/** Rows only flag going over — the amber "almost" state is for whole budgets. */
+function getRowMetrics(slice: BudgetSlice): RowMetrics {
   const hasLimit = slice.limit !== null && slice.limit > 0;
-  const percentage = hasLimit ? (slice.spent / (slice.limit as number)) * 100 : 0;
-  const isOverLimit = hasLimit && percentage > 100;
-
-  return (
-    <div
-      onMouseEnter={onHoverChange ? () => onHoverChange(true) : undefined}
-      onMouseLeave={onHoverChange ? () => onHoverChange(false) : undefined}
-      className={cn("flex w-full flex-col gap-1 rounded-xl py-0.5", isSubCategory && "px-6")}
-    >
-      <div className="flex w-full items-center gap-1">
-        <button
-          type="button"
-          onClick={onSelect}
-          className="flex flex-1 items-center gap-2.5 rounded-xl px-1 py-0.5 text-left outline-none transition-colors hover:bg-ink-50 dark:hover:bg-ink-800"
-        >
-          <div
-            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl"
-            style={{ backgroundColor: `${slice.color}26` }}
-          >
-            {createElement(Icon, { className: "h-4 w-4", style: { color: slice.color } })}
-          </div>
-          <div className="min-w-0 flex-1">
-            <Words
-              type="sm/regular"
-              as="span"
-              className="block truncate text-ink-700 dark:text-ink-300"
-            >
-              {name}
-            </Words>
-            <Words type="xs/regular" as="span" className="block text-ink-400 dark:text-ink-500">
-              {t("wallet.transactionCount", { n: slice.count })}
-            </Words>
-          </div>
-          <div className="flex flex-col items-end gap-0.5">
-            <Words
-              type="sm/bold"
-              as="span"
-              className="whitespace-nowrap text-ink-900 dark:text-ink-50"
-            >
-              {hasLimit
-                ? `${formatAmount(slice.spent)} / ${formatAmount(slice.limit as number)}`
-                : formatAmount(slice.spent)}
-            </Words>
-            <Words
-              type="xxs/bold"
-              as="span"
-              className={cn(
-                "text-ink-400 dark:text-ink-500",
-                isOverLimit && "text-red-500 dark:text-red-400",
-              )}
-            >
-              {hasLimit ? `${Math.round(percentage)}%` : t("budget.noLimitSet")}
-            </Words>
-          </div>
-        </button>
-
-        {onToggle && (
-          <button
-            type="button"
-            onClick={onToggle}
-            aria-label={t("budget.toggleBreakdown")}
-            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-ink-300 transition-colors hover:bg-ink-100 dark:text-ink-600 dark:hover:bg-ink-800"
-          >
-            <HiOutlineChevronDown
-              className={cn(
-                "h-3.5 w-3.5 transition-transform duration-300",
-                isExpanded && "rotate-180",
-              )}
-            />
-          </button>
-        )}
-      </div>
-
-      {hasLimit && (
-        <div className="ml-[46px] h-1.5 overflow-hidden rounded-full bg-ink-100 dark:bg-ink-800">
-          <div
-            className="h-full rounded-full transition-[width] duration-700 ease-out"
-            style={{
-              width: `${Math.min(100, percentage)}%`,
-              backgroundColor: isOverLimit ? "#EF4444" : slice.color,
-            }}
-          />
-        </div>
-      )}
-    </div>
-  );
+  const ratio = hasLimit ? slice.spent / (slice.limit as number) : 0;
+  return { hasLimit, ratio, percent: Math.round(ratio * 100), status: ratio > 1 ? "over" : "ok" };
 }
 
-interface BudgetCategoryRowProps {
-  slice: BudgetSlice;
-  subSlices: BudgetSlice[];
-  isExpanded: boolean;
-  isDimmed: boolean;
-  onToggle: () => void;
-  onHoverSlice: (id: string | null) => void;
-  formatAmount: (value: number) => string;
-  onSelectSlice: (slice: BudgetSlice, parentSlice?: BudgetSlice) => void;
-}
-
-function BudgetCategoryRow({
-  slice,
-  subSlices,
-  isExpanded,
-  isDimmed,
-  onToggle,
-  onHoverSlice,
-  formatAmount,
-  onSelectSlice,
-}: BudgetCategoryRowProps) {
-  const { t } = useTranslation();
-  const hasSubCategories = (slice.subSlices?.length ?? 0) > 0;
-  const hasLimit = slice.limit !== null && slice.limit > 0;
-  const subLimitTotal = subSlices.reduce((sum, sub) => sum + (sub.limit ?? 0), 0);
-  const isOverCategoryLimit = hasLimit && subLimitTotal > (slice.limit as number);
-
-  return (
-    <div className={cn("flex flex-col transition-opacity duration-300", isDimmed && "opacity-40")}>
-      <BudgetSliceRow
-        slice={slice}
-        formatAmount={formatAmount}
-        onSelect={() => onSelectSlice(slice)}
-        onToggle={hasSubCategories ? onToggle : undefined}
-        isExpanded={isExpanded}
-        onHoverChange={(isHovering) => onHoverSlice(isHovering ? slice.id : null)}
-      />
-
-      <div
-        className={cn(
-          "grid transition-[grid-template-rows] duration-300 ease-out",
-          isExpanded ? "grid-rows-[1fr]" : "grid-rows-[0fr]",
-        )}
-      >
-        <div className="overflow-hidden">
-          <div className="flex flex-col gap-1">
-            {subLimitTotal > 0 && (
-              <div className="ml-[46px] flex items-baseline gap-2 py-1">
-                <Words
-                  type="xxs/regular"
-                  as="span"
-                  className="shrink-0 whitespace-nowrap text-ink-400 dark:text-ink-500"
-                >
-                  {t("budget.categoryTotalLabel", { name: slice.name ?? t("dashboard.otherSubCategory") })}
-                </Words>
-                <span className="h-0 flex-1 border-b border-dotted border-ink-300 dark:border-ink-700" />
-                <Words
-                  type="xxs/bold"
-                  as="span"
-                  className={cn(
-                    "shrink-0 whitespace-nowrap text-ink-400 dark:text-ink-500",
-                    isOverCategoryLimit && "text-red-500 dark:text-red-400",
-                  )}
-                >
-                  {hasLimit
-                    ? `${formatAmount(subLimitTotal)} / ${formatAmount(slice.limit as number)}`
-                    : formatAmount(subLimitTotal)}
-                </Words>
-              </div>
-            )}
-            {subSlices.map((sub) => (
-              <BudgetSliceRow
-                key={sub.id}
-                slice={sub}
-                formatAmount={formatAmount}
-                onSelect={() => onSelectSlice(sub, slice)}
-                onHoverChange={(isHovering) => onHoverSlice(isHovering ? sub.id : null)}
-                isSubCategory
-              />
-            ))}
-          </div>
-        </div>
-      </div>
-    </div>
-  );
+function sumLimits(slices: BudgetSlice[]): number {
+  return slices.reduce((sum, slice) => sum + (slice.limit ?? 0), 0);
 }
 
 export function BudgetBreakdownList({
   slices,
-  title,
-  periodLabel,
   isLoading = false,
   onSelectSlice,
   allocatedLimit = 0,
   totalLimit = 0,
 }: BudgetBreakdownListProps) {
   const { t } = useTranslation();
-  const { format } = useCurrency();
+  const { format, formatNumber, formatCompact } = useMoneyFormat();
   const [expandedId, setExpandedId] = useState<string | null>(null);
-  const [hoveredSliceId, setHoveredSliceId] = useState<string | null>(null);
+  const [hoveredId, setHoveredId] = useState<string | null>(null);
 
   const expandedSlice = expandedId ? slices.find((item) => item.id === expandedId) : undefined;
-  const detailSlices = expandedSlice?.subSlices ?? [];
-  const activeSlices = expandedSlice ? detailSlices : slices;
+  const activeSlices = expandedSlice?.subSlices ?? slices;
   const activeTotal = activeSlices.reduce((sum, slice) => sum + slice.spent, 0);
-  const isEmpty = slices.length === 0;
-  const centerLabel = expandedSlice
-    ? (expandedSlice.name ?? t("dashboard.otherSubCategory"))
-    : t("dashboard.totalExpense");
+  const isOverAllocated = allocatedLimit > totalLimit;
+  const otherLabel = t("dashboard.otherSubCategory");
 
   function handleToggle(id: string) {
     setExpandedId((prev) => (prev === id ? null : id));
   }
 
-  function handleOverviewClick(id: string) {
+  function handleDonutClick(id: string) {
     const clicked = slices.find((item) => item.id === id);
     if (!clicked) return;
+    if ((clicked.subSlices?.length ?? 0) > 0) handleToggle(id);
+    else onSelectSlice(clicked);
+  }
 
-    if ((clicked.subSlices?.length ?? 0) > 0) {
-      handleToggle(id);
-    } else {
-      onSelectSlice(clicked);
-    }
+  const allocatedBanner = allocatedLimit > 0 && (
+    <span
+      className={cn(
+        "flex items-center gap-2 rounded-control px-3.5 py-2 text-[12.5px] font-semibold lg:rounded-full",
+        isOverAllocated
+          ? "bg-expense-soft text-expense-text"
+          : "bg-investment-soft text-investment-text",
+      )}
+    >
+      <LuInfo className="size-3.5 shrink-0" />
+      <span className="truncate lg:hidden">
+        {t("budget.allocatedShort", {
+          allocated: formatCompact(allocatedLimit),
+          total: formatCompact(totalLimit),
+        })}
+      </span>
+      <span className="hidden truncate lg:inline">
+        {t("budget.allocatedLimitHint", {
+          allocated: format(allocatedLimit),
+          total: formatNumber(totalLimit),
+        })}
+      </span>
+    </span>
+  );
+
+  return (
+    <Card className="flex flex-col gap-4 lg:gap-[18px]">
+      <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between lg:gap-4">
+        <div className="flex flex-col gap-0.5">
+          <span className="hidden text-[11px] font-semibold tracking-[0.08em] text-text-3 uppercase lg:block">
+            {t("budget.breakdownEyebrow")}
+          </span>
+          <h2 className="font-display text-[18px] font-semibold text-text">
+            {t("budget.breakdownTitle")}
+          </h2>
+        </div>
+        {allocatedBanner}
+      </div>
+
+      {isLoading ? (
+        <div className="flex flex-col gap-2">
+          {Array.from({ length: 5 }, (_, index) => (
+            <Skeleton key={index} className="h-11 rounded-control" />
+          ))}
+        </div>
+      ) : slices.length === 0 ? (
+        <EmptyState icon={<LuTags />} title={t("budget.noRowsAvailable")} />
+      ) : (
+        <div className="flex flex-col gap-8 lg:flex-row lg:items-start">
+          <div className="hidden shrink-0 lg:block">
+            {activeTotal > 0 ? (
+              <DonutChart
+                data={activeSlices
+                  .filter((slice) => slice.spent > 0)
+                  .map((slice): DonutChartDatum => ({
+                    id: slice.id,
+                    label: slice.name ?? otherLabel,
+                    value: slice.spent,
+                    color: slice.color,
+                  }))}
+                size={236}
+                thickness={24}
+                centerLabel={
+                  expandedSlice ? (expandedSlice.name ?? otherLabel) : t("budget.spentCaption")
+                }
+                centerValue={formatCompact(activeTotal)}
+                formatValue={formatCompact}
+                activeId={hoveredId}
+                onSliceClick={!expandedSlice ? (datum) => handleDonutClick(datum.id) : undefined}
+              />
+            ) : (
+              <div className="m-2 flex size-[220px] flex-col items-center justify-center rounded-full border-[24px] border-surface-2">
+                <span className="font-display text-[24px] font-semibold text-text">
+                  {formatCompact(0)}
+                </span>
+                <span className="text-[12px] text-text-3">{t("budget.spentCaption")}</span>
+              </div>
+            )}
+          </div>
+
+          <div className="flex min-w-0 flex-1 flex-col gap-1.5">
+            {slices.map((slice) => (
+              <BudgetCategoryRow
+                key={slice.id}
+                slice={slice}
+                isExpanded={expandedId === slice.id}
+                onToggle={() => handleToggle(slice.id)}
+                onHover={setHoveredId}
+                onSelectSlice={onSelectSlice}
+              />
+            ))}
+          </div>
+        </div>
+      )}
+
+      {slices.length > 0 && (
+        <p className="hidden text-[12.5px] text-text-3 lg:block">{t("budget.tapRowHint")}</p>
+      )}
+    </Card>
+  );
+}
+
+interface BudgetCategoryRowProps {
+  slice: BudgetSlice;
+  isExpanded: boolean;
+  onToggle: () => void;
+  onHover: (id: string | null) => void;
+  onSelectSlice: (slice: BudgetSlice, parentSlice?: BudgetSlice) => void;
+}
+
+function BudgetCategoryRow({
+  slice,
+  isExpanded,
+  onToggle,
+  onHover,
+  onSelectSlice,
+}: BudgetCategoryRowProps) {
+  const { t } = useTranslation();
+  const { format, formatNumber, formatCompact } = useMoneyFormat();
+  const subSlices = slice.subSlices ?? [];
+  const hasSubs = subSlices.length > 0;
+  const metrics = getRowMetrics(slice);
+  const name = slice.name ?? t("dashboard.otherSubCategory");
+  const subLimitTotal = sumLimits(subSlices);
+  const isSubLimitOver = metrics.hasLimit && subLimitTotal > (slice.limit as number);
+  const amountClass = metrics.status === "over" ? "text-expense-text" : "text-text-2";
+
+  return (
+    <div
+      onMouseEnter={() => onHover(slice.id)}
+      onMouseLeave={() => onHover(null)}
+      className={cn(
+        "flex flex-col rounded-control transition-colors duration-200",
+        isExpanded
+          ? "bg-surface-2 lg:bg-transparent"
+          : "hover:bg-surface-2/60 lg:hover:bg-transparent",
+      )}
+    >
+      {/* Desktop row */}
+      <div
+        className={cn(
+          "hidden items-center gap-3.5 rounded-control px-4 transition-colors duration-200 lg:flex",
+          isExpanded ? "bg-surface-2" : "hover:bg-surface-2/60",
+        )}
+      >
+        {hasSubs ? (
+          <button
+            type="button"
+            onClick={onToggle}
+            aria-expanded={isExpanded}
+            aria-label={t("budget.toggleBreakdown")}
+            className="-mx-1.5 flex size-7 shrink-0 items-center justify-center rounded-full text-text-3 transition-colors hover:bg-surface-3 hover:text-text"
+          >
+            <LuChevronRight
+              className={cn("size-4 transition-transform duration-300", isExpanded && "rotate-90")}
+            />
+          </button>
+        ) : (
+          <span className="w-4 shrink-0" aria-hidden="true" />
+        )}
+        <button
+          type="button"
+          onClick={() => onSelectSlice(slice)}
+          className="flex min-w-0 flex-1 items-center gap-3.5 py-3 text-left"
+        >
+          <span
+            className="size-2.5 shrink-0 rounded-full"
+            style={{ backgroundColor: slice.color }}
+          />
+          <span className="w-[180px] shrink-0 truncate text-[14px] font-semibold text-text">
+            {name}
+          </span>
+          <RowMeter slice={slice} metrics={metrics} />
+          <span
+            className={cn(
+              "w-[190px] shrink-0 truncate text-right font-num text-[13px] tabular",
+              amountClass,
+            )}
+          >
+            {metrics.hasLimit
+              ? `${formatNumber(slice.spent)} / ${formatNumber(slice.limit as number)}`
+              : formatNumber(slice.spent)}
+          </span>
+          <span className="flex w-[54px] shrink-0 justify-end">
+            {metrics.hasLimit && (
+              <BudgetPercentBadge
+                percent={metrics.percent}
+                status={metrics.status}
+                className={cn(
+                  "px-2 py-[3px] text-[11.5px]",
+                  isExpanded && metrics.status === "ok" && "bg-surface",
+                )}
+              />
+            )}
+          </span>
+        </button>
+      </div>
+
+      {/* Phone row */}
+      <div className="flex flex-col gap-2 px-3 py-2.5 lg:hidden">
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => onSelectSlice(slice)}
+            className="flex min-w-0 flex-1 items-center gap-2.5 text-left"
+          >
+            <span
+              className="size-[9px] shrink-0 rounded-full"
+              style={{ backgroundColor: slice.color }}
+            />
+            <span className="min-w-0 flex-1 truncate text-[14px] font-semibold text-text">
+              {name}
+            </span>
+            <span className={cn("shrink-0 font-num text-[12.5px] tabular", amountClass)}>
+              {metrics.hasLimit
+                ? `${formatCompact(slice.spent)} / ${formatCompact(slice.limit as number)}`
+                : formatCompact(slice.spent)}
+            </span>
+          </button>
+          {hasSubs ? (
+            <button
+              type="button"
+              onClick={onToggle}
+              aria-expanded={isExpanded}
+              aria-label={t("budget.toggleBreakdown")}
+              className="-mr-1 flex size-7 shrink-0 items-center justify-center rounded-full text-text-3"
+            >
+              <LuChevronDown
+                className={cn(
+                  "size-4 transition-transform duration-300",
+                  isExpanded && "rotate-180",
+                )}
+              />
+            </button>
+          ) : (
+            <span className="w-6 shrink-0" aria-hidden="true" />
+          )}
+        </div>
+        {metrics.hasLimit ? (
+          <button
+            type="button"
+            onClick={() => onSelectSlice(slice)}
+            className="block"
+            tabIndex={-1}
+            aria-hidden="true"
+          >
+            <MeterTrack
+              ratio={metrics.ratio}
+              color={metrics.status === "over" ? "var(--expense)" : slice.color}
+            />
+          </button>
+        ) : (
+          <button
+            type="button"
+            onClick={() => onSelectSlice(slice)}
+            className="text-left text-[12px] text-text-3"
+            tabIndex={-1}
+          >
+            {t("budget.noLimitTapHint")}
+          </button>
+        )}
+      </div>
+
+      <AnimatePresence initial={false}>
+        {isExpanded && hasSubs && (
+          <m.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={{ duration: 0.28, ease: EASE }}
+            className="overflow-hidden"
+          >
+            <div className="flex flex-col gap-1.5 px-3 pb-2.5 lg:px-0 lg:pt-1.5 lg:pb-0">
+              {subSlices.map((sub) => (
+                <BudgetSubRow
+                  key={sub.id}
+                  slice={sub}
+                  onHover={onHover}
+                  onSelect={() => onSelectSlice(sub, slice)}
+                />
+              ))}
+              {subLimitTotal > 0 && (
+                <div className="hidden items-center gap-2.5 pt-1 pr-4 pb-2.5 pl-11 text-[12px] text-text-3 lg:flex">
+                  <span className="shrink-0">{t("budget.subLimitTotal")}</span>
+                  <span className="h-0 flex-1 border-b border-dotted border-border-strong" />
+                  <span
+                    className={cn(
+                      "shrink-0 font-num tabular",
+                      isSubLimitOver && "text-expense-text",
+                    )}
+                  >
+                    {metrics.hasLimit
+                      ? t("budget.subLimitOf", {
+                          allocated: format(subLimitTotal),
+                          total: formatNumber(slice.limit as number),
+                        })
+                      : format(subLimitTotal)}
+                  </span>
+                </div>
+              )}
+            </div>
+          </m.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
+interface BudgetSubRowProps {
+  slice: BudgetSlice;
+  onHover: (id: string | null) => void;
+  onSelect: () => void;
+}
+
+function BudgetSubRow({ slice, onHover, onSelect }: BudgetSubRowProps) {
+  const { t } = useTranslation();
+  const { formatNumber, formatCompact } = useMoneyFormat();
+  const metrics = getRowMetrics(slice);
+  const name = slice.name ?? t("dashboard.otherSubCategory");
+  const amountClass = metrics.status === "over" ? "text-expense-text" : "text-text-2";
+
+  return (
+    <button
+      type="button"
+      onClick={onSelect}
+      onMouseEnter={(event) => {
+        event.stopPropagation();
+        onHover(slice.id);
+      }}
+      className="flex w-full items-center gap-3 rounded-[12px] px-2 py-1.5 text-left transition-colors duration-200 hover:bg-surface-3/60 lg:gap-3.5 lg:rounded-[14px] lg:bg-bg lg:py-2.5 lg:pr-4 lg:pl-11 lg:hover:bg-surface-2/70"
+    >
+      <span
+        className="hidden size-[7px] shrink-0 rounded-full lg:block"
+        style={{ backgroundColor: slice.color }}
+      />
+      <span className="min-w-0 flex-1 truncate text-[13px] text-text lg:w-[180px] lg:flex-none lg:font-medium">
+        {name}
+      </span>
+      <span className="hidden min-w-0 flex-1 lg:flex">
+        <RowMeter slice={slice} metrics={metrics} />
+      </span>
+      <span className={cn("shrink-0 font-num text-[12px] tabular lg:hidden", amountClass)}>
+        {metrics.hasLimit
+          ? `${formatCompact(slice.spent)} / ${formatCompact(slice.limit as number)}`
+          : formatCompact(slice.spent)}
+      </span>
+      <span
+        className={cn(
+          "hidden w-[190px] shrink-0 truncate text-right font-num text-[13px] tabular lg:block",
+          amountClass,
+        )}
+      >
+        {metrics.hasLimit
+          ? `${formatNumber(slice.spent)} / ${formatNumber(slice.limit as number)}`
+          : formatNumber(slice.spent)}
+      </span>
+      <span className="hidden w-[54px] shrink-0 justify-end lg:flex">
+        {metrics.hasLimit && (
+          <BudgetPercentBadge
+            percent={metrics.percent}
+            status={metrics.status}
+            className="px-2 py-[3px] text-[11.5px]"
+          />
+        )}
+      </span>
+    </button>
+  );
+}
+
+/** Desktop middle column: the limit bar, or a "no limit yet" pill. */
+function RowMeter({ slice, metrics }: { slice: BudgetSlice; metrics: RowMetrics }) {
+  const { t } = useTranslation();
+
+  if (!metrics.hasLimit) {
+    return (
+      <span className="flex min-w-0 flex-1">
+        <span className="truncate rounded-full border border-border px-2.5 py-[3px] text-[11.5px] text-text-3">
+          {t("budget.noLimitSet")}
+        </span>
+      </span>
+    );
   }
 
   return (
-    <div className="flex flex-col gap-5 rounded-2xl border border-ink-200 bg-white p-5 dark:border-ink-800 dark:bg-ink-900">
-      <div className="flex items-center justify-between gap-2">
-        <Words type="base/bold" className="text-ink-900 dark:text-ink-50">
-          {title}
-        </Words>
-        <span className="shrink-0 rounded-full bg-ink-100 px-3 py-1.5 dark:bg-ink-800">
-          <Words type="xs/bold" as="span" className="text-ink-600 dark:text-ink-300 flex">
-            {periodLabel}
-          </Words>
-        </span>
-      </div>
+    <span className="min-w-0 flex-1">
+      <MeterTrack
+        ratio={metrics.ratio}
+        color={metrics.status === "over" ? "var(--expense)" : slice.color}
+      />
+    </span>
+  );
+}
 
-      <div className="relative">
-        {isEmpty ? (
-          <div className="flex flex-col items-center justify-center gap-1 rounded-2xl border border-dashed border-ink-200 py-10 dark:border-ink-800">
-            <Words type="sm/bold" className="text-ink-500 dark:text-ink-400">
-              {t("budget.noRowsAvailable")}
-            </Words>
-          </div>
-        ) : (
-          <div className="flex flex-col items-center gap-6 sm:flex-row sm:items-start">
-            <DonutChart
-              data={activeSlices.map(
-                (slice): DonutChartDatum => ({
-                  id: slice.id,
-                  label: slice.name ?? t("dashboard.otherSubCategory"),
-                  value: slice.spent,
-                  color: slice.color,
-                }),
-              )}
-              size={180}
-              thickness={24}
-              centerLabel={centerLabel}
-              centerValue={format(activeTotal)}
-              formatValue={format}
-              activeId={hoveredSliceId}
-              onSliceClick={!expandedSlice ? (datum) => handleOverviewClick(datum.id) : undefined}
-            />
-
-            <div className="flex w-full min-w-0 flex-1 flex-col gap-1">
-              {allocatedLimit > 0 && (
-                <Words
-                  type="xxs/regular"
-                  as="span"
-                  className={cn(
-                    "px-1 pb-1 text-ink-400 dark:text-ink-500",
-                    allocatedLimit > totalLimit && "text-red-500 dark:text-red-400",
-                  )}
-                >
-                  {t("budget.allocatedLimitHint", {
-                    allocated: format(allocatedLimit),
-                    total: format(totalLimit),
-                  })}
-                </Words>
-              )}
-              {slices.map((slice) => (
-                <BudgetCategoryRow
-                  key={slice.id}
-                  slice={slice}
-                  subSlices={expandedId === slice.id ? detailSlices : []}
-                  isExpanded={expandedId === slice.id}
-                  isDimmed={expandedId !== null && expandedId !== slice.id}
-                  onToggle={() => handleToggle(slice.id)}
-                  onHoverSlice={setHoveredSliceId}
-                  formatAmount={format}
-                  onSelectSlice={onSelectSlice}
-                />
-              ))}
-            </div>
-          </div>
-        )}
-
-        {isLoading && (
-          <div className="absolute inset-0 flex items-start justify-center rounded-2xl bg-white/60 pt-12 backdrop-blur-[2px] dark:bg-ink-950/60">
-            <IconLoader className="h-6 w-6 animate-spin text-primary-500" />
-          </div>
-        )}
-      </div>
-    </div>
+function MeterTrack({ ratio, color }: { ratio: number; color: string }) {
+  return (
+    <span className="block h-1.5 w-full overflow-hidden rounded-full bg-surface-3/70">
+      <m.span
+        className="block h-full rounded-full"
+        style={{ backgroundColor: color }}
+        initial={{ width: 0 }}
+        animate={{ width: `${Math.min(1, Math.max(0, ratio)) * 100}%` }}
+        transition={{ duration: 0.7, ease: EASE }}
+      />
+    </span>
   );
 }

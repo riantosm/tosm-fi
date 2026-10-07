@@ -6,7 +6,9 @@ export const accountService = {
     try {
       await httpClient.delete("/account/data");
     } catch (error) {
-      throw new Error(getApiErrorMessage(error, i18n.t("settingsDanger.resetError")));
+      throw new Error(getApiErrorMessage(error, i18n.t("settingsDanger.resetError")), {
+        cause: error,
+      });
     }
   },
 };

@@ -1,81 +1,103 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { HiOutlineHashtag, HiXMark } from "react-icons/hi2";
-import { Words } from "@/components/atoms/Words";
-import { Tooltip } from "@/components/atoms/Tooltip";
+import { LuCheck, LuHash } from "react-icons/lu";
+import { Button } from "@/components/atoms/Button";
 import { ColorWheel } from "@/components/atoms/ColorWheel";
+import { Input } from "@/components/atoms/Input";
+import { FormField } from "@/components/molecules/FormField";
+import { Modal, ModalActions } from "@/components/molecules/Modal";
+import { useDialogSession } from "@/hooks/use-dialog-session";
 
-interface CustomColorPanelProps {
+interface CustomColorModalProps {
+  isOpen: boolean;
   value: string;
-  onChange: (hex: string) => void;
   onClose: () => void;
+  onApply: (hex: string) => void;
 }
 
 const HEX_PATTERN = /^#[0-9a-fA-F]{6}$/;
 
-export function CustomColorPanel({ value, onChange, onClose }: CustomColorPanelProps) {
+/** "Warna custom": hue ring + saturation/value square, plus a hex field. */
+export function CustomColorModal({ isOpen, value, onClose, onApply }: CustomColorModalProps) {
   const { t } = useTranslation();
-  const [isHexInputVisible, setIsHexInputVisible] = useState(false);
-  const [hexDraft, setHexDraft] = useState(value);
+  const session = useDialogSession(isOpen);
+  return (
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      onBack={onClose}
+      size="sm"
+      title={t("common.customColor")}
+      subtitle={t("common.customColorSubtitle")}
+    >
+      <CustomColorFields key={session} value={value} onClose={onClose} onApply={onApply} />
+    </Modal>
+  );
+}
 
-  function submitHexDraft() {
-    const normalized = hexDraft.startsWith("#") ? hexDraft : `#${hexDraft}`;
-    if (HEX_PATTERN.test(normalized)) onChange(normalized);
+function CustomColorFields({ value, onClose, onApply }: Omit<CustomColorModalProps, "isOpen">) {
+  const { t } = useTranslation();
+  const [color, setColor] = useState(value);
+  const [hexDraft, setHexDraft] = useState(value.replace("#", "").toUpperCase());
+  const [wheelKey, setWheelKey] = useState(0);
+
+  function handleWheelChange(hex: string) {
+    setColor(hex);
+    setHexDraft(hex.replace("#", "").toUpperCase());
   }
 
-  function toggleHexInput() {
-    const next = !isHexInputVisible;
-    if (next) setHexDraft(value);
-    setIsHexInputVisible(next);
+  function handleHexChange(raw: string) {
+    const cleaned = raw
+      .replace(/[^0-9a-fA-F]/g, "")
+      .slice(0, 6)
+      .toUpperCase();
+    setHexDraft(cleaned);
+    const normalized = `#${cleaned}`;
+    if (HEX_PATTERN.test(normalized)) {
+      setColor(normalized);
+      setWheelKey((key) => key + 1);
+    }
   }
 
   return (
-    <div className="flex flex-col gap-4 rounded-2xl border border-ink-200 bg-ink-50 p-4 dark:border-ink-800 dark:bg-ink-800">
-      <div className="flex items-center justify-between">
-        <Words type="sm/bold" className="text-ink-800 dark:text-ink-100">
-          {t("common.customColor")}
-        </Words>
-        <div className="flex items-center gap-2">
-          <Tooltip content="Hex">
-            <button
-              type="button"
-              onClick={toggleHexInput}
-              aria-label="Hex"
-              className="flex h-7 w-7 items-center justify-center rounded-md text-ink-400 hover:bg-ink-100 dark:hover:bg-ink-700"
-            >
-              <HiOutlineHashtag className="h-4 w-4" />
-            </button>
-          </Tooltip>
-          <div
-            className="h-7 w-7 shrink-0 rounded-full border border-ink-200 dark:border-ink-700"
-            style={{ background: value }}
-          />
-          <Tooltip content={t("common.close")}>
-            <button
-              type="button"
-              onClick={onClose}
-              aria-label={t("common.close")}
-              className="flex h-7 w-7 items-center justify-center rounded-md text-ink-400 hover:bg-ink-100 dark:hover:bg-ink-700"
-            >
-              <HiXMark className="h-4 w-4" />
-            </button>
-          </Tooltip>
+    <div className="flex flex-col gap-5">
+      <div className="flex justify-center py-1">
+        <ColorWheel key={wheelKey} value={color} onChange={handleWheelChange} />
+      </div>
+
+      <div className="flex items-end gap-3">
+        <span
+          className="size-12 shrink-0 rounded-[14px] shadow-card transition-colors duration-200"
+          style={{ backgroundColor: color }}
+          aria-hidden="true"
+        />
+        <div className="min-w-0 flex-1">
+          <FormField label={t("common.hexCode")} htmlFor="custom-color-hex">
+            <Input
+              id="custom-color-hex"
+              value={hexDraft}
+              onChange={(event) => handleHexChange(event.target.value)}
+              startIcon={<LuHash />}
+              className="font-mono tracking-[0.06em] uppercase"
+              maxLength={7}
+            />
+          </FormField>
         </div>
       </div>
 
-      {isHexInputVisible && (
-        <input
-          value={hexDraft}
-          onChange={(event) => setHexDraft(event.target.value)}
-          onBlur={submitHexDraft}
-          onKeyDown={(event) => {
-            if (event.key === "Enter") submitHexDraft();
-          }}
-          className="rounded-lg border border-ink-200 bg-white px-3 py-1.5 font-mono text-sm text-ink-800 outline-none focus:border-primary-400 dark:border-ink-700 dark:bg-ink-900 dark:text-ink-100"
-        />
-      )}
-
-      <ColorWheel value={value} onChange={onChange} />
+      <ModalActions>
+        <Button type="button" variant="outline" onClick={onClose}>
+          {t("common.cancel")}
+        </Button>
+        <Button
+          type="button"
+          leftIcon={<LuCheck />}
+          onClick={() => onApply(color)}
+          disabled={!HEX_PATTERN.test(color)}
+        >
+          {t("common.applyColor")}
+        </Button>
+      </ModalActions>
     </div>
   );
 }

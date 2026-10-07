@@ -6,10 +6,12 @@ interface ColorWheelProps {
   onChange: (hex: string) => void;
 }
 
-const RING_SIZE = 200;
-const RING_THICKNESS = 20;
-const SQUARE_PADDING = 10;
-const SQUARE_SIZE = RING_SIZE - (RING_THICKNESS + SQUARE_PADDING) * 2;
+const RING_SIZE = 232;
+const RING_THICKNESS = 22;
+/** Largest square that fits inside the ring's hole, minus a little breathing room. */
+const SQUARE_SIZE = Math.floor((RING_SIZE - RING_THICKNESS * 2) / Math.SQRT2) - 10;
+const SQUARE_OFFSET = (RING_SIZE - SQUARE_SIZE) / 2;
+const RING_MASK = `radial-gradient(farthest-side, transparent calc(100% - ${RING_THICKNESS}px), #000 calc(100% - ${RING_THICKNESS - 1}px))`;
 
 export function ColorWheel({ value, onChange }: ColorWheelProps) {
   const ringRef = useRef<HTMLDivElement>(null);
@@ -88,19 +90,33 @@ export function ColorWheel({ value, onChange }: ColorWheelProps) {
       <div
         ref={ringRef}
         onPointerDown={(event) => {
+          // Only the colored band picks a hue — not the empty middle around the square.
+          const rect = ringRef.current?.getBoundingClientRect();
+          if (rect) {
+            const dx = event.clientX - (rect.left + rect.width / 2);
+            const dy = event.clientY - (rect.top + rect.height / 2);
+            if (Math.hypot(dx, dy) < RING_SIZE / 2 - RING_THICKNESS - 4) return;
+          }
           draggingRef.current = "ring";
           updateFromRing(event.clientX, event.clientY);
         }}
         className="absolute inset-0 rounded-full"
-        style={{ background: "conic-gradient(red, yellow, lime, cyan, blue, magenta, red)" }}
       >
         <div
-          className="pointer-events-none absolute rounded-full border-2 border-white shadow"
+          className="absolute inset-0 rounded-full"
           style={{
-            width: 16,
-            height: 16,
-            left: ringThumbX - 8,
-            top: ringThumbY - 8,
+            background: "conic-gradient(red, yellow, lime, cyan, blue, magenta, red)",
+            WebkitMask: RING_MASK,
+            mask: RING_MASK,
+          }}
+        />
+        <div
+          className="pointer-events-none absolute rounded-full border-[3px] border-white shadow-[0_2px_6px_rgb(0_0_0/0.25)]"
+          style={{
+            width: 20,
+            height: 20,
+            left: ringThumbX - 10,
+            top: ringThumbY - 10,
             background: `hsl(${hsv.h}, 100%, 50%)`,
           }}
         />
@@ -112,10 +128,10 @@ export function ColorWheel({ value, onChange }: ColorWheelProps) {
           draggingRef.current = "square";
           updateFromSquare(event.clientX, event.clientY);
         }}
-        className="absolute overflow-hidden rounded-xl"
+        className="absolute overflow-hidden rounded-control"
         style={{
-          left: RING_THICKNESS + SQUARE_PADDING,
-          top: RING_THICKNESS + SQUARE_PADDING,
+          left: SQUARE_OFFSET,
+          top: SQUARE_OFFSET,
           width: SQUARE_SIZE,
           height: SQUARE_SIZE,
           backgroundImage:

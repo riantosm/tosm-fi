@@ -1,27 +1,43 @@
 import { useEffect, useState, type DragEvent } from "react";
 import { useTranslation } from "react-i18next";
-import { HiOutlineArrowsUpDown } from "react-icons/hi2";
-import { DashboardLayout } from "@/components/templates/DashboardLayout";
-import { Words } from "@/components/atoms/Words";
+import { AnimatePresence, m } from "motion/react";
+import { LuArrowUpDown, LuCheck, LuInfo, LuPlus, LuWallet } from "react-icons/lu";
 import { Button } from "@/components/atoms/Button";
-import { Tooltip } from "@/components/atoms/Tooltip";
+import { IconButton } from "@/components/atoms/IconButton";
+import { Reveal } from "@/components/atoms/Reveal";
+import { Skeleton } from "@/components/atoms/Skeleton";
+import { Card } from "@/components/molecules/Card";
+import { EmptyState } from "@/components/molecules/EmptyState";
+import { PageHeader } from "@/components/molecules/PageHeader";
 import { WalletCard } from "@/layouts/wallet/WalletCard";
 import { AddWalletCard } from "@/layouts/wallet/AddWalletCard";
 import { WalletFormModal } from "@/layouts/wallet/WalletFormModal";
 import { WalletReorderItem } from "@/layouts/wallet/WalletReorderItem";
+import { WalletSummaryCard } from "@/layouts/wallet/WalletSummaryCard";
 import { ViewModeToggle } from "@/layouts/wallet/ViewModeToggle";
 import { useWallets } from "@/hooks/use-wallets";
 import { useConfirmDialog } from "@/hooks/use-confirm-dialog";
 import { useWalletViewMode } from "@/hooks/use-wallet-view-mode";
 import { useToast } from "@/hooks/use-toast";
-import { useCurrency } from "@/hooks/use-currency";
 import type { WalletAccount, WalletInput } from "@/types/wallet.types";
+
+const EASE = [0.22, 1, 0.36, 1] as const;
 
 function moveItem(list: WalletAccount[], draggedId: string, targetId: string): WalletAccount[] {
   const fromIndex = list.findIndex((item) => item.idWallet === draggedId);
   const toIndex = list.findIndex((item) => item.idWallet === targetId);
   if (fromIndex === -1 || toIndex === -1) return list;
 
+  const next = [...list];
+  const [moved] = next.splice(fromIndex, 1);
+  next.splice(toIndex, 0, moved);
+  return next;
+}
+
+function moveBy(list: WalletAccount[], id: string, delta: number): WalletAccount[] {
+  const fromIndex = list.findIndex((item) => item.idWallet === id);
+  const toIndex = fromIndex + delta;
+  if (fromIndex === -1 || toIndex < 0 || toIndex >= list.length) return list;
   const next = [...list];
   const [moved] = next.splice(fromIndex, 1);
   next.splice(toIndex, 0, moved);
@@ -43,9 +59,6 @@ export function WalletPage() {
   const { confirm } = useConfirmDialog();
   const { viewMode, setViewMode } = useWalletViewMode();
   const { showToast } = useToast();
-  const { format } = useCurrency();
-
-  const totalBalance = wallets.reduce((sum, wallet) => sum + wallet.balance, 0);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingWallet, setEditingWallet] = useState<WalletAccount | null>(null);
@@ -56,11 +69,18 @@ export function WalletPage() {
   const [isReordering, setIsReordering] = useState(false);
   const [localOrder, setLocalOrder] = useState<WalletAccount[]>([]);
   const [draggedId, setDraggedId] = useState<string | null>(null);
+  const [activeId, setActiveId] = useState<string | null>(null);
   const [isSavingOrder, setIsSavingOrder] = useState(false);
 
   useEffect(() => {
     if (status === "idle") void loadWallets();
   }, [status, loadWallets]);
+
+  const positiveTotal = wallets.reduce((sum, wallet) => sum + Math.max(0, wallet.balance), 0);
+  const shareOf = (wallet: WalletAccount) =>
+    positiveTotal > 0 ? (Math.max(0, wallet.balance) / positiveTotal) * 100 : 0;
+  const isInitialLoading = status !== "loaded" && wallets.length === 0;
+  const isEmpty = status === "loaded" && wallets.length === 0;
 
   function openCreateModal() {
     setEditingWallet(null);
@@ -89,10 +109,11 @@ export function WalletPage() {
   }
 
   async function handleDelete(id: string) {
+    const wallet = wallets.find((item) => item.idWallet === id);
     const confirmed = await confirm({
-      title: t("wallet.deleteConfirmTitle"),
+      title: t("wallet.deleteConfirmTitle", { name: wallet?.nameWallet ?? "" }),
       description: t("wallet.deleteConfirmDescription"),
-      confirmLabel: t("wallet.deleteConfirmAction"),
+      confirmLabel: t("wallet.deleteWalletAction"),
       cancelLabel: t("common.cancel"),
       destructive: true,
     });
@@ -123,6 +144,7 @@ export function WalletPage() {
 
   function handleEnterReorder() {
     setLocalOrder(wallets);
+    setActiveId(null);
     setIsReordering(true);
   }
 
@@ -149,91 +171,214 @@ export function WalletPage() {
     }
   }
 
+  function handleMove(id: string, delta: number) {
+    setLocalOrder((prev) => moveBy(prev, id, delta));
+    setActiveId(id);
+  }
+
+  const subtitle = isReordering
+    ? t("wallet.reorderSubtitle")
+    : isEmpty
+      ? t("wallet.emptySubtitle")
+      : t("wallet.pageSubtitle", { count: wallets.length });
+
   return (
-    <DashboardLayout>
-      <div className="flex flex-col gap-6">
-        <div className="flex flex-wrap items-center justify-between gap-2">
-          <div className="flex flex-wrap items-center gap-2">
-            <Words as="h1" type="2xl/bold" className="text-ink-900 dark:text-ink-50">
-              {t("nav.wallet")}
-            </Words>
-            <span className="shrink-0 rounded-full bg-ink-100 px-3 py-1.5 dark:bg-ink-800">
-              <Words
-                type="xs/bold"
-                as="span"
-                className="text-ink-600 dark:text-ink-300 flex items-center"
+    <div className="flex flex-col gap-4 lg:gap-5">
+      <PageHeader
+        title={t("nav.wallet")}
+        subtitle={subtitle}
+        showSubtitleOnMobile={false}
+        actions={
+          isReordering ? (
+            <>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={handleCancelReorder}
+                disabled={isSavingOrder}
               >
-                {t("dashboard.walletCountLabel", { count: wallets.length })}
-              </Words>
-            </span>
-            <span className="shrink-0 rounded-full bg-gradient-to-bl from-primary-400 to-primary-900 px-3 py-1.5">
-              <Words type="xs/bold" as="span" className="text-white flex items-center">
-                {format(totalBalance)}
-              </Words>
-            </span>
-          </div>
-
-          {isReordering ? (
-            <div className="flex shrink-0 items-center gap-2">
-              <Button variant="secondary" onClick={handleCancelReorder}>
-                <Words type="sm/bold" as="span">
-                  {t("common.cancel")}
-                </Words>
+                {t("common.cancel")}
               </Button>
-              <Button onClick={() => void handleSaveOrder()} isLoading={isSavingOrder}>
-                <Words type="sm/bold" as="span">
-                  {t("wallet.saveOrder")}
-                </Words>
+              <Button
+                type="button"
+                leftIcon={<LuCheck />}
+                onClick={() => void handleSaveOrder()}
+                isLoading={isSavingOrder}
+              >
+                {t("wallet.saveOrder")}
               </Button>
-            </div>
+            </>
           ) : (
-            <div className="flex shrink-0 items-center gap-3">
-              <Tooltip content={t("wallet.toggleReorder")}>
-                <button
+            <>
+              {!isEmpty && <ViewModeToggle value={viewMode} onChange={setViewMode} />}
+              {wallets.length > 1 && (
+                <Button
                   type="button"
+                  variant="outline"
+                  leftIcon={<LuArrowUpDown />}
                   onClick={handleEnterReorder}
-                  aria-label={t("wallet.toggleReorder")}
-                  className="flex h-9 w-9 items-center justify-center rounded-full border border-ink-200 text-ink-500 transition-colors hover:bg-ink-100 dark:border-ink-800 dark:text-ink-400 dark:hover:bg-ink-800"
                 >
-                  <HiOutlineArrowsUpDown className="h-4 w-4" />
-                </button>
-              </Tooltip>
-              <ViewModeToggle value={viewMode} onChange={setViewMode} />
-            </div>
-          )}
-        </div>
+                  {t("wallet.toggleReorder")}
+                </Button>
+              )}
+              <Button type="button" leftIcon={<LuPlus />} onClick={openCreateModal}>
+                {t("wallet.addTitle")}
+              </Button>
+            </>
+          )
+        }
+        mobileActions={
+          isReordering ? (
+            <>
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                onClick={handleCancelReorder}
+                disabled={isSavingOrder}
+              >
+                {t("common.cancel")}
+              </Button>
+              <Button
+                type="button"
+                size="sm"
+                leftIcon={<LuCheck />}
+                onClick={() => void handleSaveOrder()}
+                isLoading={isSavingOrder}
+              >
+                {t("wallet.saveShort")}
+              </Button>
+            </>
+          ) : (
+            !isEmpty && (
+              <>
+                <ViewModeToggle value={viewMode} onChange={setViewMode} variant="icon" />
+                {wallets.length > 1 && (
+                  <IconButton
+                    label={t("wallet.toggleReorder")}
+                    icon={<LuArrowUpDown />}
+                    variant="surface"
+                    size="lg"
+                    tooltip={false}
+                    onClick={handleEnterReorder}
+                  />
+                )}
+              </>
+            )
+          )
+        }
+      />
 
+      <AnimatePresence mode="wait" initial={false}>
         {isReordering ? (
-          <div className="flex flex-col gap-2">
-            {localOrder.map((wallet) => (
+          <m.div
+            key="reorder"
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -4 }}
+            transition={{ duration: 0.25, ease: EASE }}
+            className="flex flex-col gap-2 lg:rounded-card lg:bg-surface lg:p-4 lg:shadow-card"
+          >
+            <p className="flex items-center gap-2 rounded-control bg-primary-soft px-3.5 py-2.5 text-[12.5px] text-primary-text lg:mb-1 lg:bg-transparent lg:px-1 lg:py-1 lg:text-[13px] lg:text-text-2">
+              <LuInfo className="size-4 shrink-0 lg:text-primary-text" />
+              <span className="lg:hidden">{t("wallet.reorderHintShort")}</span>
+              <span className="hidden lg:inline">{t("wallet.reorderHint")}</span>
+            </p>
+            {localOrder.map((wallet, index) => (
               <WalletReorderItem
                 key={wallet.idWallet}
                 wallet={wallet}
                 isDragging={draggedId === wallet.idWallet}
-                onDragStart={() => setDraggedId(wallet.idWallet)}
+                isActive={activeId === wallet.idWallet}
+                canMoveUp={index > 0}
+                canMoveDown={index < localOrder.length - 1}
+                onMoveUp={() => handleMove(wallet.idWallet, -1)}
+                onMoveDown={() => handleMove(wallet.idWallet, 1)}
+                onDragStart={() => {
+                  setDraggedId(wallet.idWallet);
+                  setActiveId(wallet.idWallet);
+                }}
                 onDragOver={(event) => handleDragOver(event, wallet.idWallet)}
                 onDrop={(event) => event.preventDefault()}
                 onDragEnd={() => setDraggedId(null)}
               />
             ))}
-          </div>
-        ) : (
-          <div
-            className={
-              viewMode === "grid" ? "grid grid-cols-2 gap-4 xl:grid-cols-3" : "flex flex-col gap-3"
-            }
+          </m.div>
+        ) : isEmpty ? (
+          <m.div
+            key="empty"
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3, ease: EASE }}
           >
-            {wallets.map((wallet) => (
-              <WalletCard
-                key={wallet.idWallet}
-                wallet={wallet}
-                onClick={() => openEditModal(wallet)}
-              />
-            ))}
-            <AddWalletCard onClick={openCreateModal} />
-          </div>
+            <EmptyState
+              variant="page"
+              icon={<LuWallet />}
+              title={t("wallet.emptyTitle")}
+              description={t("wallet.emptyDescription")}
+              action={
+                <Button type="button" leftIcon={<LuPlus />} onClick={openCreateModal}>
+                  {t("wallet.addFirst")}
+                </Button>
+              }
+              className="min-h-[360px] lg:min-h-[520px]"
+            />
+          </m.div>
+        ) : (
+          <m.div
+            key={`view-${viewMode}`}
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -4 }}
+            transition={{ duration: 0.25, ease: EASE }}
+            className="flex flex-col gap-4 lg:gap-5"
+          >
+            <Reveal immediate>
+              <WalletSummaryCard wallets={wallets} isLoading={isInitialLoading} />
+            </Reveal>
+
+            {isInitialLoading ? (
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:gap-4 xl:grid-cols-3">
+                {Array.from({ length: 3 }, (_, index) => (
+                  <Skeleton key={index} className="h-[150px] rounded-card lg:h-[171px]" />
+                ))}
+              </div>
+            ) : viewMode === "grid" ? (
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:gap-4 xl:grid-cols-3">
+                {wallets.map((wallet, index) => (
+                  <Reveal key={wallet.idWallet} delay={Math.min(index, 6) * 0.04}>
+                    <WalletCard
+                      wallet={wallet}
+                      share={shareOf(wallet)}
+                      onClick={() => openEditModal(wallet)}
+                    />
+                  </Reveal>
+                ))}
+                <Reveal delay={Math.min(wallets.length, 6) * 0.04}>
+                  <AddWalletCard onClick={openCreateModal} />
+                </Reveal>
+              </div>
+            ) : (
+              <Reveal>
+                <Card padding="none" className="flex flex-col px-4 py-1.5 sm:px-5 lg:px-6 lg:py-2">
+                  <div className="flex flex-col divide-y divide-border">
+                    {wallets.map((wallet) => (
+                      <WalletCard
+                        key={wallet.idWallet}
+                        wallet={wallet}
+                        share={shareOf(wallet)}
+                        variant="row"
+                        onClick={() => openEditModal(wallet)}
+                      />
+                    ))}
+                  </div>
+                  <AddWalletCard onClick={openCreateModal} variant="row" />
+                </Card>
+              </Reveal>
+            )}
+          </m.div>
         )}
-      </div>
+      </AnimatePresence>
 
       <WalletFormModal
         isOpen={isModalOpen}
@@ -246,6 +391,6 @@ export function WalletPage() {
         onDelete={handleDelete}
         onSetPrimary={handleSetPrimary}
       />
-    </DashboardLayout>
+    </div>
   );
 }

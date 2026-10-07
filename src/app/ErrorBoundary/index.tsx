@@ -1,7 +1,7 @@
 import { Component, type ErrorInfo, type ReactNode } from "react";
 import { useLocation } from "react-router-dom";
+import { LuCloudAlert, LuRefreshCw, LuRotateCw } from "react-icons/lu";
 import { Button } from "@/components/atoms/Button";
-import { Words } from "@/components/atoms/Words";
 import i18n from "@/helpers/i18n";
 import { logCrash } from "@/utils/crash-logger";
 
@@ -64,20 +64,31 @@ class ErrorBoundaryImpl extends Component<ErrorBoundaryImplProps, ErrorBoundaryI
   render() {
     if (this.state.error) {
       return (
-        <div className="flex h-svh flex-col items-center justify-center gap-4 bg-ink-50 px-6 text-center dark:bg-ink-950">
-          <Words type="xl/bold" className="text-ink-900 dark:text-ink-50">
-            {i18n.t("errorBoundary.title")}
-          </Words>
-          <Words type="sm/regular" className="max-w-sm text-ink-500 dark:text-ink-400">
-            {i18n.t("errorBoundary.description")}
-          </Words>
-          <div className="flex gap-3">
-            <Button variant="secondary" onClick={() => this.setState({ error: null })}>
-              {i18n.t("errorBoundary.retryButton")}
-            </Button>
-            <Button variant="primary" onClick={() => window.location.reload()}>
-              {i18n.t("errorBoundary.reloadButton")}
-            </Button>
+        <div className="flex min-h-svh items-center justify-center bg-bg px-4">
+          <div className="flex w-full max-w-[480px] animate-fade-up flex-col items-center gap-4 rounded-[28px] bg-surface px-6 py-9 text-center shadow-pop sm:px-10">
+            <span className="flex size-[88px] items-center justify-center rounded-full bg-expense-soft">
+              <span className="flex size-12 items-center justify-center rounded-[14px] bg-surface text-expense-text shadow-card">
+                <LuCloudAlert className="size-[22px]" />
+              </span>
+            </span>
+            <h1 className="mt-1 font-display text-[22px] font-semibold text-text sm:text-[24px]">
+              {i18n.t("errorBoundary.title")}
+            </h1>
+            <p className="max-w-[400px] text-[13.5px] leading-relaxed text-text-2">
+              {i18n.t("errorBoundary.description")}
+            </p>
+            <div className="mt-2 grid w-full grid-cols-1 gap-2.5 sm:grid-cols-2">
+              <Button leftIcon={<LuRefreshCw />} onClick={() => this.setState({ error: null })}>
+                {i18n.t("errorBoundary.retryButton")}
+              </Button>
+              <Button
+                variant="outline"
+                leftIcon={<LuRotateCw />}
+                onClick={() => window.location.reload()}
+              >
+                {i18n.t("errorBoundary.reloadButton")}
+              </Button>
+            </div>
           </div>
         </div>
       );

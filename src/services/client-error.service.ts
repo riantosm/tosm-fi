@@ -20,7 +20,7 @@ export const clientErrorService = {
       const { data } = await httpClient.get("/errors", { params });
       return data.data as ClientError[];
     } catch (error) {
-      throw new Error(getApiErrorMessage(error, i18n.t("errorLog.genericError")));
+      throw new Error(getApiErrorMessage(error, i18n.t("errorLog.genericError")), { cause: error });
     }
   },
 
@@ -28,7 +28,7 @@ export const clientErrorService = {
     try {
       await httpClient.delete(`/errors/${idClientError}`);
     } catch (error) {
-      throw new Error(getApiErrorMessage(error, i18n.t("errorLog.genericError")));
+      throw new Error(getApiErrorMessage(error, i18n.t("errorLog.genericError")), { cause: error });
     }
   },
 };

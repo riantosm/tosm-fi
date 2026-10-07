@@ -1,10 +1,14 @@
 import { useEffect, useState, type DragEvent } from "react";
 import { useTranslation } from "react-i18next";
-import { HiOutlineArrowsUpDown, HiOutlinePlus } from "react-icons/hi2";
-import { DashboardLayout } from "@/components/templates/DashboardLayout";
-import { Words } from "@/components/atoms/Words";
+import { AnimatePresence, m } from "motion/react";
+import { LuArrowUpDown, LuCheck, LuInfo, LuPlus, LuTags } from "react-icons/lu";
 import { Button } from "@/components/atoms/Button";
-import { Tooltip } from "@/components/atoms/Tooltip";
+import { IconButton } from "@/components/atoms/IconButton";
+import { Reveal } from "@/components/atoms/Reveal";
+import { Skeleton } from "@/components/atoms/Skeleton";
+import { EmptyState } from "@/components/molecules/EmptyState";
+import { PageHeader } from "@/components/molecules/PageHeader";
+import { SegmentedControl } from "@/components/molecules/SegmentedControl";
 import { CategoryCard } from "@/layouts/category/CategoryCard";
 import { CategoryReorderItem } from "@/layouts/category/CategoryReorderItem";
 import { CategoryFormModal } from "@/layouts/category/CategoryFormModal";
@@ -12,7 +16,7 @@ import { SubCategoryFormModal } from "@/layouts/category/SubCategoryFormModal";
 import { useCategories } from "@/hooks/use-categories";
 import { useConfirmDialog } from "@/hooks/use-confirm-dialog";
 import { useToast } from "@/hooks/use-toast";
-import { moveItem } from "@/utils/reorder";
+import { moveByIndex, moveItem } from "@/utils/reorder";
 import type {
   Category,
   CategoryInput,
@@ -20,6 +24,10 @@ import type {
   SubCategory,
   SubCategoryInput,
 } from "@/types/category.types";
+
+type TypeFilter = "all" | CategoryType;
+
+const EASE = [0.22, 1, 0.36, 1] as const;
 
 interface CategoryModalState {
   categoryId: string | null;
@@ -65,9 +73,11 @@ export function CategoriesPage() {
   const [isDeletingSubCategory, setIsDeletingSubCategory] = useState(false);
   const [isReorderingSubCategories, setIsReorderingSubCategories] = useState(false);
 
+  const [typeFilter, setTypeFilter] = useState<TypeFilter>("all");
   const [isReordering, setIsReordering] = useState(false);
   const [localOrder, setLocalOrder] = useState<Category[]>([]);
   const [draggedId, setDraggedId] = useState<string | null>(null);
+  const [activeId, setActiveId] = useState<string | null>(null);
   const [isSavingOrder, setIsSavingOrder] = useState(false);
 
   useEffect(() => {
@@ -130,10 +140,18 @@ export function CategoriesPage() {
   }
 
   async function handleDeleteCategory(id: string) {
+    const category = categories.find((item) => item.idCategory === id);
+    const subNames = category?.subCategories.map((sub) => sub.nameSubCategory) ?? [];
     const confirmed = await confirm({
-      title: t("category.deleteConfirmTitle"),
-      description: t("category.deleteConfirmDescription"),
-      confirmLabel: t("wallet.deleteConfirmAction"),
+      title: t("category.deleteConfirmTitle", { name: category?.nameCategory ?? "" }),
+      description:
+        subNames.length > 0
+          ? t("category.deleteConfirmWithSubs", {
+              count: subNames.length,
+              names: subNames.join(", "),
+            })
+          : t("category.deleteConfirmNoSubs"),
+      confirmLabel: t("category.deleteCategoryAction"),
       cancelLabel: t("common.cancel"),
       destructive: true,
     });
@@ -173,8 +191,8 @@ export function CategoriesPage() {
 
   async function handleDeleteSubCategory(subCategory: SubCategory) {
     const confirmed = await confirm({
-      title: t("category.deleteSubCategoryConfirmTitle"),
-      description: t("category.deleteConfirmDescription"),
+      title: t("category.deleteSubCategoryConfirmTitle", { name: subCategory.nameSubCategory }),
+      description: t("category.deleteSubConfirmDescription"),
       confirmLabel: t("wallet.deleteConfirmAction"),
       cancelLabel: t("common.cancel"),
       destructive: true,
@@ -194,7 +212,13 @@ export function CategoriesPage() {
 
   function handleEnterReorder() {
     setLocalOrder(categories);
+    setActiveId(null);
     setIsReordering(true);
+  }
+
+  function handleMove(index: number, delta: number) {
+    setActiveId(localOrder[index]?.idCategory ?? null);
+    setLocalOrder((prev) => moveByIndex(prev, index, delta));
   }
 
   function handleCancelReorder() {
@@ -231,105 +255,240 @@ export function CategoriesPage() {
     }
   }
 
+  const visibleCategories =
+    typeFilter === "all"
+      ? categories
+      : categories.filter((category) => category.type === typeFilter);
+  const isEmpty = status === "loaded" && categories.length === 0;
+  const isInitialLoading = status !== "loaded" && categories.length === 0;
+  const countLabel = `${t("category.categoryCountLabel", { count: categories.length })} · ${t("category.subCategoryCountLabel", { count: subCategoryCount })}`;
+  const subtitle = isReordering
+    ? t("category.reorderSubtitle")
+    : isEmpty
+      ? t("category.noCategories")
+      : countLabel;
+
+  const typeTabs = (
+    <SegmentedControl
+      options={[
+        { value: "all", label: t("common.all") },
+        { value: "expense", label: t("category.expense") },
+        { value: "income", label: t("category.income") },
+      ]}
+      value={typeFilter}
+      onChange={setTypeFilter}
+      size="md"
+      thumbClassName="bg-primary-soft shadow-none"
+      activeClassName="text-primary-text"
+      className="bg-surface shadow-card"
+    />
+  );
+
   return (
-    <DashboardLayout>
-      <div className="flex flex-col gap-8">
-        <div className="flex flex-wrap items-center justify-between gap-2">
-          <div className="flex flex-wrap items-center gap-2">
-            <Words as="h1" type="2xl/bold" className="text-ink-900 dark:text-ink-50">
-              {t("nav.category")}
-            </Words>
-            <span className="shrink-0 rounded-full bg-ink-100 px-3 py-1.5 dark:bg-ink-800">
-              <Words type="xs/bold" as="span" className="text-ink-600 dark:text-ink-300 flex items-center">
-                {t("category.categoryCountLabel", { count: categories.length })} ·{" "}
-                {t("category.subCategoryCountLabel", { count: subCategoryCount })}
-              </Words>
-            </span>
-          </div>
-
-          {isReordering ? (
-            <div className="flex shrink-0 items-center gap-2">
-              <Button variant="secondary" onClick={handleCancelReorder}>
-                <Words type="sm/bold" as="span">
-                  {t("common.cancel")}
-                </Words>
-              </Button>
-              <Button onClick={() => void handleSaveOrder()} isLoading={isSavingOrder}>
-                <Words type="sm/bold" as="span">
-                  {t("category.saveOrder")}
-                </Words>
-              </Button>
-            </div>
-          ) : (
-            <div className="flex shrink-0 items-center gap-2">
-              <Tooltip content={t("category.toggleReorder")}>
-                <button
-                  type="button"
-                  onClick={handleEnterReorder}
-                  aria-label={t("category.toggleReorder")}
-                  className="flex h-9 w-9 items-center justify-center rounded-full border border-ink-200 text-ink-500 transition-colors hover:bg-ink-100 dark:border-ink-800 dark:text-ink-400 dark:hover:bg-ink-800"
-                >
-                  <HiOutlineArrowsUpDown className="h-4 w-4" />
-                </button>
-              </Tooltip>
-              <button
+    <div className="flex flex-col gap-4 lg:gap-5">
+      <PageHeader
+        title={t("nav.category")}
+        subtitle={subtitle}
+        showSubtitleOnMobile={false}
+        actions={
+          isReordering ? (
+            <>
+              <Button
                 type="button"
-                onClick={() => openCreateCategoryModal("expense")}
-                className="flex items-center gap-1.5 rounded-full border border-ink-200 px-3 py-1.5 text-ink-500 transition-colors hover:bg-ink-100 dark:border-ink-800 dark:text-ink-400 dark:hover:bg-ink-800"
+                variant="outline"
+                onClick={handleCancelReorder}
+                disabled={isSavingOrder}
               >
-                <HiOutlinePlus className="h-4 w-4" />
-                <Words type="xs/bold" as="span">
-                  {t("category.addCategory")}
-                </Words>
-              </button>
-            </div>
-          )}
-        </div>
+                {t("common.cancel")}
+              </Button>
+              <Button
+                type="button"
+                leftIcon={<LuCheck />}
+                onClick={() => void handleSaveOrder()}
+                isLoading={isSavingOrder}
+              >
+                {t("category.saveOrder")}
+              </Button>
+            </>
+          ) : (
+            <>
+              {!isEmpty && typeTabs}
+              {categories.length > 1 && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  leftIcon={<LuArrowUpDown />}
+                  onClick={handleEnterReorder}
+                >
+                  {t("category.toggleReorder")}
+                </Button>
+              )}
+              <Button
+                type="button"
+                leftIcon={<LuPlus />}
+                onClick={() =>
+                  openCreateCategoryModal(typeFilter === "income" ? "income" : "expense")
+                }
+              >
+                {t("category.addCategory")}
+              </Button>
+            </>
+          )
+        }
+        mobileActions={
+          isReordering ? (
+            <>
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                onClick={handleCancelReorder}
+                disabled={isSavingOrder}
+              >
+                {t("common.cancel")}
+              </Button>
+              <Button
+                type="button"
+                size="sm"
+                leftIcon={<LuCheck />}
+                onClick={() => void handleSaveOrder()}
+                isLoading={isSavingOrder}
+              >
+                {t("wallet.saveShort")}
+              </Button>
+            </>
+          ) : (
+            <>
+              {categories.length > 1 && (
+                <IconButton
+                  label={t("category.toggleReorder")}
+                  icon={<LuArrowUpDown />}
+                  variant="surface"
+                  size="lg"
+                  tooltip={false}
+                  onClick={handleEnterReorder}
+                />
+              )}
+              <IconButton
+                label={t("category.addCategory")}
+                icon={<LuPlus />}
+                variant="primary"
+                size="lg"
+                tooltip={false}
+                onClick={() =>
+                  openCreateCategoryModal(typeFilter === "income" ? "income" : "expense")
+                }
+              />
+            </>
+          )
+        }
+      />
 
+      {!isReordering && !isEmpty && (
+        <div className="-mt-1 flex flex-col gap-2 lg:hidden">
+          <div className="[&>div]:flex [&>div]:w-full [&_button]:flex-1">{typeTabs}</div>
+          <p className="px-1 text-[12.5px] text-text-3">{countLabel}</p>
+        </div>
+      )}
+
+      <AnimatePresence mode="wait" initial={false}>
         {isReordering ? (
-          <div className="flex flex-col gap-2">
-            {localOrder.map((category) => (
+          <m.div
+            key="reorder"
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -4 }}
+            transition={{ duration: 0.25, ease: EASE }}
+            className="flex flex-col gap-2 lg:rounded-card lg:bg-surface lg:p-4 lg:shadow-card"
+          >
+            <p className="flex items-center gap-2 rounded-control bg-primary-soft px-3.5 py-2.5 text-[12.5px] text-primary-text lg:hidden">
+              <LuInfo className="size-4 shrink-0" />
+              {t("wallet.reorderHintShort")}
+            </p>
+            {localOrder.map((category, index) => (
               <CategoryReorderItem
                 key={category.idCategory}
                 category={category}
                 isDragging={draggedId === category.idCategory}
-                onDragStart={() => setDraggedId(category.idCategory)}
+                isActive={activeId === category.idCategory}
+                canMoveUp={index > 0}
+                canMoveDown={index < localOrder.length - 1}
+                onMoveUp={() => handleMove(index, -1)}
+                onMoveDown={() => handleMove(index, 1)}
+                onDragStart={() => {
+                  setDraggedId(category.idCategory);
+                  setActiveId(category.idCategory);
+                }}
                 onDragOver={(event) => handleDragOver(event, category.idCategory)}
                 onDrop={(event) => event.preventDefault()}
                 onDragEnd={() => setDraggedId(null)}
               />
             ))}
-          </div>
-        ) : categories.length === 0 ? (
-          <div className="rounded-2xl border border-dashed border-ink-200 p-6 text-center dark:border-ink-800">
-            <Words type="sm/regular" className="text-ink-400 dark:text-ink-500">
-              {t("category.noCategories")}
-            </Words>
-          </div>
+          </m.div>
+        ) : isEmpty ? (
+          <m.div
+            key="empty"
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3, ease: EASE }}
+          >
+            <EmptyState
+              variant="page"
+              icon={<LuTags />}
+              title={t("category.noCategories")}
+              description={t("category.emptyDescription")}
+              action={
+                <Button
+                  type="button"
+                  leftIcon={<LuPlus />}
+                  onClick={() => openCreateCategoryModal("expense")}
+                >
+                  {t("category.addFirst")}
+                </Button>
+              }
+              className="min-h-[360px] lg:min-h-[520px]"
+            />
+          </m.div>
         ) : (
-          <div className="flex flex-col gap-3">
-            {categories.map((category) => (
-              <CategoryCard
-                key={category.idCategory}
-                category={category}
-                isDeleting={deletingCategoryId === category.idCategory}
-                onEdit={() => openEditCategoryModal(category)}
-                onDelete={() => void handleDeleteCategory(category.idCategory)}
-                onEditSubCategory={(sub) =>
-                  openEditSubCategoryModal(category.idCategory, sub.idSubCategory)
-                }
-                onAddSubCategory={() => openCreateSubCategoryModal(category.idCategory)}
-              />
-            ))}
-          </div>
+          <m.div
+            key={`list-${typeFilter}`}
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -4 }}
+            transition={{ duration: 0.25, ease: EASE }}
+            className="grid grid-cols-1 gap-3 lg:grid-cols-2 lg:gap-4"
+          >
+            {isInitialLoading
+              ? Array.from({ length: 4 }, (_, index) => (
+                  <Skeleton key={index} className="h-[132px] rounded-card lg:h-[153px]" />
+                ))
+              : visibleCategories.map((category, index) => (
+                  <Reveal key={category.idCategory} delay={Math.min(index, 6) * 0.04}>
+                    <CategoryCard
+                      category={category}
+                      isDeleting={deletingCategoryId === category.idCategory}
+                      onEdit={() => openEditCategoryModal(category)}
+                      onDelete={() => void handleDeleteCategory(category.idCategory)}
+                      onEditSubCategory={(sub) =>
+                        openEditSubCategoryModal(category.idCategory, sub.idSubCategory)
+                      }
+                      onAddSubCategory={() => openCreateSubCategoryModal(category.idCategory)}
+                    />
+                  </Reveal>
+                ))}
+          </m.div>
         )}
-      </div>
+      </AnimatePresence>
 
       <CategoryFormModal
         isOpen={categoryModalState !== null}
         category={editingCategory}
         defaultType={categoryModalState?.defaultType ?? "expense"}
         isSubmitting={isSubmittingCategory}
+        isDeleting={deletingCategoryId !== null}
+        onDelete={
+          editingCategory ? () => void handleDeleteCategory(editingCategory.idCategory) : undefined
+        }
         onClose={closeCategoryModal}
         onSubmit={handleCategorySubmit}
         onAddSubCategory={() => {
@@ -352,6 +511,7 @@ export function CategoriesPage() {
         isOpen={subCategoryModalState !== null}
         subCategory={editingSubCategory}
         categoryColor={subCategoryParentCategory?.color ?? "#a1a1aa"}
+        categoryName={subCategoryParentCategory?.nameCategory}
         isSubmitting={isSubmittingSubCategory}
         isDeleting={isDeletingSubCategory}
         onClose={closeSubCategoryModal}
@@ -360,6 +520,6 @@ export function CategoriesPage() {
           if (editingSubCategory) void handleDeleteSubCategory(editingSubCategory);
         }}
       />
-    </DashboardLayout>
+    </div>
   );
 }

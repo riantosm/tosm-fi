@@ -19,7 +19,7 @@ export const authService = {
       const { data } = await httpClient.post("/auth/register", input);
       return data.data as AuthUser;
     } catch (error) {
-      throw new Error(getApiErrorMessage(error, i18n.t("auth.genericError")));
+      throw new Error(getApiErrorMessage(error, i18n.t("auth.genericError")), { cause: error });
     }
   },
 
@@ -31,7 +31,7 @@ export const authService = {
       });
       return data.data as LoginResponse;
     } catch (error) {
-      throw new Error(getApiErrorMessage(error, i18n.t("auth.genericError")));
+      throw new Error(getApiErrorMessage(error, i18n.t("auth.genericError")), { cause: error });
     }
   },
 
@@ -42,7 +42,7 @@ export const authService = {
       });
       return data.data as AuthUser;
     } catch (error) {
-      throw new Error(getApiErrorMessage(error, i18n.t("auth.genericError")));
+      throw new Error(getApiErrorMessage(error, i18n.t("auth.genericError")), { cause: error });
     }
   },
 
@@ -57,7 +57,7 @@ export const authService = {
       const { data } = await httpClient.patch("/user/me", input);
       return data.data as AuthUser;
     } catch (error) {
-      throw new Error(getApiErrorMessage(error, i18n.t("profile.genericError")));
+      throw new Error(getApiErrorMessage(error, i18n.t("profile.genericError")), { cause: error });
     }
   },
 
@@ -65,7 +65,7 @@ export const authService = {
     try {
       await httpClient.patch("/user/me/password", input);
     } catch (error) {
-      throw new Error(getApiErrorMessage(error, i18n.t("profile.genericError")));
+      throw new Error(getApiErrorMessage(error, i18n.t("profile.genericError")), { cause: error });
     }
   },
 };

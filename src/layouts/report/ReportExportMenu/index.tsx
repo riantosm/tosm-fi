@@ -1,76 +1,107 @@
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { HiOutlineArrowDownTray, HiOutlineDocumentArrowDown, HiOutlineDocumentText, HiOutlineTableCells } from "react-icons/hi2";
-import { Words } from "@/components/atoms/Words";
+import type { IconType } from "react-icons";
+import { LuDownload, LuFileCode2, LuFileSpreadsheet, LuFileText } from "react-icons/lu";
+import { Button } from "@/components/atoms/Button";
+import { IconButton } from "@/components/atoms/IconButton";
+import { IconLoader } from "@/components/atoms/IconLoader";
+import { Popover } from "@/components/molecules/Popover";
 import { cn } from "@/utils/cn";
 import type { ReportExportFormat } from "@/types/report.types";
 
-const FORMAT_OPTIONS: { format: Exclude<ReportExportFormat, "print">; icon: typeof HiOutlineDocumentText }[] = [
-  { format: "pdf", icon: HiOutlineDocumentText },
-  { format: "excel", icon: HiOutlineTableCells },
-  { format: "csv", icon: HiOutlineDocumentArrowDown },
+type ExportFormat = Exclude<ReportExportFormat, "print">;
+
+const FORMAT_OPTIONS: { format: ExportFormat; icon: IconType; tileClass: string }[] = [
+  { format: "pdf", icon: LuFileText, tileClass: "bg-expense-soft text-expense-text" },
+  { format: "excel", icon: LuFileSpreadsheet, tileClass: "bg-income-soft text-income-text" },
+  { format: "csv", icon: LuFileCode2, tileClass: "bg-primary-soft text-primary-text" },
 ];
 
 interface ReportExportMenuProps {
-  onExport: (format: Exclude<ReportExportFormat, "print">) => void;
-  exportingFormat: Exclude<ReportExportFormat, "print"> | null;
+  onExport: (format: ExportFormat) => void;
+  exportingFormat: ExportFormat | null;
+  /** button = labelled primary button (desktop); icon = round app-bar button (phone). */
+  variant?: "button" | "icon";
 }
 
-export function ReportExportMenu({ onExport, exportingFormat }: ReportExportMenuProps) {
+/** "Export" — PDF / Excel / CSV of the current report period. */
+export function ReportExportMenu({
+  onExport,
+  exportingFormat,
+  variant = "button",
+}: ReportExportMenuProps) {
   const { t } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
-  const containerRef = useRef<HTMLDivElement>(null);
+  const isExporting = exportingFormat !== null;
 
-  useEffect(() => {
-    if (!isOpen) return;
-
-    function handleClickOutside(event: MouseEvent) {
-      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
-        setIsOpen(false);
-      }
-    }
-
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, [isOpen]);
+  const trigger =
+    variant === "icon" ? (
+      <IconButton
+        label={t("reports.export.title")}
+        icon={isExporting ? <IconLoader className="animate-spin" /> : <LuDownload />}
+        variant="primary"
+        size="lg"
+        tooltip={false}
+        onClick={() => setIsOpen((prev) => !prev)}
+      />
+    ) : (
+      <Button
+        type="button"
+        leftIcon={<LuDownload />}
+        isLoading={isExporting}
+        onClick={() => setIsOpen((prev) => !prev)}
+      >
+        {t("reports.export.title")}
+      </Button>
+    );
 
   return (
-    <div ref={containerRef} className="relative">
-      <button
-        type="button"
-        onClick={() => setIsOpen((prev) => !prev)}
-        className="flex items-center gap-1.5 rounded-full bg-primary-600 px-4 py-2 text-white transition-colors hover:bg-primary-500 dark:bg-primary-500 dark:text-ink-950 dark:hover:bg-primary-400"
-      >
-        <HiOutlineArrowDownTray className="h-4 w-4" />
-        <Words type="sm/bold" as="span">
+    <Popover
+      isOpen={isOpen}
+      onClose={() => setIsOpen(false)}
+      trigger={trigger}
+      align="end"
+      panelClassName="w-[340px]"
+    >
+      <div className="flex flex-col gap-0.5">
+        <span className="px-3 pt-2 pb-1.5 text-[11px] font-semibold tracking-[0.08em] text-text-3 uppercase">
           {t("reports.export.title")}
-        </Words>
-      </button>
-
-      {isOpen && (
-        <div className="absolute left-0 top-full z-20 mt-2 w-48 max-w-[calc(100vw-2rem)] overflow-hidden rounded-2xl border border-ink-200 bg-white py-1 shadow-lg sm:left-auto sm:right-0 dark:border-ink-800 dark:bg-ink-900">
-          {FORMAT_OPTIONS.map(({ format, icon: Icon }) => (
-            <button
-              key={format}
-              type="button"
-              disabled={exportingFormat !== null}
-              onClick={() => {
-                onExport(format);
-                setIsOpen(false);
-              }}
+        </span>
+        {FORMAT_OPTIONS.map(({ format, icon: Icon, tileClass }) => (
+          <button
+            key={format}
+            type="button"
+            disabled={isExporting}
+            onClick={() => {
+              onExport(format);
+              setIsOpen(false);
+            }}
+            className="group flex w-full items-center gap-3 rounded-control px-2.5 py-2.5 text-left transition-colors duration-200 hover:bg-surface-2 disabled:opacity-60"
+          >
+            <span
               className={cn(
-                "flex w-full items-center gap-2.5 px-4 py-2.5 text-left transition-colors",
-                "text-ink-600 hover:bg-ink-50 disabled:opacity-60 dark:text-ink-300 dark:hover:bg-ink-800",
+                "flex size-[38px] shrink-0 items-center justify-center rounded-[12px]",
+                tileClass,
               )}
             >
-              <Icon className="h-4 w-4 shrink-0" />
-              <Words type="sm/regular" as="span">
+              <Icon className="size-[18px]" />
+            </span>
+            <span className="flex min-w-0 flex-1 flex-col gap-px">
+              <span className="truncate text-[14px] font-semibold text-text">
                 {t(`reports.export.${format}`)}
-              </Words>
-            </button>
-          ))}
-        </div>
-      )}
-    </div>
+              </span>
+              <span className="truncate text-[12.5px] text-text-3">
+                {t(`reports.export.${format}Description`)}
+              </span>
+            </span>
+            {exportingFormat === format ? (
+              <IconLoader className="size-[18px] shrink-0 animate-spin text-primary-text" />
+            ) : (
+              <LuDownload className="size-[18px] shrink-0 text-text-3 transition-colors group-hover:text-primary-text" />
+            )}
+          </button>
+        ))}
+      </div>
+    </Popover>
   );
 }

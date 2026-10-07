@@ -1,10 +1,10 @@
-import { useMemo, useState } from "react";
+import { useId, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { LuChartLine } from "react-icons/lu";
 import {
+  Area,
+  AreaChart,
   CartesianGrid,
-  Legend,
-  Line,
-  LineChart,
   ResponsiveContainer,
   Tooltip,
   XAxis,
@@ -12,23 +12,30 @@ import {
   type DotItemDotProps,
 } from "recharts";
 import { IconLoader } from "@/components/atoms/IconLoader";
-import { Words } from "@/components/atoms/Words";
-import { useCurrency } from "@/hooks/use-currency";
-import { useLanguage } from "@/hooks/use-language";
-import { useTheme } from "@/hooks/use-theme";
+import { Card } from "@/components/molecules/Card";
+import { EmptyState } from "@/components/molecules/EmptyState";
+import { SectionHead } from "@/components/molecules/SectionHead";
+import { SegmentedControl } from "@/components/molecules/SegmentedControl";
+import { ChartTooltip } from "@/components/molecules/ChartTooltip";
+import { useMoneyFormat } from "@/hooks/use-money-format";
 import { cn } from "@/utils/cn";
 import type { CashFlowDisplayMode, CashFlowPoint } from "@/types/report.types";
 
-const INCOME_COLOR = "#23ac82";
-const EXPENSE_COLOR = "#ef4444";
+type CashFlowSeries = "income" | "expense";
+
+const SERIES: CashFlowSeries[] = ["income", "expense"];
+
+const SERIES_COLOR: Record<CashFlowSeries, string> = {
+  income: "var(--chart-1)",
+  expense: "var(--chart-2)",
+};
 
 const DISPLAY_MODES: CashFlowDisplayMode[] = ["cumulative", "period"];
 
-type CashFlowSeries = "income" | "expense";
-
 interface CashFlowChartProps {
   data: CashFlowPoint[];
-  periodLabel: string;
+  /** Small uppercase label above the title (e.g. "LAPORAN · ARUS KAS"). */
+  eyebrow?: string;
   isLoading?: boolean;
 }
 
@@ -42,6 +49,7 @@ function toCumulative(data: CashFlowPoint[]): CashFlowPoint[] {
   });
 }
 
+/** Marks today's bucket with a persistent dot (same treatment as the hover dot). */
 function renderTodayDot(color: string) {
   return ({ cx, cy, payload, index }: DotItemDotProps) => {
     if (!payload.isToday) return null;
@@ -50,26 +58,22 @@ function renderTodayDot(color: string) {
         key={`today-${index}`}
         cx={cx}
         cy={cy}
-        r={5}
+        r={5.5}
         fill={color}
-        stroke="#fff"
-        strokeWidth={2}
+        stroke="var(--surface)"
+        strokeWidth={2.5}
       />
     );
   };
 }
 
-export function CashFlowChart({ data, periodLabel, isLoading = false }: CashFlowChartProps) {
+export function CashFlowChart({ data, eyebrow, isLoading = false }: CashFlowChartProps) {
   const { t } = useTranslation();
-  const { format } = useCurrency();
-  const { language } = useLanguage();
-  const { theme } = useTheme();
-  const isDark = theme === "dark";
+  const { format, formatCompact } = useMoneyFormat();
+  const gradientId = useId().replace(/[^a-zA-Z0-9_-]/g, "");
   const [mode, setMode] = useState<CashFlowDisplayMode>("cumulative");
   const [hiddenSeries, setHiddenSeries] = useState<Set<CashFlowSeries>>(new Set());
 
-  const gridColor = isDark ? "#27272a" : "#e4e4e7";
-  const tickColor = isDark ? "#71717a" : "#a1a1aa";
   const isEmpty = data.every((point) => point.income === 0 && point.expense === 0);
   const chartData = useMemo(
     () => (mode === "cumulative" ? toCumulative(data) : data),
@@ -85,148 +89,163 @@ export function CashFlowChart({ data, periodLabel, isLoading = false }: CashFlow
     });
   }
 
-  function compactFormat(value: number) {
-    return new Intl.NumberFormat(language, {
-      notation: "compact",
-      maximumFractionDigits: 1,
-    }).format(value);
-  }
+  const modeOptions = DISPLAY_MODES.map((option) => ({
+    value: option,
+    label: t(`reports.cashFlow.modes.${option}`),
+  }));
+
+  const legend = (
+    <div className="flex items-center gap-3 sm:gap-4">
+      {SERIES.map((series) => {
+        const isHidden = hiddenSeries.has(series);
+        return (
+          <button
+            key={series}
+            type="button"
+            onClick={() => toggleSeries(series)}
+            aria-pressed={!isHidden}
+            className={cn(
+              "pressable inline-flex items-center gap-1.5 rounded-full text-[12px] sm:text-[12.5px]",
+              isHidden ? "text-text-3 line-through opacity-70" : "text-text-2 hover:text-text",
+            )}
+          >
+            <span
+              className="size-[9px] shrink-0 rounded-full transition-opacity"
+              style={{ backgroundColor: SERIES_COLOR[series], opacity: isHidden ? 0.4 : 1 }}
+            />
+            <span className="sm:hidden">{t(`reports.cashFlow.short.${series}`)}</span>
+            <span className="hidden sm:inline">{t(`reports.cashFlow.${series}`)}</span>
+          </button>
+        );
+      })}
+    </div>
+  );
 
   return (
-    <div className="flex h-full flex-col gap-4 rounded-2xl border border-ink-200 bg-white p-5 dark:border-ink-800 dark:bg-ink-900">
-      <div className="flex items-center justify-between gap-2">
-        <Words type="base/bold" className="text-ink-900 dark:text-ink-50">
-          {t("reports.cashFlow.title")}
-        </Words>
-        <span className="shrink-0 rounded-full bg-ink-100 px-3 py-1.5 dark:bg-ink-800">
-          <Words
-            type="xs/bold"
-            as="span"
-            className="flex items-center justify-center text-ink-600 dark:text-ink-300"
-          >
-            {periodLabel}
-          </Words>
-        </span>
-      </div>
+    <Card className="flex flex-col gap-4 lg:gap-[18px]">
+      <SectionHead
+        eyebrow={eyebrow}
+        title={t("reports.cashFlow.title")}
+        right={
+          <>
+            {legend}
+            <div className="hidden sm:block">
+              <SegmentedControl
+                options={modeOptions}
+                value={mode}
+                onChange={setMode}
+                ariaLabel={t("reports.cashFlow.title")}
+              />
+            </div>
+          </>
+        }
+      />
 
-      <div className="flex items-center gap-1 self-start rounded-full bg-ink-100 p-1 dark:bg-ink-800">
-        {DISPLAY_MODES.map((option) => {
-          const isActive = mode === option;
-          return (
-            <button
-              key={option}
-              type="button"
-              onClick={() => setMode(option)}
-              className={cn(
-                "rounded-full px-3.5 py-1.5 transition-colors",
-                isActive
-                  ? "bg-white text-ink-900 shadow-sm dark:bg-ink-950 dark:text-ink-50"
-                  : "text-ink-500 hover:text-ink-700 dark:text-ink-400 dark:hover:text-ink-200",
-              )}
-            >
-              <Words type={isActive ? "sm/bold" : "sm/regular"} as="span">
-                {t(`reports.cashFlow.modes.${option}`)}
-              </Words>
-            </button>
-          );
-        })}
-      </div>
-
-      <div className="relative flex-1">
+      <div className="relative">
         {isEmpty ? (
-          <div className="flex flex-1 flex-col items-center justify-center gap-1 rounded-2xl border border-dashed border-ink-200 py-16 dark:border-ink-800">
-            <Words type="sm/bold" className="text-ink-500 dark:text-ink-400">
-              {t("reports.cashFlow.empty")}
-            </Words>
-          </div>
+          <EmptyState
+            icon={<LuChartLine />}
+            title={t("reports.cashFlow.empty")}
+            className="h-[200px] sm:h-[253px]"
+          />
         ) : (
-          <div className="h-72 w-full">
+          <div className="h-[200px] w-full sm:h-[270px] [&_*]:outline-none">
             <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={chartData} margin={{ top: 4, right: 8, left: 0, bottom: 0 }}>
-                <CartesianGrid stroke={gridColor} vertical={false} />
+              <AreaChart data={chartData} margin={{ top: 8, right: 6, left: 0, bottom: 0 }}>
+                <defs>
+                  {SERIES.map((series) => (
+                    <linearGradient
+                      key={series}
+                      id={`${gradientId}-${series}`}
+                      x1="0"
+                      y1="0"
+                      x2="0"
+                      y2="1"
+                    >
+                      <stop offset="0%" stopColor={SERIES_COLOR[series]} stopOpacity={0.32} />
+                      <stop offset="100%" stopColor={SERIES_COLOR[series]} stopOpacity={0} />
+                    </linearGradient>
+                  ))}
+                </defs>
+                <CartesianGrid vertical={false} stroke="var(--border)" />
                 <XAxis
                   dataKey="label"
                   axisLine={false}
                   tickLine={false}
-                  tick={{ fill: tickColor, fontSize: 12 }}
+                  tick={{ fill: "var(--text-3)", fontSize: 11 }}
+                  tickMargin={8}
+                  minTickGap={16}
                 />
                 <YAxis
                   axisLine={false}
                   tickLine={false}
                   width={40}
-                  tick={{ fill: tickColor, fontSize: 12 }}
-                  tickFormatter={compactFormat}
+                  tick={{ fill: "var(--text-3)", fontSize: 11 }}
+                  tickFormatter={formatCompact}
                 />
                 <Tooltip
-                  cursor={{ stroke: gridColor }}
-                  contentStyle={{
-                    borderRadius: 12,
-                    border: `1px solid ${gridColor}`,
-                    backgroundColor: isDark ? "#18181b" : "#ffffff",
-                    fontSize: 12,
-                  }}
-                  labelStyle={{ color: isDark ? "#fafafa" : "#18181b", fontWeight: 600 }}
-                  formatter={(value, name) => [
-                    format(Number(value)),
-                    name === "income"
-                      ? t("reports.cashFlow.income")
-                      : t("reports.cashFlow.expense"),
-                  ]}
-                />
-                <Legend
-                  iconType="circle"
-                  onClick={(entry) => toggleSeries(entry.dataKey as CashFlowSeries)}
-                  formatter={(value) => {
-                    const isHidden = hiddenSeries.has(value as CashFlowSeries);
+                  cursor={{ stroke: "var(--text-3)", strokeOpacity: 0.35, strokeWidth: 1 }}
+                  content={({ active, payload, label }) => {
+                    if (!active || !payload?.length) return null;
                     return (
-                      <span
-                        className={cn(
-                          "cursor-pointer select-none text-xs",
-                          isHidden
-                            ? "text-ink-400 line-through dark:text-ink-600"
-                            : "text-ink-600 dark:text-ink-300",
-                        )}
-                      >
-                        {value === "income"
-                          ? t("reports.cashFlow.income")
-                          : t("reports.cashFlow.expense")}
-                      </span>
+                      <ChartTooltip
+                        title={label}
+                        rows={payload.map((entry) => {
+                          const series = entry.dataKey as CashFlowSeries;
+                          return {
+                            key: series,
+                            label: t(`reports.cashFlow.${series}`),
+                            value: format(Number(entry.value)),
+                            color: SERIES_COLOR[series],
+                          };
+                        })}
+                      />
                     );
                   }}
                 />
-                <Line
-                  type="monotone"
-                  dataKey="income"
-                  name="income"
-                  stroke={INCOME_COLOR}
-                  strokeWidth={2.5}
-                  dot={renderTodayDot(INCOME_COLOR)}
-                  activeDot={{ r: 5 }}
-                  animationDuration={600}
-                  hide={hiddenSeries.has("income")}
-                />
-                <Line
-                  type="monotone"
-                  dataKey="expense"
-                  name="expense"
-                  stroke={EXPENSE_COLOR}
-                  strokeWidth={2.5}
-                  dot={renderTodayDot(EXPENSE_COLOR)}
-                  activeDot={{ r: 5 }}
-                  animationDuration={600}
-                  hide={hiddenSeries.has("expense")}
-                />
-              </LineChart>
+                {SERIES.map((series) => (
+                  <Area
+                    key={series}
+                    type="monotone"
+                    dataKey={series}
+                    name={series}
+                    stroke={SERIES_COLOR[series]}
+                    strokeWidth={2.5}
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    fill={`url(#${gradientId}-${series})`}
+                    dot={renderTodayDot(SERIES_COLOR[series])}
+                    activeDot={{
+                      r: 7,
+                      fill: SERIES_COLOR[series],
+                      stroke: "var(--surface)",
+                      strokeWidth: 3,
+                    }}
+                    animationDuration={600}
+                    hide={hiddenSeries.has(series)}
+                  />
+                ))}
+              </AreaChart>
             </ResponsiveContainer>
           </div>
         )}
 
         {isLoading && (
-          <div className="absolute inset-0 flex items-start justify-center rounded-2xl bg-white/60 pt-12 backdrop-blur-[2px] dark:bg-ink-950/60">
-            <IconLoader className="h-6 w-6 animate-spin text-primary-500" />
+          <div className="absolute inset-0 flex animate-fade-in items-start justify-center rounded-control bg-surface/60 pt-14 backdrop-blur-[2px]">
+            <IconLoader className="size-6 animate-spin text-primary" />
           </div>
         )}
       </div>
-    </div>
+
+      <div className="sm:hidden">
+        <SegmentedControl
+          options={modeOptions}
+          value={mode}
+          onChange={setMode}
+          fill
+          ariaLabel={t("reports.cashFlow.title")}
+        />
+      </div>
+    </Card>
   );
 }

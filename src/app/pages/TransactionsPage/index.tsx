@@ -1,35 +1,53 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { DashboardLayout } from "@/components/templates/DashboardLayout";
+import { AnimatePresence, m } from "motion/react";
+import { LuPlus, LuSearch } from "react-icons/lu";
+import { Button } from "@/components/atoms/Button";
+import { IconButton } from "@/components/atoms/IconButton";
 import { IconLoader } from "@/components/atoms/IconLoader";
-import { Words } from "@/components/atoms/Words";
+import { Reveal } from "@/components/atoms/Reveal";
+import { Card } from "@/components/molecules/Card";
+import { PageHeader } from "@/components/molecules/PageHeader";
 import { MonthTabs } from "@/layouts/transaction/MonthTabs";
 import {
   TransactionFilterChips,
+  type ActiveFilterChip,
   type TransactionTypeFilter,
 } from "@/layouts/transaction/TransactionFilterChips";
 import {
-  TransactionToolbar,
+  TransactionSearchField,
+  TransactionSortMenu,
   type DateRangeFilter,
   type TransactionSortOption,
 } from "@/layouts/transaction/TransactionToolbar";
+import { DateRangeFilterPopover } from "@/layouts/transaction/DateRangeFilterPopover";
 import { TransactionSummaryBar } from "@/layouts/transaction/TransactionSummaryBar";
 import { TransactionCalendar } from "@/layouts/transaction/TransactionCalendar";
 import { TransactionList } from "@/layouts/dashboard/TransactionList";
-import { AddTransactionFab } from "@/layouts/dashboard/AddTransactionFab";
 import { AddTransactionModal } from "@/layouts/transaction/AddTransactionModal";
 import { BalanceCorrectionModal } from "@/layouts/wallet/BalanceCorrectionModal";
 import { PayOccurrenceModal } from "@/layouts/schedule/PayOccurrenceModal";
 import { useCategories } from "@/hooks/use-categories";
+import { useLanguage } from "@/hooks/use-language";
+import { DESKTOP_QUERY, useMediaQuery } from "@/hooks/use-media-query";
+import { useQuickAdd } from "@/hooks/use-quick-add";
 import { useWallets } from "@/hooks/use-wallets";
 import { useTransactions } from "@/hooks/use-transactions";
 import { useScheduleOccurrences } from "@/hooks/use-schedule-occurrences";
 import { useScheduleOccurrenceActions } from "@/hooks/use-schedule-occurrence-actions";
+import { formatShortDate, parseIsoDate } from "@/utils/calendar";
+import { toIntlLocale } from "@/utils/locale";
 import { formatMonthParam, generateMonthRange, startOfMonth } from "@/utils/month";
 import { filterOccurrencesForView } from "@/utils/schedule-occurrence-filter";
-import type { Transaction, TransactionListParams, TransactionSummary } from "@/types/transaction.types";
+import type {
+  Transaction,
+  TransactionListParams,
+  TransactionSummary,
+} from "@/types/transaction.types";
 import type { WalletAccount } from "@/types/wallet.types";
+
+const EASE = [0.22, 1, 0.36, 1] as const;
 
 const SEARCH_DEBOUNCE_MS = 2000;
 const PAGE_SIZE = 20;
@@ -61,6 +79,9 @@ const DISPLAY_SORT_CONFIG: Record<TransactionSortOption, DisplaySortConfig> = {
 export function TransactionsPage() {
   const { t } = useTranslation();
   const location = useLocation();
+  const { language } = useLanguage();
+  const isDesktop = useMediaQuery(DESKTOP_QUERY);
+  const { openManualEntry } = useQuickAdd();
   const { categories, status: categoriesStatus, loadCategories } = useCategories();
   const { wallets, status: walletsStatus, loadWallets } = useWallets();
   const { transactions, queryTransactions } = useTransactions();
@@ -82,7 +103,9 @@ export function TransactionsPage() {
     () => locationState?.typeFilter ?? "all",
   );
   const [walletFilter, setWalletFilter] = useState("all");
-  const [categoryFilter, setCategoryFilter] = useState(() => locationState?.categoryFilter ?? "all");
+  const [categoryFilter, setCategoryFilter] = useState(
+    () => locationState?.categoryFilter ?? "all",
+  );
   const [subCategoryFilter, setSubCategoryFilter] = useState(
     () => locationState?.subCategoryFilter ?? "all",
   );
@@ -96,10 +119,24 @@ export function TransactionsPage() {
   const [completedQueryKey, setCompletedQueryKey] = useState<string | null>(null);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(0);
+  const [totalCount, setTotalCount] = useState<number | null>(null);
   const sentinelRef = useRef<HTMLDivElement | null>(null);
 
+  // Search lives in the desktop header; phones open a search row under the app bar.
+  // Arriving with `focusSearch` (Dashboard search pill) opens/focuses it.
+  const desktopSearchRef = useRef<HTMLInputElement>(null);
+  const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(shouldFocusSearch);
+  const [lastFocusSearchToken, setLastFocusSearchToken] = useState(focusSearchToken);
+  if (focusSearchToken !== lastFocusSearchToken) {
+    setLastFocusSearchToken(focusSearchToken);
+    if (focusSearchToken) setIsMobileSearchOpen(true);
+  }
+  useEffect(() => {
+    if (focusSearchToken && isDesktop) desktopSearchRef.current?.focus();
+  }, [focusSearchToken, isDesktop]);
+
   const [calendarTransactions, setCalendarTransactions] = useState<Transaction[]>([]);
-  const [isCalendarLoading, setIsCalendarLoading] = useState(false);
+  const [completedCalendarKey, setCompletedCalendarKey] = useState<string | null>(null);
 
   const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
   const [correctionState, setCorrectionState] = useState<CorrectionState | null>(null);
@@ -176,6 +213,7 @@ export function TransactionsPage() {
         page === 1 ? result.transactions : [...prev, ...result.transactions],
       );
       setTotalPages(result.totalPages ?? 0);
+      setTotalCount(result.total);
       setSummary(result.summary);
       setCompletedQueryKey(queryKey);
     });
@@ -209,7 +247,10 @@ export function TransactionsPage() {
   // for every day at once, not just whichever page has scrolled into view.
   // Respects every filter except the day range itself, since that's what
   // clicking a calendar cell sets.
-  const calendarQueryParams: Omit<TransactionListParams, "page" | "limit" | "dateFrom" | "dateTo" | "sort"> = {
+  const calendarQueryParams: Omit<
+    TransactionListParams,
+    "page" | "limit" | "dateFrom" | "dateTo" | "sort"
+  > = {
     month: formatMonthParam(selectedMonth),
     type: typeFilter !== "all" ? typeFilter : undefined,
     idWallet: walletFilter !== "all" ? walletFilter : undefined,
@@ -219,14 +260,15 @@ export function TransactionsPage() {
   };
   const calendarQueryKey = JSON.stringify({ ...calendarQueryParams, refreshToken });
 
+  const isCalendarLoading = completedCalendarKey !== calendarQueryKey;
+
   useEffect(() => {
     let cancelled = false;
-    setIsCalendarLoading(true);
 
     void queryTransactions(calendarQueryParams).then((result) => {
       if (cancelled) return;
       setCalendarTransactions(result.transactions);
-      setIsCalendarLoading(false);
+      setCompletedCalendarKey(calendarQueryKey);
     });
 
     return () => {
@@ -275,13 +317,125 @@ export function TransactionsPage() {
     Boolean(searchQuery) ||
     Boolean(dateRange.from || dateRange.to);
 
-  return (
-    <DashboardLayout>
-      <div className="flex h-full flex-col gap-5">
-        <Words as="h1" type="2xl/bold" className="text-ink-900 dark:text-ink-50">
-          {t("nav.transactions")}
-        </Words>
+  function resetFilters() {
+    setTypeFilter("all");
+    setWalletFilter("all");
+    setCategoryFilter("all");
+    setSubCategoryFilter("all");
+    setSearchQuery("");
+    setDateRange({ from: "", to: "" });
+  }
 
+  const locale = toIntlLocale(language);
+  const extraActiveFilters: ActiveFilterChip[] = [
+    ...(searchQuery
+      ? [{ key: "search", label: `“${searchQuery}”`, onRemove: () => setSearchQuery("") }]
+      : []),
+    ...(dateRange.from || dateRange.to
+      ? [
+          {
+            key: "date",
+            label:
+              dateRange.from === dateRange.to || !dateRange.to
+                ? formatShortDate(parseIsoDate(dateRange.from || dateRange.to), locale)
+                : `${formatShortDate(parseIsoDate(dateRange.from), locale)} – ${formatShortDate(parseIsoDate(dateRange.to), locale)}`,
+            onRemove: () => setDateRange({ from: "", to: "" }),
+          },
+        ]
+      : []),
+  ];
+  const monthLabel = new Intl.DateTimeFormat(locale, { month: "long", year: "numeric" }).format(
+    selectedMonth,
+  );
+  const subtitle =
+    totalCount !== null
+      ? `${monthLabel} · ${t("transaction.countLabel", { count: totalCount })}`
+      : monthLabel;
+
+  return (
+    <div className="flex flex-col gap-4 lg:gap-5">
+      <PageHeader
+        title={t("nav.transactions")}
+        subtitle={<span className="first-letter:uppercase">{subtitle}</span>}
+        showSubtitleOnMobile={false}
+        actions={
+          <>
+            <TransactionSearchField
+              ref={desktopSearchRef}
+              value={searchQuery}
+              onChange={setSearchQuery}
+              className="w-[240px] xl:w-[300px]"
+            />
+            <DateRangeFilterPopover
+              dateRange={dateRange}
+              onDateRangeChange={setDateRange}
+              align="end"
+            />
+            <TransactionSortMenu value={sortOption} onChange={setSortOption} align="end" />
+            <Button type="button" leftIcon={<LuPlus />} onClick={openManualEntry}>
+              {t("dashboard.recordTransaction")}
+            </Button>
+          </>
+        }
+        mobileActions={
+          <>
+            <IconButton
+              label={t("transaction.searchPlaceholder")}
+              icon={<LuSearch />}
+              variant="surface"
+              size="lg"
+              tooltip={false}
+              className={
+                isMobileSearchOpen || searchQuery ? "bg-primary-soft text-primary-text" : undefined
+              }
+              onClick={() => setIsMobileSearchOpen((open) => !open)}
+            />
+            <DateRangeFilterPopover
+              dateRange={dateRange}
+              onDateRangeChange={setDateRange}
+              variant="icon"
+              align="end"
+            />
+            <TransactionSortMenu
+              value={sortOption}
+              onChange={setSortOption}
+              variant="icon"
+              align="end"
+            />
+          </>
+        }
+      />
+
+      <AnimatePresence initial={false}>
+        {(isMobileSearchOpen || Boolean(searchQuery)) && !isDesktop && (
+          <m.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={{ duration: 0.25, ease: EASE }}
+            className="-mt-2 overflow-hidden lg:hidden"
+          >
+            <TransactionSearchField
+              value={searchQuery}
+              onChange={setSearchQuery}
+              autoFocus
+              className="h-11"
+            />
+          </m.div>
+        )}
+      </AnimatePresence>
+
+      {/* Phones show summary before filters; desktop keeps DOM order (filters, then summary). */}
+      <Reveal immediate className="max-lg:order-1">
+        <MonthTabs
+          months={months}
+          selected={selectedMonth}
+          onSelect={handleSelectMonth}
+          onGoToCurrent={() => handleSelectMonth(startOfMonth(new Date()))}
+        />
+      </Reveal>
+
+      <Reveal immediate delay={0.05} className="max-lg:order-3">
         <TransactionFilterChips
           wallets={wallets}
           categories={categories}
@@ -293,33 +447,30 @@ export function TransactionsPage() {
           onSelectCategory={handleSelectCategory}
           selectedSubCategoryId={subCategoryFilter}
           onSelectSubCategory={setSubCategoryFilter}
+          extraActiveFilters={extraActiveFilters}
+          matchCount={hasActiveFilter ? totalCount : null}
+          onReset={resetFilters}
         />
+      </Reveal>
 
-        <TransactionToolbar
-          searchQuery={searchQuery}
-          onSearchChange={setSearchQuery}
-          dateRange={dateRange}
-          onDateRangeChange={setDateRange}
-          onGoToCurrentMonth={() => handleSelectMonth(startOfMonth(new Date()))}
-          sortOption={sortOption}
-          onSortChange={setSortOption}
-          focusSearchToken={focusSearchToken}
-        />
-
-        <MonthTabs months={months} selected={selectedMonth} onSelect={handleSelectMonth} />
-
+      <Reveal immediate delay={0.05} className="max-lg:order-2">
         <TransactionSummaryBar expense={summary?.expense ?? 0} income={summary?.income ?? 0} />
+      </Reveal>
 
-        <div className="grid grid-cols-1 gap-5 lg:grid-cols-[3fr_2fr] lg:items-start">
+      <div className="grid grid-cols-1 gap-4 max-lg:order-4 lg:grid-cols-[minmax(0,1fr)_400px] lg:items-start xl:grid-cols-[minmax(0,1fr)_480px] 2xl:grid-cols-[minmax(0,1fr)_520px]">
+        <Reveal delay={0.05}>
           <TransactionCalendar
             month={selectedMonth}
             transactions={calendarTransactions}
+            categories={categories}
             selectedDay={selectedDay}
             onSelectDay={handleSelectDay}
             isLoading={isCalendarLoading}
           />
+        </Reveal>
 
-          <div className="flex flex-col gap-5">
+        <Reveal delay={0.1}>
+          <Card className="flex flex-col">
             <TransactionList
               transactions={displayedTransactions}
               occurrences={visibleOccurrences}
@@ -328,23 +479,44 @@ export function TransactionsPage() {
               onEditTransaction={handleEditTransaction}
               onPayOccurrence={openPayModal}
               onCancelOccurrence={(occurrence) => void handleCancelOccurrence(occurrence)}
-              title=""
-              emptyMessage={hasActiveFilter ? t("transaction.noDataForFilter") : t("dashboard.noTransactions")}
+              title={
+                hasActiveFilter ? t("transaction.filterResults") : t("transaction.allTransactions")
+              }
+              headerAction={
+                totalCount !== null && (
+                  <span
+                    key={totalCount}
+                    className="animate-fade-in text-[13px] text-text-3 tabular"
+                  >
+                    {totalCount}
+                  </span>
+                )
+              }
+              emptyMessage={
+                hasActiveFilter ? t("transaction.noDataForFilter") : t("dashboard.noTransactions")
+              }
               dateGroupOrder={displaySortConfig.dateGroupOrder}
               sortWithinDay={displaySortConfig.sortWithinDay}
+              dayHeaderStyle="full"
               isLoading={isQueryLoading}
             />
 
             {hasMore && (
-              <div ref={sentinelRef} className="flex justify-center py-4">
-                {isLoadingMore && <IconLoader className="h-5 w-5 animate-spin text-primary-500" />}
+              <div
+                ref={sentinelRef}
+                className="flex items-center justify-center gap-2 pt-4 text-[13px] text-text-3"
+              >
+                {isLoadingMore && (
+                  <>
+                    <IconLoader className="size-4 animate-spin" />
+                    {t("transaction.loadingMore")}
+                  </>
+                )}
               </div>
             )}
-          </div>
-        </div>
+          </Card>
+        </Reveal>
       </div>
-
-      <AddTransactionFab />
 
       <AddTransactionModal
         isOpen={editingTransaction !== null}
@@ -364,6 +536,6 @@ export function TransactionsPage() {
         occurrence={payingOccurrence}
         onClose={closePayModal}
       />
-    </DashboardLayout>
+    </div>
   );
 }

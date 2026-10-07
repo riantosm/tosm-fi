@@ -1,52 +1,58 @@
 import { useTranslation } from "react-i18next";
-import { HiOutlineTrophy } from "react-icons/hi2";
-import { IconLoader } from "@/components/atoms/IconLoader";
-import { Words } from "@/components/atoms/Words";
-import { useCurrency } from "@/hooks/use-currency";
+import { LuTrophy } from "react-icons/lu";
+import { Skeleton } from "@/components/atoms/Skeleton";
+import { Card } from "@/components/molecules/Card";
+import { EmptyState } from "@/components/molecules/EmptyState";
+import { SectionHead } from "@/components/molecules/SectionHead";
 import { useLanguage } from "@/hooks/use-language";
+import { useMoneyFormat } from "@/hooks/use-money-format";
 import { cn } from "@/utils/cn";
+import { toIntlLocale } from "@/utils/locale";
 import type { TopSpendingItem } from "@/types/report.types";
 
-const RANK_STYLE: Record<number, string> = {
-  1: "bg-amber-400 text-white",
-  2: "bg-ink-300 text-white dark:bg-ink-500",
-  3: "bg-orange-400 text-white",
+/** Gold / silver / bronze trophies for the top three; plain numbers after. */
+const MEDAL_CLASS: Record<number, string> = {
+  1: "bg-investment text-white",
+  2: "bg-text-3/45 text-white",
+  3: "bg-[color-mix(in_oklab,var(--expense),var(--investment-text)_35%)] text-white",
 };
 
 function RankBadge({ rank }: { rank: number }) {
-  const medalClass = RANK_STYLE[rank];
-
-  if (medalClass) {
-    return (
-      <div
-        className={cn("flex h-8 w-8 shrink-0 items-center justify-center rounded-full", medalClass)}
-      >
-        <HiOutlineTrophy className="h-4 w-4" />
-      </div>
-    );
-  }
-
+  const medalClass = MEDAL_CLASS[rank];
   return (
-    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-ink-100 dark:bg-ink-800">
-      <Words type="xs/bold" as="span" className="text-ink-500 dark:text-ink-400">
-        {rank}
-      </Words>
-    </div>
+    <span
+      className={cn(
+        "flex size-8 shrink-0 items-center justify-center rounded-full text-[12px] font-semibold tabular",
+        medalClass ?? "bg-surface-2 text-text-3",
+      )}
+    >
+      {medalClass ? <LuTrophy className="size-4" /> : rank}
+    </span>
   );
 }
 
 interface TopSpendingListProps {
   items: TopSpendingItem[];
+  /** "LAPORAN · TERBESAR" */
+  eyebrow: string;
   isLoading?: boolean;
+  className?: string;
 }
 
-export function TopSpendingList({ items, isLoading = false }: TopSpendingListProps) {
+export function TopSpendingList({
+  items,
+  eyebrow,
+  isLoading = false,
+  className,
+}: TopSpendingListProps) {
   const { t } = useTranslation();
-  const { format } = useCurrency();
   const { language } = useLanguage();
+  const { formatNumber } = useMoneyFormat();
+  const locale = toIntlLocale(language);
+  const isInitialLoading = isLoading && items.length === 0;
 
   function formatDate(value: string): string {
-    return new Intl.DateTimeFormat(language, {
+    return new Intl.DateTimeFormat(locale, {
       day: "numeric",
       month: "short",
       year: "numeric",
@@ -54,67 +60,53 @@ export function TopSpendingList({ items, isLoading = false }: TopSpendingListPro
   }
 
   return (
-    <div className="flex h-full flex-col gap-4 rounded-2xl border border-ink-200 bg-white p-5 dark:border-ink-800 dark:bg-ink-900">
-      <Words type="base/bold" className="text-ink-900 dark:text-ink-50">
-        {t("reports.topSpending.title")}
-      </Words>
+    <Card className={cn("flex flex-col gap-4 lg:gap-[18px]", className)}>
+      <SectionHead eyebrow={eyebrow} title={t("reports.topSpending.title")} />
 
-      <div className="relative flex-1">
-        {items.length === 0 ? (
-          <div className="flex flex-1 flex-col items-center justify-center gap-1 rounded-2xl border border-dashed border-ink-200 py-10 dark:border-ink-800">
-            <Words type="sm/bold" className="text-ink-500 dark:text-ink-400">
-              {t("reports.topSpending.empty")}
-            </Words>
-          </div>
-        ) : (
-          <div className="flex flex-col gap-1">
-            {items.map((item) => (
-              <div
-                key={item.idTransaction}
-                className="flex items-center gap-3 rounded-xl px-1 py-2"
-              >
-                <RankBadge rank={item.rank} />
-                <div className="min-w-0 flex-1">
-                  <Words
-                    type="sm/bold"
-                    as="span"
-                    className="block truncate text-ink-900 dark:text-ink-50"
-                  >
-                    {item.title}
-                  </Words>
-                  <Words
-                    type="xs/regular"
-                    as="span"
-                    className="block truncate text-ink-400 dark:text-ink-500"
-                  >
-                    {item.subCategoryName
-                      ? `${item.categoryName} · ${item.subCategoryName}`
-                      : item.categoryName}
-                  </Words>
-                </div>
-                <div className="flex shrink-0 flex-col items-end gap-0.5">
-                  <Words
-                    type="sm/bold"
-                    as="span"
-                    className="whitespace-nowrap text-ink-900 dark:text-ink-50"
-                  >
-                    {format(item.amount)}
-                  </Words>
-                  <Words type="xs/regular" as="span" className="text-ink-400 dark:text-ink-500">
-                    {formatDate(item.date)}
-                  </Words>
-                </div>
+      {isInitialLoading ? (
+        <div className="flex flex-col gap-3">
+          {Array.from({ length: 5 }, (_, index) => (
+            <div key={index} className="flex items-center gap-3">
+              <Skeleton className="size-8 shrink-0 rounded-full" />
+              <div className="flex flex-1 flex-col gap-1.5">
+                <Skeleton className="h-3.5 w-3/5 rounded-full" />
+                <Skeleton className="h-3 w-2/5 rounded-full" />
               </div>
-            ))}
-          </div>
-        )}
-
-        {isLoading && (
-          <div className="absolute inset-0 flex items-start justify-center rounded-2xl bg-white/60 pt-8 backdrop-blur-[2px] dark:bg-ink-950/60">
-            <IconLoader className="h-6 w-6 animate-spin text-primary-500" />
-          </div>
-        )}
-      </div>
-    </div>
+              <Skeleton className="h-3.5 w-16 rounded-full" />
+            </div>
+          ))}
+        </div>
+      ) : items.length === 0 ? (
+        <EmptyState icon={<LuTrophy />} title={t("reports.topSpending.empty")} className="flex-1" />
+      ) : (
+        <div
+          className={cn(
+            "flex flex-col gap-1 transition-opacity duration-300",
+            isLoading && "opacity-60",
+          )}
+        >
+          {items.map((item) => (
+            <div
+              key={item.idTransaction}
+              className="flex animate-fade-in items-center gap-3 py-1.5"
+            >
+              <RankBadge rank={item.rank} />
+              <span className="flex min-w-0 flex-1 flex-col gap-px">
+                <span className="truncate text-[14px] font-semibold text-text">{item.title}</span>
+                <span className="truncate text-[12px] text-text-3">
+                  {formatDate(item.date)} ·{" "}
+                  {item.subCategoryName
+                    ? `${item.categoryName} · ${item.subCategoryName}`
+                    : item.categoryName}
+                </span>
+              </span>
+              <span className="shrink-0 font-num text-[14px] font-semibold text-expense-text tabular">
+                −{formatNumber(item.amount)}
+              </span>
+            </div>
+          ))}
+        </div>
+      )}
+    </Card>
   );
 }

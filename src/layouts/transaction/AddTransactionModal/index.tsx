@@ -1,20 +1,28 @@
-import { createElement, useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { AnimatePresence, m } from "motion/react";
 import {
-  HiOutlineArrowsRightLeft,
-  HiOutlineCalendarDays,
-  HiOutlineClock,
-  HiOutlineDocumentDuplicate,
-  HiOutlineTag,
-  HiOutlineTrash,
-} from "react-icons/hi2";
-import { Modal } from "@/components/molecules/Modal";
+  LuArrowUpDown,
+  LuCalendarClock,
+  LuCheck,
+  LuCopy,
+  LuTrash2,
+  LuTrendingUp,
+  LuType,
+} from "react-icons/lu";
 import { Button } from "@/components/atoms/Button";
-import { Input } from "@/components/atoms/Input";
 import { Checkbox } from "@/components/atoms/Checkbox";
-import { Words } from "@/components/atoms/Words";
-import { Tooltip } from "@/components/atoms/Tooltip";
-import { ModalCloseButton } from "@/components/atoms/ModalCloseButton";
+import { IconButton } from "@/components/atoms/IconButton";
+import { Input } from "@/components/atoms/Input";
+import { Textarea } from "@/components/atoms/Textarea";
+import { AmountCard } from "@/components/molecules/AmountCard";
+import { CategoryPickerRow } from "@/components/molecules/CategoryPickerRow";
+import { Chip } from "@/components/molecules/Chip";
+import { FormField } from "@/components/molecules/FormField";
+import { Modal, ModalActions } from "@/components/molecules/Modal";
+import { PickerField } from "@/components/molecules/PickerField";
+import { SegmentedControl } from "@/components/molecules/SegmentedControl";
+import { WalletChipGroup } from "@/components/molecules/WalletChipGroup";
 import { SelectCategoryModal } from "@/layouts/transaction/SelectCategoryModal";
 import { SelectSubCategoryModal } from "@/layouts/transaction/SelectSubCategoryModal";
 import { AmountCalculatorModal } from "@/layouts/transaction/AmountCalculatorModal";
@@ -24,15 +32,13 @@ import { useCategories } from "@/hooks/use-categories";
 import { useWallets } from "@/hooks/use-wallets";
 import { useTransactions } from "@/hooks/use-transactions";
 import { useInvestmentTransactions } from "@/hooks/use-investment-transactions";
-import { useCurrency } from "@/hooks/use-currency";
 import { useLanguage } from "@/hooks/use-language";
 import { useToast } from "@/hooks/use-toast";
 import { useConfirmDialog } from "@/hooks/use-confirm-dialog";
-import { resolveCategoryIcon } from "@/constants/category-icons";
+import { useDialogSession } from "@/hooks/use-dialog-session";
 import type { Category, CategoryType, SubCategory } from "@/types/category.types";
 import type { Transaction, TransactionInput } from "@/types/transaction.types";
-import type { WalletAccount } from "@/types/wallet.types";
-import { cn } from "@/utils/cn";
+import { formatDateTimeLabel } from "@/utils/tx-time";
 
 type FormTransactionType = "income" | "expense" | "transfer";
 
@@ -42,30 +48,16 @@ interface AddTransactionModalProps {
   onClose: () => void;
 }
 
+const EASE = [0.22, 1, 0.36, 1] as const;
+
+const TYPE_ACTIVE_CLASS: Record<FormTransactionType, string> = {
+  expense: "text-expense-text",
+  income: "text-income-text",
+  transfer: "text-primary-text",
+};
+
 function toFormType(type: Transaction["type"] | undefined): FormTransactionType {
   return type === "transfer" ? "transfer" : type === "income" ? "income" : "expense";
-}
-
-function formatDateLabel(date: Date, locale: string, todayLabel: string): string {
-  const now = new Date();
-  if (date.toDateString() === now.toDateString()) return todayLabel;
-  try {
-    return new Intl.DateTimeFormat(locale, {
-      day: "numeric",
-      month: "short",
-      year: "numeric",
-    }).format(date);
-  } catch {
-    return date.toDateString();
-  }
-}
-
-function formatTimeLabel(date: Date, locale: string): string {
-  try {
-    return new Intl.DateTimeFormat(locale, { hour: "numeric", minute: "2-digit" }).format(date);
-  } catch {
-    return date.toLocaleTimeString();
-  }
 }
 
 function shuffle<T>(items: T[]): T[] {
@@ -77,18 +69,29 @@ function shuffle<T>(items: T[]): T[] {
   return result;
 }
 
+/**
+ * Catat / edit transaksi dialog. A fresh dialog (and form state) is mounted on
+ * every open, so closing never leaks state into the next entry and the exit
+ * animation keeps showing what was there.
+ */
 export function AddTransactionModal({ isOpen, transaction, onClose }: AddTransactionModalProps) {
+  const session = useDialogSession(isOpen);
   return (
-    <Modal isOpen={isOpen} onClose={onClose} size="2xl">
-      {isOpen && <AddTransactionFields transaction={transaction ?? null} onClose={onClose} />}
-    </Modal>
+    <AddTransactionDialog
+      key={session}
+      isOpen={isOpen}
+      transaction={transaction ?? null}
+      onClose={onClose}
+    />
   );
 }
 
-function AddTransactionFields({
-  transaction,
+function AddTransactionDialog({
+  isOpen,
+  transaction: transactionProp,
   onClose,
 }: {
+  isOpen: boolean;
   transaction: Transaction | null;
   onClose: () => void;
 }) {
@@ -98,9 +101,11 @@ function AddTransactionFields({
   const { wallets, status: walletsStatus, loadWallets } = useWallets();
   const { createTransaction, editTransaction, deleteTransaction } = useTransactions();
   const { createMoneyIn } = useInvestmentTransactions();
-  const { format } = useCurrency();
   const { showToast } = useToast();
   const { confirm } = useConfirmDialog();
+
+  // Frozen for this dialog's lifetime: the parent clears its own state while we animate out.
+  const [transaction] = useState(transactionProp);
 
   const [type, setType] = useState<FormTransactionType>(() => toFormType(transaction?.type));
   const [categoryId, setCategoryId] = useState<string | null>(transaction?.idCategory ?? null);
@@ -160,8 +165,6 @@ function AddTransactionFields({
 
     return shuffle(allSubCategories).slice(0, 6);
   }, [categories, type, category]);
-
-  const CategoryIcon = category ? resolveCategoryIcon(category.icon) : HiOutlineTag;
 
   function handleTypeChange(nextType: FormTransactionType) {
     if (nextType === type) return;
@@ -337,293 +340,268 @@ function AddTransactionFields({
     }
   }
 
+  const isBusy = isSaving || isDuplicating || isDeleting;
+  const isTransfer = type === "transfer";
+  const fromWallet = wallets.find((item) => item.idWallet === walletFromId);
+  const toWallet = wallets.find((item) => item.idWallet === walletToId);
+  const saveLabel = transaction
+    ? t("transaction.saveChanges")
+    : isTransfer
+      ? t("transaction.saveTransfer")
+      : t("transaction.save");
+
   return (
     <>
-      <div className="flex flex-col gap-5">
-        <div className="flex items-center justify-between gap-2">
-          <Words as="h2" type="xl/bold" className="text-ink-900 dark:text-ink-50">
-            {transaction ? t("transaction.editTransaction") : t("transaction.addTransaction")}
-          </Words>
-          <div className="flex shrink-0 items-center gap-1">
-            {transaction && (
-              <>
-                <Tooltip content={t("transaction.duplicateButton")}>
-                  <button
-                    type="button"
-                    onClick={() => void handleDuplicate()}
-                    disabled={isDuplicating}
-                    aria-label={t("transaction.duplicateButton")}
-                    className="flex h-9 w-9 items-center justify-center rounded-full text-ink-400 transition-colors hover:bg-ink-100 hover:text-ink-600 disabled:opacity-60 dark:hover:bg-ink-800 dark:hover:text-ink-200"
-                  >
-                    <HiOutlineDocumentDuplicate className="h-4 w-4" />
-                  </button>
-                </Tooltip>
-                <Tooltip content={t("transaction.deleteButton")}>
-                  <button
-                    type="button"
-                    onClick={() => void handleDelete()}
-                    disabled={isDeleting}
-                    aria-label={t("transaction.deleteButton")}
-                    className="flex h-9 w-9 items-center justify-center rounded-full text-ink-400 transition-colors hover:bg-red-50 hover:text-red-500 disabled:opacity-60 dark:hover:bg-red-500/10 dark:hover:text-red-400"
-                  >
-                    <HiOutlineTrash className="h-4 w-4" />
-                  </button>
-                </Tooltip>
-              </>
-            )}
-            <ModalCloseButton onClose={onClose} />
-          </div>
-        </div>
-
-        <div className="flex rounded-xl border border-ink-200 p-1 dark:border-ink-800">
-          <button
-            type="button"
-            onClick={() => handleTypeChange("expense")}
-            className={cn(
-              "flex-1 rounded-lg py-2 text-center transition-colors",
-              type === "expense"
-                ? "bg-red-50 text-red-600 dark:bg-red-500/10 dark:text-red-400"
-                : "text-ink-400 hover:bg-ink-50 dark:hover:bg-ink-800",
-            )}
-          >
-            <Words type="sm/bold" as="span">
-              {t("transaction.expense")}
-            </Words>
-          </button>
-          <button
-            type="button"
-            onClick={() => handleTypeChange("income")}
-            className={cn(
-              "flex-1 rounded-lg py-2 text-center transition-colors",
-              type === "income"
-                ? "bg-primary-50 text-primary-600 dark:bg-primary-500/10 dark:text-primary-400"
-                : "text-ink-400 hover:bg-ink-50 dark:hover:bg-ink-800",
-            )}
-          >
-            <Words type="sm/bold" as="span">
-              {t("transaction.income")}
-            </Words>
-          </button>
-          <button
-            type="button"
-            onClick={() => handleTypeChange("transfer")}
-            className={cn(
-              "flex-1 rounded-lg py-2 text-center transition-colors",
-              type === "transfer"
-                ? "bg-ink-200 text-ink-800 dark:bg-ink-700 dark:text-ink-100"
-                : "text-ink-400 hover:bg-ink-50 dark:hover:bg-ink-800",
-            )}
-          >
-            <Words type="sm/bold" as="span">
-              {t("transaction.transfer")}
-            </Words>
-          </button>
-        </div>
-
-        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
-          <div className="flex flex-col gap-4">
-            <div
-              className={cn(
-                "flex flex-wrap items-center gap-3 rounded-2xl p-4",
-                (type === "transfer" || !category) && "bg-ink-100 dark:bg-ink-800",
-              )}
-              style={type !== "transfer" && category ? { backgroundColor: `${category.color}26` } : undefined}
-            >
-              {type === "transfer" ? (
-                <div className="flex min-w-0 flex-1 items-center gap-3">
-                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-ink-200 dark:bg-ink-700">
-                    <HiOutlineArrowsRightLeft className="h-6 w-6 text-ink-500 dark:text-ink-400" />
-                  </div>
-                  <Words type="sm/bold" className="text-ink-900 dark:text-ink-50">
-                    {t("transaction.transfer")}
-                  </Words>
-                </div>
-              ) : (
-                <button
-                  type="button"
-                  onClick={() => setIsCategoryPickerOpen(true)}
-                  className="flex min-w-0 flex-1 items-center gap-3 text-left"
-                >
-                  <div
-                    className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full"
-                    style={category ? { backgroundColor: `${category.color}40` } : undefined}
-                  >
-                    {createElement(CategoryIcon, {
-                      className: cn("h-6 w-6", !category && "text-ink-400 dark:text-ink-500"),
-                      style: category ? { color: category.color } : undefined,
-                    })}
-                  </div>
-                  <div className="flex min-w-0 flex-col">
-                    <Words type="sm/bold" className="truncate text-ink-900 dark:text-ink-50">
-                      {category
-                        ? category.nameCategory
-                        : t("transaction.selectCategoryPlaceholder")}
-                    </Words>
-                    {subCategory && (
-                      <Words type="xs/regular" className="truncate text-ink-500 dark:text-ink-400">
-                        {subCategory.nameSubCategory}
-                      </Words>
-                    )}
-                  </div>
-                </button>
-              )}
-
-              <button
-                type="button"
-                onClick={() => setIsAmountPickerOpen(true)}
-                className="ml-auto min-w-0 shrink-0"
-              >
-                <Words
-                  type={format(amount).length > 12 ? "sm/bold" : "xl/bold"}
-                  className="break-words text-right text-ink-900 dark:text-ink-50"
-                >
-                  {format(amount)}
-                </Words>
-              </button>
-            </div>
-
-            {quickPicks.length > 0 && (
-              <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
-                {quickPicks.map(({ sub, category: parent }) => {
-                  const isSelected = sub.idSubCategory === subCategoryId;
-
-                  return (
-                    <button
-                      key={sub.idSubCategory}
-                      type="button"
-                      onClick={() => handleQuickPick(parent, sub)}
-                      className={cn(
-                        "flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full border px-3 py-1.5 transition-colors",
-                        isSelected
-                          ? "border-transparent"
-                          : "border-ink-200 text-ink-600 hover:bg-ink-50 dark:border-ink-700 dark:text-ink-300 dark:hover:bg-ink-800",
-                      )}
-                      style={
-                        isSelected
-                          ? { backgroundColor: `${parent.color}26`, color: parent.color }
-                          : undefined
-                      }
-                    >
-                      <Words type="xs/regular" as="span">
-                        {sub.nameSubCategory}
-                      </Words>
-                      {!category && (
-                        <Words
-                          type="xs/regular"
-                          as="span"
-                          className={isSelected ? undefined : "text-ink-400 dark:text-ink-500"}
-                          style={isSelected ? { color: parent.color, opacity: 0.7 } : undefined}
-                        >
-                          《{parent.nameCategory}》
-                        </Words>
-                      )}
-                    </button>
-                  );
-                })}
-              </div>
-            )}
-
-            <Input
-              value={title}
-              onChange={(event) => setTitle(event.target.value)}
-              placeholder={t("transaction.titlePlaceholder")}
-            />
-
-            <textarea
-              value={notes}
-              onChange={(event) => setNotes(event.target.value)}
-              placeholder={t("transaction.notesPlaceholder")}
-              rows={3}
-              className="w-full resize-none rounded-xl border border-ink-200 bg-white px-3.5 py-2.5 text-sm text-ink-900 placeholder:text-ink-400 outline-none transition-colors focus:border-primary-400 dark:border-ink-700 dark:bg-ink-900 dark:text-ink-100 dark:placeholder:text-ink-500 dark:focus:border-primary-500"
-            />
-          </div>
-
-          <div className="flex flex-col gap-4">
-            <button
+      <Modal
+        isOpen={isOpen}
+        onClose={onClose}
+        size="lg"
+        title={transaction ? t("transaction.editTransaction") : t("transaction.addTransaction")}
+        subtitle={
+          transaction
+            ? t("transaction.recordedAt", {
+                date: formatDateTimeLabel(new Date(transaction.date), language),
+              })
+            : undefined
+        }
+        headerActions={
+          transaction && (
+            <>
+              <IconButton
+                label={t("transaction.duplicateButton")}
+                icon={<LuCopy />}
+                size="sm"
+                onClick={() => void handleDuplicate()}
+                disabled={isBusy}
+              />
+              <IconButton
+                label={t("transaction.deleteButton")}
+                icon={<LuTrash2 />}
+                size="sm"
+                variant="danger"
+                onClick={() => void handleDelete()}
+                disabled={isBusy}
+              />
+            </>
+          )
+        }
+        footer={
+          <ModalActions>
+            <Button type="button" variant="outline" onClick={onClose} disabled={isBusy}>
+              {t("common.cancel")}
+            </Button>
+            <Button
               type="button"
-              onClick={() => setIsDateTimePickerOpen(true)}
-              className="flex items-center gap-3 rounded-2xl border border-ink-200 p-3 transition-colors hover:bg-ink-50 dark:border-ink-800 dark:hover:bg-ink-800"
+              leftIcon={<LuCheck />}
+              onClick={() => void handleSave()}
+              isLoading={isSaving}
+              disabled={isBusy}
             >
-              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-ink-100 dark:bg-ink-800">
-                <HiOutlineCalendarDays className="h-4 w-4 text-ink-500 dark:text-ink-400" />
-              </div>
-              <Words type="sm/bold" className="text-ink-900 dark:text-ink-50">
-                {formatDateLabel(date, language, t("transaction.today"))}
-              </Words>
-              <span className="flex-1" />
-              <HiOutlineClock className="h-4 w-4 shrink-0 text-ink-400 dark:text-ink-500" />
-              <Words type="sm/bold" className="text-ink-900 dark:text-ink-50">
-                {formatTimeLabel(date, language)}
-              </Words>
-            </button>
+              {saveLabel}
+            </Button>
+          </ModalActions>
+        }
+      >
+        <div className="flex flex-col gap-[18px]">
+          <SegmentedControl
+            options={[
+              { value: "expense", label: t("transaction.expense") },
+              { value: "income", label: t("transaction.income") },
+              { value: "transfer", label: t("transaction.transfer") },
+            ]}
+            value={type}
+            onChange={handleTypeChange}
+            size="md"
+            fill
+            activeClassName={TYPE_ACTIVE_CLASS[type]}
+            ariaLabel={t("transaction.typeLabel")}
+          />
 
-            {type === "transfer" ? (
-              <>
-                <WalletPickerGroup
+          <AmountCard
+            amount={amount}
+            onPickAmount={() => setIsAmountPickerOpen(true)}
+            pickAmountLabel={t("transaction.amountTitle")}
+            header={
+              !isTransfer && (
+                <CategoryPickerRow
+                  category={category}
+                  subCategory={subCategory}
+                  placeholder={t("transaction.selectCategoryPlaceholder")}
+                  onClick={() => setIsCategoryPickerOpen(true)}
+                />
+              )
+            }
+          />
+
+          <AnimatePresence initial={false} mode="popLayout">
+            {isTransfer ? (
+              <m.div
+                key="transfer"
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.25, ease: EASE }}
+                className="flex flex-col gap-3 rounded-[18px] border border-border p-4"
+              >
+                <WalletChipGroup
                   label={t("transaction.transferFrom")}
                   wallets={wallets}
                   selectedId={walletFromId}
                   disabledId={walletToId}
                   onSelect={setWalletFromId}
                 />
-                <WalletPickerGroup
+                <div className="flex items-center gap-3" aria-hidden={false}>
+                  <span className="h-px flex-1 bg-border" />
+                  <IconButton
+                    label={t("transaction.swapWallets")}
+                    icon={<LuArrowUpDown />}
+                    size="sm"
+                    className="bg-primary-soft text-primary-text hover:bg-primary-soft"
+                    onClick={() => {
+                      setWalletFromId(walletToId);
+                      setWalletToId(walletFromId);
+                    }}
+                  />
+                  <span className="h-px flex-1 bg-border" />
+                </div>
+                <WalletChipGroup
                   label={t("transaction.transferTo")}
                   wallets={wallets}
                   selectedId={walletToId}
                   disabledId={walletFromId}
                   onSelect={setWalletToId}
                 />
-              </>
+              </m.div>
             ) : (
-              <WalletPickerGroup
-                label={t("transaction.walletLabel")}
-                wallets={wallets}
-                selectedId={selectedWalletId}
-                onSelect={setWalletId}
-              />
+              quickPicks.length > 0 && (
+                <m.div
+                  key={`quick-${type}`}
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.25, ease: EASE }}
+                  className="flex flex-col gap-2"
+                >
+                  <span className="text-[13px] font-semibold text-text-2">
+                    {t("transaction.quickSubLabel")}
+                  </span>
+                  <div className="flex flex-wrap gap-2">
+                    {quickPicks.map(({ sub, category: parent }) => (
+                      <Chip
+                        key={sub.idSubCategory}
+                        size="sm"
+                        active={sub.idSubCategory === subCategoryId}
+                        onClick={() => handleQuickPick(parent, sub)}
+                        className="max-w-[220px]"
+                      >
+                        {sub.nameSubCategory}
+                        {!category && (
+                          <span className="ml-1 font-normal text-text-3">
+                            · {parent.nameCategory}
+                          </span>
+                        )}
+                      </Chip>
+                    ))}
+                  </div>
+                </m.div>
+              )
             )}
+          </AnimatePresence>
 
-            {type === "expense" && !transaction && (
-              <div className="flex flex-col gap-2">
-                <label className="flex items-center gap-2">
-                  <Checkbox
-                    checked={isInvestment}
-                    onChange={(event) => setIsInvestment(event.target.checked)}
-                  />
-                  <Words type="sm/bold" as="span" className="text-ink-700 dark:text-ink-300">
+          <FormField
+            label={isTransfer ? t("transaction.titleLabel") : t("transaction.titleLabelOptional")}
+            htmlFor="tx-title"
+          >
+            <Input
+              id="tx-title"
+              value={title}
+              onChange={(event) => setTitle(event.target.value)}
+              placeholder={
+                isTransfer && fromWallet && toWallet
+                  ? `${fromWallet.nameWallet} → ${toWallet.nameWallet}`
+                  : t("transaction.titlePlaceholder")
+              }
+              startIcon={<LuType />}
+            />
+          </FormField>
+
+          <FormField label={t("transaction.notesLabel")} htmlFor="tx-notes">
+            <Textarea
+              id="tx-notes"
+              value={notes}
+              onChange={(event) => setNotes(event.target.value)}
+              placeholder={t("transaction.notesPlaceholder")}
+              rows={2}
+            />
+          </FormField>
+
+          <PickerField
+            id="tx-date"
+            label={t("transaction.dateTimeLabel")}
+            icon={<LuCalendarClock />}
+            value={formatDateTimeLabel(date, language, {
+              today: t("transaction.today"),
+              yesterday: t("transaction.yesterday"),
+            })}
+            onClick={() => setIsDateTimePickerOpen(true)}
+          />
+
+          {!isTransfer && (
+            <WalletChipGroup
+              label={t("transaction.walletLabel")}
+              wallets={wallets}
+              selectedId={selectedWalletId}
+              onSelect={setWalletId}
+            />
+          )}
+
+          {type === "expense" && !transaction && (
+            <div className="flex flex-col gap-2.5">
+              <label className="flex cursor-pointer items-center gap-3 rounded-control border border-border px-3.5 py-3 transition-colors duration-200 hover:bg-surface-2 has-[:checked]:border-primary has-[:checked]:bg-primary-soft">
+                <Checkbox
+                  checked={isInvestment}
+                  onChange={(event) => setIsInvestment(event.target.checked)}
+                />
+                <span className="flex min-w-0 flex-1 flex-col gap-px">
+                  <span className="truncate text-[14px] font-semibold text-text">
                     {t("transaction.markAsInvestment")}
-                  </Words>
-                </label>
+                  </span>
+                  <span className="truncate text-[12.5px] text-text-3">
+                    {t("transaction.markAsInvestmentHint")}
+                  </span>
+                </span>
+                <LuTrendingUp className="size-[18px] shrink-0 text-investment-text" />
+              </label>
 
+              <AnimatePresence initial={false}>
                 {isInvestment && (
-                  <InvestmentAccountPickerButton
-                    idInstrument={investmentInstrumentId}
-                    idInvestmentAccount={investmentAccountId}
-                    onChange={(instrument, account) => {
-                      setInvestmentInstrumentId(instrument.idInstrument);
-                      setInvestmentAccountId(account.idInvestmentAccount);
-                    }}
-                  />
+                  <m.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: "auto" }}
+                    exit={{ opacity: 0, height: 0 }}
+                    transition={{ duration: 0.25, ease: EASE }}
+                    className="overflow-hidden"
+                  >
+                    <InvestmentAccountPickerButton
+                      idInstrument={investmentInstrumentId}
+                      idInvestmentAccount={investmentAccountId}
+                      onChange={(instrument, account) => {
+                        setInvestmentInstrumentId(instrument.idInstrument);
+                        setInvestmentAccountId(account.idInvestmentAccount);
+                      }}
+                    />
+                  </m.div>
                 )}
-              </div>
-            )}
-          </div>
+              </AnimatePresence>
+            </div>
+          )}
         </div>
-
-        <Button
-          onClick={() => void handleSave()}
-          isLoading={isSaving || isDuplicating || isDeleting}
-          className="w-full"
-        >
-          <Words type="sm/bold" as="span">
-            {t("transaction.save")}
-          </Words>
-        </Button>
-      </div>
+      </Modal>
 
       <SelectCategoryModal
         isOpen={isCategoryPickerOpen}
         type={type === "transfer" ? "expense" : (type as CategoryType)}
+        selectedId={categoryId}
         onClose={() => setIsCategoryPickerOpen(false)}
         onSelect={handleCategorySelect}
       />
@@ -631,6 +609,11 @@ function AddTransactionFields({
       <SelectSubCategoryModal
         isOpen={isSubCategoryPickerOpen}
         category={category}
+        selectedId={subCategoryId}
+        onBack={() => {
+          setIsSubCategoryPickerOpen(false);
+          setIsCategoryPickerOpen(true);
+        }}
         onClose={() => setIsSubCategoryPickerOpen(false)}
         onSelect={(selected) => {
           setSubCategoryId(selected ? selected.idSubCategory : null);
@@ -655,52 +638,5 @@ function AddTransactionFields({
         onConfirm={setDate}
       />
     </>
-  );
-}
-
-interface WalletPickerGroupProps {
-  label: string;
-  wallets: WalletAccount[];
-  selectedId: string | null;
-  disabledId?: string | null;
-  onSelect: (id: string) => void;
-}
-
-function WalletPickerGroup({
-  label,
-  wallets,
-  selectedId,
-  disabledId,
-  onSelect,
-}: WalletPickerGroupProps) {
-  return (
-    <div className="flex flex-col gap-2">
-      <Words type="xs/bold" className="uppercase tracking-wide text-ink-400 dark:text-ink-500">
-        {label}
-      </Words>
-      <div className="flex flex-wrap gap-2">
-        {wallets.map((wallet) => (
-          <button
-            key={wallet.idWallet}
-            type="button"
-            onClick={() => onSelect(wallet.idWallet)}
-            disabled={wallet.idWallet === disabledId}
-            className={cn(
-              "rounded-full border-2 px-3 py-1.5 transition-colors disabled:cursor-not-allowed disabled:opacity-40",
-              selectedId === wallet.idWallet ? "" : "border-ink-200 dark:border-ink-700",
-            )}
-            style={selectedId === wallet.idWallet ? { borderColor: wallet.color } : undefined}
-          >
-            <Words
-              type="xs/bold"
-              as="span"
-              className="text-ink-700 dark:text-ink-300 flex shrink-0 items-center justify-center"
-            >
-              {wallet.nameWallet}
-            </Words>
-          </button>
-        ))}
-      </div>
-    </div>
   );
 }

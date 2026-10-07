@@ -1,45 +1,45 @@
-import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { HiOutlineArrowLeft } from "react-icons/hi2";
-import { DashboardLayout } from "@/components/templates/DashboardLayout";
-import { Words } from "@/components/atoms/Words";
+import { LuCoins, LuHash } from "react-icons/lu";
+import { Reveal } from "@/components/atoms/Reveal";
+import { PageHeader } from "@/components/molecules/PageHeader";
 import { CurrencyOptionList } from "@/layouts/settings/CurrencyOptionList";
 import { DecimalOptionList } from "@/layouts/settings/DecimalOptionList";
+import { SettingsPanel } from "@/layouts/settings/SettingsPanel";
 import { ROUTES } from "@/constants/routes";
 
 export function SettingsCurrencyPage() {
   const { t } = useTranslation();
 
   return (
-    <DashboardLayout>
-      <div className="flex flex-col gap-6">
-        <div className="flex flex-col gap-2">
-          <Link
-            to={ROUTES.SETTINGS}
-            className="flex w-fit items-center gap-1.5 text-ink-500 hover:text-ink-700 dark:text-ink-400 dark:hover:text-ink-200"
+    <div className="flex flex-col gap-4 lg:gap-5">
+      <PageHeader
+        title={t("settingsCurrency.title")}
+        subtitle={t("settingsCurrency.subtitle")}
+        backTo={ROUTES.SETTINGS}
+      />
+
+      <div className="grid items-start gap-4 lg:grid-cols-2 lg:gap-5">
+        <Reveal immediate>
+          <SettingsPanel
+            icon={<LuCoins />}
+            iconClassName="bg-investment-soft text-investment-text"
+            title={t("settingsCurrency.title")}
+            subtitle={t("settingsCurrency.currencySubtitle")}
           >
-            <HiOutlineArrowLeft className="h-4 w-4" />
-            <Words type="sm/bold" as="span">
-              {t("common.back")}
-            </Words>
-          </Link>
-          <Words as="h1" type="2xl/bold" className="text-ink-900 dark:text-ink-50">
-            {t("settingsCurrency.title")}
-          </Words>
-          <Words type="sm/regular" className="text-ink-500 dark:text-ink-400">
-            {t("settingsCurrency.subtitle")}
-          </Words>
-        </div>
-
-        <CurrencyOptionList />
-
-        <div className="flex flex-col gap-3">
-          <Words type="sm/bold" className="text-ink-500 dark:text-ink-400">
-            {t("settingsCurrency.decimalTitle")}
-          </Words>
-          <DecimalOptionList />
-        </div>
+            <CurrencyOptionList />
+          </SettingsPanel>
+        </Reveal>
+        <Reveal delay={0.05}>
+          <SettingsPanel
+            icon={<LuHash />}
+            iconClassName="bg-investment-soft text-investment-text"
+            title={t("settingsCurrency.decimalTitle")}
+            subtitle={t("settingsCurrency.decimalSubtitle")}
+          >
+            <DecimalOptionList />
+          </SettingsPanel>
+        </Reveal>
       </div>
-    </DashboardLayout>
+    </div>
   );
 }

@@ -29,8 +29,17 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     const root = document.documentElement;
+    // Briefly enable color transitions on every element so switching themes
+    // cross-fades instead of snapping; removed right after so normal
+    // interactions keep their own (faster) transitions.
+    root.classList.add("theme-switching");
     root.classList.toggle("dark", theme === "dark");
     localStorage.setItem(THEME_STORAGE_KEY, theme);
+    document
+      .querySelector('meta[name="theme-color"]')
+      ?.setAttribute("content", theme === "dark" ? "#25263a" : "#f4f5fb");
+    const timeout = window.setTimeout(() => root.classList.remove("theme-switching"), 450);
+    return () => window.clearTimeout(timeout);
   }, [theme]);
 
   const setTheme = useCallback((next: Theme) => setThemeState(next), []);

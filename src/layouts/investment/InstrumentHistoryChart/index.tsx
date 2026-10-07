@@ -1,109 +1,113 @@
+import { useId } from "react";
 import { useTranslation } from "react-i18next";
-import { Area, AreaChart, CartesianGrid, Legend, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
-import { useCurrency } from "@/hooks/use-currency";
+import {
+  Area,
+  ComposedChart,
+  CartesianGrid,
+  Line,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from "recharts";
+import { ChartTooltip } from "@/components/molecules/ChartTooltip";
+import { formatTimelineDate } from "@/layouts/investment/investment-ui";
 import { useLanguage } from "@/hooks/use-language";
-import { useTheme } from "@/hooks/use-theme";
+import { useMoneyFormat } from "@/hooks/use-money-format";
 import { cn } from "@/utils/cn";
-import type { TimelinePoint } from "@/types/investment-transaction.types";
+import type {
+  NetWorthTimelineGranularity,
+  TimelinePoint,
+} from "@/types/investment-transaction.types";
 
 interface InstrumentHistoryChartProps {
+  /** Already summed + bucketed running totals. */
   data: TimelinePoint[];
   color: string;
+  granularity: NetWorthTimelineGranularity;
+  className?: string;
 }
 
-export function InstrumentHistoryChart({ data, color }: InstrumentHistoryChartProps) {
+/** "Riwayat nilai": value area in the instrument color over a stepped capital line. */
+export function InstrumentHistoryChart({
+  data,
+  color,
+  granularity,
+  className,
+}: InstrumentHistoryChartProps) {
   const { t } = useTranslation();
-  const { format } = useCurrency();
   const { language } = useLanguage();
-  const { theme } = useTheme();
-  const isDark = theme === "dark";
-
-  const gridColor = isDark ? "#27272a" : "#e4e4e7";
-  const tickColor = isDark ? "#71717a" : "#a1a1aa";
-  const investedColor = isDark ? "#71717a" : "#a1a1aa";
-
-  function compactFormat(value: number) {
-    return new Intl.NumberFormat(language, {
-      notation: "compact",
-      maximumFractionDigits: 1,
-    }).format(value);
-  }
-
-  function dateFormat(value: string) {
-    return new Intl.DateTimeFormat(language, { day: "numeric", month: "short" }).format(
-      new Date(value),
-    );
-  }
+  const { format } = useMoneyFormat();
+  const gradientId = `history-${useId().replace(/:/g, "")}`;
 
   return (
-    <div className="h-64 w-full">
+    <div className={cn("h-[150px] w-full lg:h-[230px]", className)}>
       <ResponsiveContainer width="100%" height="100%">
-        <AreaChart data={data} margin={{ top: 4, right: 8, left: 0, bottom: 0 }}>
+        <ComposedChart data={data} margin={{ top: 10, right: 6, left: 6, bottom: 0 }}>
           <defs>
-            <linearGradient id="instrumentCurrentFill" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor={color} stopOpacity={0.35} />
+            <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor={color} stopOpacity={0.32} />
               <stop offset="100%" stopColor={color} stopOpacity={0} />
             </linearGradient>
           </defs>
-          <CartesianGrid stroke={gridColor} vertical={false} />
+          <CartesianGrid vertical={false} stroke="var(--border)" />
           <XAxis
             dataKey="date"
-            tickFormatter={dateFormat}
             axisLine={false}
             tickLine={false}
-            tick={{ fill: tickColor, fontSize: 12 }}
+            tickMargin={10}
+            minTickGap={22}
+            tick={{ fill: "var(--text-3)", fontSize: 11.5 }}
+            tickFormatter={(value: string) => formatTimelineDate(value, granularity, language)}
           />
-          <YAxis
-            axisLine={false}
-            tickLine={false}
-            width={44}
-            tick={{ fill: tickColor, fontSize: 12 }}
-            tickFormatter={compactFormat}
-          />
+          <YAxis hide domain={["auto", "auto"]} />
           <Tooltip
-            cursor={{ stroke: gridColor }}
-            contentStyle={{
-              borderRadius: 12,
-              border: `1px solid ${gridColor}`,
-              backgroundColor: isDark ? "#18181b" : "#ffffff",
-              fontSize: 12,
+            cursor={{ stroke: color, strokeOpacity: 0.5 }}
+            content={({ active, payload }) => {
+              const point = payload?.[0]?.payload as TimelinePoint | undefined;
+              if (!active || !point) return null;
+              return (
+                <ChartTooltip
+                  title={formatTimelineDate(point.date, granularity, language, "tooltip")}
+                  rows={[
+                    {
+                      key: "current",
+                      label: t("investment.valueShort"),
+                      value: format(point.current),
+                      color,
+                    },
+                    {
+                      key: "invested",
+                      label: t("investment.capital"),
+                      value: format(point.invested),
+                      color: "var(--text-3)",
+                      marker: "line",
+                      muted: true,
+                    },
+                  ]}
+                />
+              );
             }}
-            labelFormatter={(value) => dateFormat(String(value))}
-            labelStyle={{ color: isDark ? "#fafafa" : "#18181b", fontWeight: 600 }}
-            formatter={(value, name) => [
-              format(Number(value)),
-              name === "invested" ? t("investment.investedAmount") : t("investment.currentValue"),
-            ]}
-          />
-          <Legend
-            iconType="circle"
-            formatter={(value) => (
-              <span className={cn("text-xs", "text-ink-600 dark:text-ink-300")}>
-                {value === "invested"
-                  ? t("investment.investedAmount")
-                  : t("investment.currentValue")}
-              </span>
-            )}
-          />
-          <Area
-            type="monotone"
-            dataKey="invested"
-            name="invested"
-            stroke={investedColor}
-            strokeWidth={2}
-            fill="none"
-            animationDuration={600}
           />
           <Area
             type="monotone"
             dataKey="current"
-            name="current"
             stroke={color}
             strokeWidth={2.5}
-            fill="url(#instrumentCurrentFill)"
+            fill={`url(#${gradientId})`}
+            activeDot={{ r: 6, fill: color, stroke: "var(--surface)", strokeWidth: 3 }}
             animationDuration={600}
           />
-        </AreaChart>
+          <Line
+            type="stepAfter"
+            dataKey="invested"
+            stroke="var(--text-3)"
+            strokeWidth={1.75}
+            dot={false}
+            activeDot={false}
+            animationDuration={600}
+          />
+        </ComposedChart>
       </ResponsiveContainer>
     </div>
   );

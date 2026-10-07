@@ -29,7 +29,7 @@ export const reportService = {
       const { categoryBreakdown, ...summary } = data.data;
       return { summary, categoryBreakdown };
     } catch (error) {
-      throw new Error(getApiErrorMessage(error, i18n.t("reports.genericError")));
+      throw new Error(getApiErrorMessage(error, i18n.t("reports.genericError")), { cause: error });
     }
   },
 
@@ -38,10 +38,12 @@ export const reportService = {
   // list over the wire just to sum it client-side.
   async fetchCashFlow(dateFrom: string, dateTo: string, locale: string): Promise<CashFlowPoint[]> {
     try {
-      const { data } = await httpClient.get("/reports/cash-flow", { params: { dateFrom, dateTo, locale } });
+      const { data } = await httpClient.get("/reports/cash-flow", {
+        params: { dateFrom, dateTo, locale },
+      });
       return data.data as CashFlowPoint[];
     } catch (error) {
-      throw new Error(getApiErrorMessage(error, i18n.t("reports.genericError")));
+      throw new Error(getApiErrorMessage(error, i18n.t("reports.genericError")), { cause: error });
     }
   },
 
@@ -54,7 +56,7 @@ export const reportService = {
       });
       return data.data as MonthlyTrendRawPoint[];
     } catch (error) {
-      throw new Error(getApiErrorMessage(error, i18n.t("reports.genericError")));
+      throw new Error(getApiErrorMessage(error, i18n.t("reports.genericError")), { cause: error });
     }
   },
 
@@ -62,20 +64,28 @@ export const reportService = {
   // /transactions call per wallet.
   async fetchWalletUsage(dateFrom: string, dateTo: string): Promise<WalletUsageItem[]> {
     try {
-      const { data } = await httpClient.get("/reports/wallet-usage", { params: { dateFrom, dateTo } });
+      const { data } = await httpClient.get("/reports/wallet-usage", {
+        params: { dateFrom, dateTo },
+      });
       return data.data as WalletUsageItem[];
     } catch (error) {
-      throw new Error(getApiErrorMessage(error, i18n.t("reports.genericError")));
+      throw new Error(getApiErrorMessage(error, i18n.t("reports.genericError")), { cause: error });
     }
   },
 
   // Dedicated backend endpoint: category/subcategory names are already resolved server-side.
-  async fetchTopSpending(dateFrom: string, dateTo: string, limit: number): Promise<TopSpendingItem[]> {
+  async fetchTopSpending(
+    dateFrom: string,
+    dateTo: string,
+    limit: number,
+  ): Promise<TopSpendingItem[]> {
     try {
-      const { data } = await httpClient.get("/reports/top-spending", { params: { dateFrom, dateTo, limit } });
+      const { data } = await httpClient.get("/reports/top-spending", {
+        params: { dateFrom, dateTo, limit },
+      });
       return data.data as TopSpendingItem[];
     } catch (error) {
-      throw new Error(getApiErrorMessage(error, i18n.t("reports.genericError")));
+      throw new Error(getApiErrorMessage(error, i18n.t("reports.genericError")), { cause: error });
     }
   },
 
@@ -88,7 +98,9 @@ export const reportService = {
       });
       return data.data as DashboardSummary;
     } catch (error) {
-      throw new Error(getApiErrorMessage(error, i18n.t("dashboard.genericError")));
+      throw new Error(getApiErrorMessage(error, i18n.t("dashboard.genericError")), {
+        cause: error,
+      });
     }
   },
 

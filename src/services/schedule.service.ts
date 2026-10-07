@@ -8,7 +8,7 @@ export const scheduleService = {
       const { data } = await httpClient.get("/schedules");
       return data.data as Schedule[];
     } catch (error) {
-      throw new Error(getApiErrorMessage(error, i18n.t("schedule.genericError")));
+      throw new Error(getApiErrorMessage(error, i18n.t("schedule.genericError")), { cause: error });
     }
   },
 
@@ -17,7 +17,7 @@ export const scheduleService = {
       const { data } = await httpClient.post("/schedules", input);
       return data.data as Schedule;
     } catch (error) {
-      throw new Error(getApiErrorMessage(error, i18n.t("schedule.genericError")));
+      throw new Error(getApiErrorMessage(error, i18n.t("schedule.genericError")), { cause: error });
     }
   },
 
@@ -26,7 +26,7 @@ export const scheduleService = {
       const { data } = await httpClient.patch(`/schedules/${idSchedule}`, input);
       return data.data as Schedule;
     } catch (error) {
-      throw new Error(getApiErrorMessage(error, i18n.t("schedule.genericError")));
+      throw new Error(getApiErrorMessage(error, i18n.t("schedule.genericError")), { cause: error });
     }
   },
 
@@ -35,7 +35,7 @@ export const scheduleService = {
       const { data } = await httpClient.patch(`/schedules/${idSchedule}/pause`, { isActive });
       return data.data as Schedule;
     } catch (error) {
-      throw new Error(getApiErrorMessage(error, i18n.t("schedule.genericError")));
+      throw new Error(getApiErrorMessage(error, i18n.t("schedule.genericError")), { cause: error });
     }
   },
 
@@ -43,7 +43,7 @@ export const scheduleService = {
     try {
       await httpClient.delete(`/schedules/${idSchedule}`);
     } catch (error) {
-      throw new Error(getApiErrorMessage(error, i18n.t("schedule.genericError")));
+      throw new Error(getApiErrorMessage(error, i18n.t("schedule.genericError")), { cause: error });
     }
   },
 };

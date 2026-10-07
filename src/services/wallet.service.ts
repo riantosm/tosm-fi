@@ -8,7 +8,7 @@ export const walletService = {
       const { data } = await httpClient.get("/wallets");
       return data.data as WalletAccount[];
     } catch (error) {
-      throw new Error(getApiErrorMessage(error, i18n.t("wallet.genericError")));
+      throw new Error(getApiErrorMessage(error, i18n.t("wallet.genericError")), { cause: error });
     }
   },
 
@@ -17,7 +17,7 @@ export const walletService = {
       const { data } = await httpClient.post("/wallets", input);
       return data.data as WalletAccount;
     } catch (error) {
-      throw new Error(getApiErrorMessage(error, i18n.t("wallet.genericError")));
+      throw new Error(getApiErrorMessage(error, i18n.t("wallet.genericError")), { cause: error });
     }
   },
 
@@ -29,7 +29,7 @@ export const walletService = {
       });
       return data.data as WalletAccount;
     } catch (error) {
-      throw new Error(getApiErrorMessage(error, i18n.t("wallet.genericError")));
+      throw new Error(getApiErrorMessage(error, i18n.t("wallet.genericError")), { cause: error });
     }
   },
 
@@ -37,7 +37,7 @@ export const walletService = {
     try {
       await httpClient.delete(`/wallets/${id}`);
     } catch (error) {
-      throw new Error(getApiErrorMessage(error, i18n.t("wallet.genericError")));
+      throw new Error(getApiErrorMessage(error, i18n.t("wallet.genericError")), { cause: error });
     }
   },
 
@@ -46,7 +46,7 @@ export const walletService = {
       const { data } = await httpClient.patch(`/wallets/${id}/primary`);
       return data.data as WalletAccount[];
     } catch (error) {
-      throw new Error(getApiErrorMessage(error, i18n.t("wallet.genericError")));
+      throw new Error(getApiErrorMessage(error, i18n.t("wallet.genericError")), { cause: error });
     }
   },
 
@@ -55,7 +55,7 @@ export const walletService = {
       const { data } = await httpClient.patch("/wallets/reorder", { orderedIds });
       return data.data as WalletAccount[];
     } catch (error) {
-      throw new Error(getApiErrorMessage(error, i18n.t("wallet.genericError")));
+      throw new Error(getApiErrorMessage(error, i18n.t("wallet.genericError")), { cause: error });
     }
   },
 };

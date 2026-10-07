@@ -8,7 +8,9 @@ export const userApprovalService = {
       const { data } = await httpClient.get("/user/get-list-user");
       return data.data as AuthUser[];
     } catch (error) {
-      throw new Error(getApiErrorMessage(error, i18n.t("userApproval.genericError")));
+      throw new Error(getApiErrorMessage(error, i18n.t("userApproval.genericError")), {
+        cause: error,
+      });
     }
   },
 
@@ -17,7 +19,9 @@ export const userApprovalService = {
       const { data } = await httpClient.post("/user/accept-user", { idUser });
       return data.data as AuthUser;
     } catch (error) {
-      throw new Error(getApiErrorMessage(error, i18n.t("userApproval.genericError")));
+      throw new Error(getApiErrorMessage(error, i18n.t("userApproval.genericError")), {
+        cause: error,
+      });
     }
   },
 };

@@ -163,3 +163,43 @@ export function buildBudgetSlices(
     };
   });
 }
+
+/** "ok" < 90% used, "warn" 90–100%, "over" past the limit. */
+export type BudgetStatus = "ok" | "warn" | "over";
+
+export interface BudgetProgress {
+  /** spent / limit (0 when there's no limit) — may exceed 1. */
+  ratio: number;
+  /** Rounded percentage for badges. */
+  percent: number;
+  status: BudgetStatus;
+  /** Limit left this month (0 once over). */
+  remaining: number;
+  /** How far past the limit (0 when within it). */
+  overBy: number;
+  /** Days left after today. */
+  remainingDays: number;
+  /** `remaining` spread over the days left; `null` on the last day. */
+  dailyPace: number | null;
+}
+
+const WARN_RATIO = 0.9;
+
+export function computeBudgetProgress(
+  spent: number,
+  limit: number,
+  range: Pick<CurrentMonthRange, "daysInMonth" | "dayOfMonth">,
+): BudgetProgress {
+  const ratio = limit > 0 ? spent / limit : 0;
+  const remaining = Math.max(0, limit - spent);
+  const remainingDays = Math.max(0, range.daysInMonth - range.dayOfMonth);
+  return {
+    ratio,
+    percent: Math.round(ratio * 100),
+    status: ratio > 1 ? "over" : ratio >= WARN_RATIO ? "warn" : "ok",
+    remaining,
+    overBy: Math.max(0, spent - limit),
+    remainingDays,
+    dailyPace: remainingDays > 0 ? remaining / remainingDays : null,
+  };
+}
