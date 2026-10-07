@@ -5,6 +5,8 @@ import { cn } from "@/utils/cn";
 
 interface AmountCardProps {
   amount: number;
+  /** Overrides the formatted number, e.g. the calculator's as-typed "1,5". */
+  amountLabel?: string;
   /** Opens the calculator. Omit for a read-only amount. */
   onPickAmount?: () => void;
   pickAmountLabel?: string;
@@ -21,6 +23,7 @@ interface AmountCardProps {
 /** The big "IDR 45.000" block of every money dialog (design AmountCard). */
 export function AmountCard({
   amount,
+  amountLabel,
   onPickAmount,
   pickAmountLabel,
   header,
@@ -30,7 +33,7 @@ export function AmountCard({
   className,
 }: AmountCardProps) {
   const { symbol, formatNumber } = useMoneyFormat();
-  const value = formatNumber(amount);
+  const value = amountLabel ?? formatNumber(amount);
   const sizeClass =
     value.length > 14 ? "text-[28px]" : value.length > 11 ? "text-[34px]" : "text-[40px]";
 

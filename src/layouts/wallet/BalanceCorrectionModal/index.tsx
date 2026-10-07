@@ -213,6 +213,7 @@ function BalanceCorrectionFields({
 
         <AmountCard
           amount={calc.value}
+          amountLabel={calc.displayValue}
           align="end"
           caption={
             calc.hasExpression ? (

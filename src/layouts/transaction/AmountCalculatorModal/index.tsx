@@ -61,7 +61,7 @@ function AmountCalculatorFields({
   onConfirm,
 }: AmountCalculatorFieldsProps) {
   const { t } = useTranslation();
-  const { symbol, formatNumber } = useMoneyFormat();
+  const { symbol } = useMoneyFormat();
 
   function confirmAndClose(value: number) {
     onConfirm(Math.max(0, value));
@@ -69,7 +69,7 @@ function AmountCalculatorFields({
   }
 
   const calc = useAmountCalculator(amount, { onEnter: confirmAndClose });
-  const valueLabel = formatNumber(calc.value);
+  const valueLabel = calc.displayValue;
 
   return (
     <div className="flex flex-col gap-4">

@@ -59,7 +59,7 @@ interface SetLimitFieldsProps {
 
 function SetLimitFields({ slice, isOpen, onClose, onSubmit }: SetLimitFieldsProps) {
   const { t } = useTranslation();
-  const { symbol, format, formatNumber } = useMoneyFormat();
+  const { symbol, format } = useMoneyFormat();
 
   function confirmAndClose(value: number) {
     if (!isOpen) return;
@@ -68,7 +68,7 @@ function SetLimitFields({ slice, isOpen, onClose, onSubmit }: SetLimitFieldsProp
   }
 
   const calc = useAmountCalculator(slice.limit ?? 0, { onEnter: confirmAndClose });
-  const valueLabel = formatNumber(calc.value);
+  const valueLabel = calc.displayValue;
   const name = slice.name ?? t("dashboard.otherSubCategory");
 
   return (

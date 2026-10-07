@@ -54,7 +54,7 @@ export function useAmountCalculator(
   options: UseAmountCalculatorOptions = {},
 ) {
   const { onEnter } = options;
-  const { format, currency } = useCurrency();
+  const { format, currency, decimalPlaces } = useCurrency();
   const locale = CURRENCIES.find((item) => item.code === currency)?.locale ?? "en-US";
 
   const [terms, setTerms] = useState<string[]>([initialValue !== 0 ? String(initialValue) : "0"]);
@@ -170,6 +170,17 @@ export function useAmountCalculator(
     return () => window.removeEventListener("keydown", handleKeyDown);
   });
 
+  // A single term is shown as typed, so a trailing "1," or decimals like "1,232" stay visible
+  // even when the currency setting rounds to 0 places. A computed result keeps up to 2 decimals.
+  const lastTerm = terms[terms.length - 1];
+  const displayValue =
+    terms.length === 1 && lastTerm.includes(".")
+      ? formatTermNumber(lastTerm, locale)
+      : new Intl.NumberFormat(locale, {
+          minimumFractionDigits: decimalPlaces,
+          maximumFractionDigits: terms.length === 1 ? decimalPlaces : Math.max(decimalPlaces, 2),
+        }).format(value);
+
   const expressionDisplay = terms
     .map((term, index) => (index % 2 === 1 ? ` ${term} ` : formatTermNumber(term, locale)))
     .join("");
@@ -177,6 +188,8 @@ export function useAmountCalculator(
   return {
     value,
     formattedValue: format(value),
+    /** The big number label: the typed input, or the computed result of an expression. */
+    displayValue,
     expressionDisplay,
     hasExpression: terms.length > 1,
     /** Locale decimal separator, for the keypad's decimal key label. */
