@@ -491,7 +491,7 @@ function ChartLegend({ color, capitalLabel }: { color: string; capitalLabel?: st
         <span className="hidden lg:inline">{t("investment.currentValue")}</span>
       </span>
       <span className="flex items-center gap-1.5">
-        <span className="h-0.5 w-2.5 rounded-full bg-text-2" />
+        <span className="h-0.5 w-2.5 rounded-full bg-text-3 opacity-55" />
         {capitalLabel ?? t("investment.capital")}
       </span>
     </span>

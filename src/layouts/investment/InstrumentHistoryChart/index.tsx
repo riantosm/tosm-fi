@@ -4,7 +4,6 @@ import {
   Area,
   ComposedChart,
   CartesianGrid,
-  Line,
   ResponsiveContainer,
   Tooltip,
   XAxis,
@@ -28,7 +27,7 @@ interface InstrumentHistoryChartProps {
   className?: string;
 }
 
-/** "Riwayat nilai": value area in the instrument color over a stepped capital line. */
+/** "Riwayat nilai": value area in the instrument color over a dimmed gray capital area. */
 export function InstrumentHistoryChart({
   data,
   color,
@@ -39,6 +38,7 @@ export function InstrumentHistoryChart({
   const { language } = useLanguage();
   const { format } = useMoneyFormat();
   const gradientId = `history-${useId().replace(/:/g, "")}`;
+  const capitalGradientId = `${gradientId}-capital`;
 
   return (
     <div className={cn("h-[150px] w-full lg:h-[230px]", className)}>
@@ -48,6 +48,10 @@ export function InstrumentHistoryChart({
             <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
               <stop offset="0%" stopColor={color} stopOpacity={0.32} />
               <stop offset="100%" stopColor={color} stopOpacity={0} />
+            </linearGradient>
+            <linearGradient id={capitalGradientId} x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" style={{ stopColor: "var(--text-3)", stopOpacity: 0.18 }} />
+              <stop offset="100%" style={{ stopColor: "var(--text-3)", stopOpacity: 0 }} />
             </linearGradient>
           </defs>
           <CartesianGrid vertical={false} stroke="var(--border)" />
@@ -91,20 +95,22 @@ export function InstrumentHistoryChart({
           />
           <Area
             type="monotone"
+            dataKey="invested"
+            stroke="var(--text-3)"
+            strokeOpacity={0.55}
+            strokeWidth={1.75}
+            fill={`url(#${capitalGradientId})`}
+            dot={false}
+            activeDot={false}
+            animationDuration={600}
+          />
+          <Area
+            type="monotone"
             dataKey="current"
             stroke={color}
             strokeWidth={2.5}
             fill={`url(#${gradientId})`}
             activeDot={{ r: 6, fill: color, stroke: "var(--surface)", strokeWidth: 3 }}
-            animationDuration={600}
-          />
-          <Line
-            type="stepAfter"
-            dataKey="invested"
-            stroke="var(--text-3)"
-            strokeWidth={1.75}
-            dot={false}
-            activeDot={false}
             animationDuration={600}
           />
         </ComposedChart>

@@ -8,8 +8,8 @@ import {
   LuCalendar,
   LuCheck,
   LuNotebookPen,
-  LuSparkles,
   LuTrash2,
+  LuTrendingUpDown,
 } from "react-icons/lu";
 import { Badge } from "@/components/atoms/Badge";
 import { Button } from "@/components/atoms/Button";
@@ -45,7 +45,7 @@ const TYPE_BADGE = {
   in: { tone: "income", icon: <LuArrowDownLeft /> },
   out: { tone: "expense", icon: <LuArrowUpRight /> },
   transfer: { tone: "primary", icon: <LuArrowLeftRight /> },
-  pl: { tone: "investment", icon: <LuSparkles /> },
+  pl: { tone: "investment", icon: <LuTrendingUpDown /> },
 } as const;
 
 export function EditInvestmentTransactionModal(props: EditInvestmentTransactionModalProps) {

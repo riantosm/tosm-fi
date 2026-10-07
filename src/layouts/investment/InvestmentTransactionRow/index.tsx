@@ -1,5 +1,5 @@
 import { useTranslation } from "react-i18next";
-import { LuArrowDownLeft, LuArrowLeftRight, LuArrowUpRight, LuSparkles } from "react-icons/lu";
+import { LuArrowDownLeft, LuArrowLeftRight, LuArrowUpRight, LuTrendingUpDown } from "react-icons/lu";
 import { TxRowBase, type TxAmountTone } from "@/components/molecules/TxRowBase";
 import { formatRelativeDay } from "@/layouts/investment/investment-ui";
 import { useInvestmentLabels } from "@/layouts/investment/use-investment-labels";
@@ -71,7 +71,7 @@ export function InvestmentTransactionRow({
         : null;
       break;
     case "pl":
-      icon = <LuSparkles />;
+      icon = <LuTrendingUpDown />;
       tone = "investment";
       title = source.accountName
         ? t("investment.row.update", { account: source.accountName })
