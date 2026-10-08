@@ -677,6 +677,7 @@
     "profitLossNoChange": "Enter this account's latest value",
     "profitLossSubtitle": "Record profit/loss from the latest value",
     "recordedValue": "Recorded value {{amount}}",
+    "recordedValueOn": "Value on {{date}}: {{amount}}",
     "remainingAfterWithdraw": "Value left after withdrawal: {{amount}}",
     "save": "Save",
     "saveValue": "Save value",

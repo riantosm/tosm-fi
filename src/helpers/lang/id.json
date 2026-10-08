@@ -677,6 +677,7 @@
     "profitLossNoChange": "Masukkan nilai terbaru akun ini",
     "profitLossSubtitle": "Catat profit/rugi dari nilai terbaru",
     "recordedValue": "Nilai tercatat {{amount}}",
+    "recordedValueOn": "Nilai per {{date}}: {{amount}}",
     "remainingAfterWithdraw": "Sisa nilai setelah tarik: {{amount}}",
     "save": "Simpan",
     "saveValue": "Simpan nilai",

@@ -6,6 +6,7 @@ import { FormField } from "@/components/molecules/FormField";
 import { Modal, ModalActions } from "@/components/molecules/Modal";
 import { AmountInput } from "@/layouts/investment/AmountInput";
 import { InvestmentAccountSummary } from "@/layouts/investment/InvestmentAccountSummary";
+import { InvestmentDateTimeField } from "@/layouts/investment/InvestmentDateTimeField";
 import { InvestmentTargetModal } from "@/layouts/investment/InvestmentTargetModal";
 import { useDialogSession } from "@/hooks/use-dialog-session";
 import { useInstruments } from "@/hooks/use-instruments";
@@ -43,6 +44,7 @@ function TransferFormDialog({ isOpen, onClose }: TransferFormModalProps) {
   const [to, setTo] = useState<AccountRef | null>(null);
   const [picking, setPicking] = useState<"from" | "to" | null>(null);
   const [amountInput, setAmountInput] = useState("");
+  const [date, setDate] = useState(() => new Date());
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
@@ -92,7 +94,7 @@ function TransferFormDialog({ isOpen, onClose }: TransferFormModalProps) {
         idInstrumentTo: to.idInstrument,
         idInvestmentAccountTo: to.idInvestmentAccount,
         amount,
-        date: new Date().toISOString(),
+        date: date.toISOString(),
       });
       showToast(t("investment.transferSuccess"), "success");
       onClose();
@@ -173,6 +175,8 @@ function TransferFormDialog({ isOpen, onClose }: TransferFormModalProps) {
           <FormField label={t("investment.transferAmountLabel")} htmlFor="transfer-amount">
             <AmountInput id="transfer-amount" value={amountInput} onChange={setAmountInput} />
           </FormField>
+
+          <InvestmentDateTimeField id="transfer" value={date} onChange={setDate} />
 
           {source && destination && amount > 0 && (
             <div className="grid animate-fade-in grid-cols-2 gap-2.5">

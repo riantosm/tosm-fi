@@ -4,7 +4,8 @@ import { LuCheck, LuTrendingDown, LuTrendingUp } from "react-icons/lu";
 import { Button } from "@/components/atoms/Button";
 import { Modal, ModalActions } from "@/components/molecules/Modal";
 import { InvestmentAccountSummary } from "@/layouts/investment/InvestmentAccountSummary";
-import { formatPercent } from "@/layouts/investment/investment-ui";
+import { InvestmentDateTimeField } from "@/layouts/investment/InvestmentDateTimeField";
+import { formatPercent, timelineValueAt } from "@/layouts/investment/investment-ui";
 import { useDialogSession } from "@/hooks/use-dialog-session";
 import { useInvestmentTransactions } from "@/hooks/use-investment-transactions";
 import { useLanguage } from "@/hooks/use-language";
@@ -12,12 +13,16 @@ import { useMoneyFormat } from "@/hooks/use-money-format";
 import { useToast } from "@/hooks/use-toast";
 import { formatNumberInput, parseFormattedNumber } from "@/utils/number-input";
 import { cn } from "@/utils/cn";
+import { toIntlLocale } from "@/utils/locale";
 import type { Instrument, InvestmentAccount } from "@/types/instrument.types";
+import type { TimelinePoint } from "@/types/investment-transaction.types";
 
 interface ProfitLossFormModalProps {
   isOpen: boolean;
   instrument: Instrument | null;
   account: InvestmentAccount | null;
+  /** The account's running-total series — lets a backdated update compare against the value on that date. */
+  timeline?: TimelinePoint[];
   onClose: () => void;
 }
 
@@ -39,6 +44,7 @@ function ProfitLossFormDialog({
   isOpen,
   instrument: instrumentProp,
   account: accountProp,
+  timeline: timelineProp,
   onClose,
 }: ProfitLossFormModalProps) {
   const { t } = useTranslation();
@@ -50,11 +56,21 @@ function ProfitLossFormDialog({
   // Frozen for this dialog's lifetime so the exit animation keeps the same account.
   const [instrument] = useState(instrumentProp);
   const [account] = useState(accountProp);
-  const recordedValue = account?.currentValue ?? 0;
+  const [timeline] = useState(timelineProp ?? []);
   const [newValueInput, setNewValueInput] = useState(
-    formatNumberInput(String(recordedValue).replace(".", ",")),
+    formatNumberInput(String(account?.currentValue ?? 0).replace(".", ",")),
   );
+  const [date, setDate] = useState(() => new Date());
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // The new value is the value AS OF `date` (the backend computes the delta the
+  // same way), so a backdated update compares against the ledger on that date.
+  const latestPoint = timeline.at(-1);
+  const isBackdated =
+    latestPoint !== undefined && date.getTime() < new Date(latestPoint.date).getTime();
+  const recordedValue = isBackdated
+    ? timelineValueAt(timeline, date)
+    : (account?.currentValue ?? 0);
 
   const newValue = parseFormattedNumber(newValueInput);
   const delta = newValue - recordedValue;
@@ -68,7 +84,7 @@ function ProfitLossFormDialog({
       showToast(t("investment.negativeValueError"), "error");
       return;
     }
-    if (newValue === account.currentValue) {
+    if (newValue === recordedValue) {
       showToast(t("investment.noOpProfitLossError"), "error");
       return;
     }
@@ -79,7 +95,7 @@ function ProfitLossFormDialog({
         idInstrument: instrument.idInstrument,
         idInvestmentAccount: account.idInvestmentAccount,
         newCurrentValue: newValue,
-        date: new Date().toISOString(),
+        date: date.toISOString(),
       });
       showToast(t("investment.profitLossSuccess"), "success");
       onClose();
@@ -122,9 +138,22 @@ function ProfitLossFormDialog({
         {account && (
           <InvestmentAccountSummary
             title={account.nameInvestmentAccount}
-            subtitle={t("investment.recordedValue", { amount: formatNumber(account.currentValue) })}
+            subtitle={
+              isBackdated
+                ? t("investment.recordedValueOn", {
+                    date: date.toLocaleDateString(toIntlLocale(language), {
+                      day: "numeric",
+                      month: "short",
+                      year: "numeric",
+                    }),
+                    amount: formatNumber(recordedValue),
+                  })
+                : t("investment.recordedValue", { amount: formatNumber(recordedValue) })
+            }
           />
         )}
+
+        <InvestmentDateTimeField id="pl" value={date} onChange={setDate} />
 
         <label
           htmlFor="pl-new-value"

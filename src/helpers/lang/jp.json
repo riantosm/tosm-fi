@@ -677,6 +677,7 @@
     "profitLossNoChange": "この口座の最新の評価額を入力してください",
     "profitLossSubtitle": "最新の評価額から損益を記録",
     "recordedValue": "記録額 {{amount}}",
+    "recordedValueOn": "{{date}}時点の評価額 {{amount}}",
     "remainingAfterWithdraw": "引き出し後の残高：{{amount}}",
     "save": "保存",
     "saveValue": "評価額を保存",

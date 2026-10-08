@@ -11,6 +11,7 @@ import { Modal, ModalActions } from "@/components/molecules/Modal";
 import { WalletChipGroup } from "@/components/molecules/WalletChipGroup";
 import { AmountInput } from "@/layouts/investment/AmountInput";
 import { InvestmentAccountSummary } from "@/layouts/investment/InvestmentAccountSummary";
+import { InvestmentDateTimeField } from "@/layouts/investment/InvestmentDateTimeField";
 import { SelectCategoryModal } from "@/layouts/transaction/SelectCategoryModal";
 import { SelectSubCategoryModal } from "@/layouts/transaction/SelectSubCategoryModal";
 import { useCategories } from "@/hooks/use-categories";
@@ -58,6 +59,7 @@ function WithdrawalFormDialog({
   const [account] = useState(accountProp);
   const [amountInput, setAmountInput] = useState("");
   const [note, setNote] = useState("");
+  const [date, setDate] = useState(() => new Date());
   const [depositToWallet, setDepositToWallet] = useState(false);
   const [walletId, setWalletId] = useState<string | null>(null);
   const [categoryId, setCategoryId] = useState<string | null>(null);
@@ -120,7 +122,7 @@ function WithdrawalFormDialog({
           title: t("investment.withdrawalTransactionTitle"),
           notes: note,
           amount,
-          date: new Date().toISOString(),
+          date: date.toISOString(),
         });
         idTransaction = created.idTransaction;
       }
@@ -128,7 +130,7 @@ function WithdrawalFormDialog({
         idInstrument: instrument.idInstrument,
         idInvestmentAccount: account.idInvestmentAccount,
         amount,
-        date: new Date().toISOString(),
+        date: date.toISOString(),
         idTransaction,
         note: note || undefined,
       });
@@ -201,6 +203,8 @@ function WithdrawalFormDialog({
               hasError={isOverdrawn}
             />
           </FormField>
+
+          <InvestmentDateTimeField id="withdrawal" value={date} onChange={setDate} />
 
           <FormField label={t("investment.noteLabel")} htmlFor="withdrawal-note">
             <Input

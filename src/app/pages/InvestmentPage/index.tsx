@@ -806,6 +806,11 @@ export function InvestmentPage() {
         isOpen={profitLossTarget !== null}
         instrument={profitLossTarget?.instrument ?? null}
         account={profitLossTarget?.account ?? null}
+        timeline={
+          profitLossTarget
+            ? timelines.accounts[profitLossTarget.account.idInvestmentAccount]
+            : undefined
+        }
         onClose={() => setProfitLossState(null)}
       />
 

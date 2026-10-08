@@ -16,6 +16,19 @@ export function formatPercent(value: number, language: string): string {
 }
 
 /**
+ * A running-total series' current value at `date` (its latest point on or
+ * before it), or 0 before the first point.
+ */
+export function timelineValueAt(points: TimelinePoint[], date: Date): number {
+  let value = 0;
+  for (const point of points) {
+    if (new Date(point.date).getTime() > date.getTime()) break;
+    value = point.current;
+  }
+  return value;
+}
+
+/**
  * Sums several running-total series (one per account) into one series.
  * Each input series is a step function (its value holds until its next point),
  * so the sum at any instant is the sum of every series' latest point so far.

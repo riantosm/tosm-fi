@@ -1,11 +1,9 @@
 import { useState, type SubmitEvent } from "react";
 import { useTranslation } from "react-i18next";
 import {
-  LuAlarmClock,
   LuArrowDownLeft,
   LuArrowLeftRight,
   LuArrowUpRight,
-  LuCalendar,
   LuCheck,
   LuNotebookPen,
   LuTrash2,
@@ -18,16 +16,13 @@ import { IconButton } from "@/components/atoms/IconButton";
 import { Input } from "@/components/atoms/Input";
 import { FormField } from "@/components/molecules/FormField";
 import { Modal, ModalActions } from "@/components/molecules/Modal";
-import { PickerField } from "@/components/molecules/PickerField";
 import { AmountInput } from "@/layouts/investment/AmountInput";
+import { InvestmentDateTimeField } from "@/layouts/investment/InvestmentDateTimeField";
 import { useInvestmentLabels } from "@/layouts/investment/use-investment-labels";
-import { DateTimePickerModal } from "@/layouts/transaction/DateTimePickerModal";
 import { useConfirmDialog } from "@/hooks/use-confirm-dialog";
 import { useDialogSession } from "@/hooks/use-dialog-session";
 import { useInvestmentTransactions } from "@/hooks/use-investment-transactions";
-import { useLanguage } from "@/hooks/use-language";
 import { useToast } from "@/hooks/use-toast";
-import { toIntlLocale } from "@/utils/locale";
 import { formatNumberInput, parseFormattedNumber } from "@/utils/number-input";
 import type { Instrument } from "@/types/instrument.types";
 import type { InvestmentTransaction } from "@/types/investment-transaction.types";
@@ -60,8 +55,6 @@ function EditInvestmentTransactionDialog({
   onClose,
 }: EditInvestmentTransactionModalProps) {
   const { t } = useTranslation();
-  const { language } = useLanguage();
-  const locale = toIntlLocale(language);
   const { editInvestmentTransaction, deleteInvestmentTransaction } = useInvestmentTransactions();
   const { confirm } = useConfirmDialog();
   const { showToast } = useToast();
@@ -77,7 +70,6 @@ function EditInvestmentTransactionDialog({
   const [isNegative, setIsNegative] = useState((transaction?.amount ?? 0) < 0);
   const [date, setDate] = useState(() => (transaction ? new Date(transaction.date) : new Date()));
   const [note, setNote] = useState(transaction?.note ?? "");
-  const [isDateTimePickerOpen, setIsDateTimePickerOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const isBusy = isSubmitting || isDeleting;
@@ -227,26 +219,7 @@ function EditInvestmentTransactionDialog({
               </label>
             )}
 
-            <div className="grid grid-cols-2 gap-2.5">
-              <PickerField
-                id="edit-investment-date"
-                label={t("investment.dateLabel")}
-                icon={<LuCalendar />}
-                value={date.toLocaleDateString(locale, {
-                  day: "numeric",
-                  month: "short",
-                  year: "numeric",
-                })}
-                onClick={() => setIsDateTimePickerOpen(true)}
-              />
-              <PickerField
-                id="edit-investment-time"
-                label={t("investment.timeLabel")}
-                icon={<LuAlarmClock />}
-                value={date.toLocaleTimeString(locale, { hour: "2-digit", minute: "2-digit" })}
-                onClick={() => setIsDateTimePickerOpen(true)}
-              />
-            </div>
+            <InvestmentDateTimeField id="edit-investment" value={date} onChange={setDate} />
 
             {isOut && (
               <FormField label={t("investment.noteLabel")} htmlFor="edit-investment-note">
@@ -263,12 +236,6 @@ function EditInvestmentTransactionDialog({
         )}
       </Modal>
 
-      <DateTimePickerModal
-        isOpen={isDateTimePickerOpen}
-        value={date}
-        onClose={() => setIsDateTimePickerOpen(false)}
-        onConfirm={setDate}
-      />
     </>
   );
 }
