@@ -10,8 +10,8 @@ import {
   LuCircleCheck,
   LuCircleX,
   LuScale,
-  LuSparkles,
   LuTag,
+  LuTrendingUpDown,
   LuX,
 } from "react-icons/lu";
 import { Button } from "@/components/atoms/Button";
@@ -19,8 +19,10 @@ import { TxRowBase, type TxAmountTone } from "@/components/molecules/TxRowBase";
 import { resolveCategoryIcon } from "@/constants/category-icons";
 import { useCurrency } from "@/hooks/use-currency";
 import { useLanguage } from "@/hooks/use-language";
+import { useInvestmentLabels } from "@/layouts/investment/use-investment-labels";
 import type { AssistantDraft, AssistantMessage } from "@/types/assistant.types";
 import type { Category } from "@/types/category.types";
+import type { Instrument } from "@/types/instrument.types";
 import type { WalletAccount } from "@/types/wallet.types";
 import { cn } from "@/utils/cn";
 import { toIntlLocale } from "@/utils/locale";
@@ -34,6 +36,7 @@ interface AssistantPreviewCardProps {
   previousDrafts?: AssistantDraft[];
   wallets: WalletAccount[];
   categories: Category[];
+  instruments: Instrument[];
   onSave: () => void;
   onCancel: () => void;
 }
@@ -50,12 +53,18 @@ function dayKey(iso: string) {
   return `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
 }
 
-/** Signed effect of a draft on the user's money (transfers move money, they don't change it). */
+/**
+ * Signed effect of a draft on the user's wallets — the "netto dompet" total.
+ * Transfers only move money; investment moves count only for their wallet
+ * side (top up from a wallet, withdrawal into one); value updates don't touch
+ * wallets at all.
+ */
 function signedAmount(draft: AssistantDraft): number {
   switch (draft.kind) {
     case "income":
-    case "investmentOut":
       return draft.amount;
+    case "investmentOut":
+      return draft.idWallet ? draft.amount : 0;
     case "expense":
     case "investmentIn":
       return -draft.amount;
@@ -66,22 +75,51 @@ function signedAmount(draft: AssistantDraft): number {
   }
 }
 
+/** What the row's own amount shows: the ledger's view for investment rows (top up +, tarik −). */
+function rowAmount(draft: AssistantDraft): number | null {
+  switch (draft.kind) {
+    case "investmentIn":
+      return draft.amount;
+    case "investmentOut":
+      return -draft.amount;
+    case "investmentPl":
+      return (draft.balanceAfter ?? 0) - (draft.balanceBefore ?? 0);
+    case "transfer":
+    case "investmentTransfer":
+      return null;
+    default:
+      return signedAmount(draft);
+  }
+}
+
 /** Catat Cepat preview (V2/PreviewCard): drafts grouped per day, totals, Simpan/Batal and its after-states. */
 export function AssistantPreviewCard({
   message,
   previousDrafts,
   wallets,
   categories,
+  instruments,
   onSave,
   onCancel,
 }: AssistantPreviewCardProps) {
   const { t } = useTranslation();
   const { format } = useCurrency();
   const { language } = useLanguage();
+  const resolveLabels = useInvestmentLabels(instruments);
   const locale = toIntlLocale(language);
 
   const walletOf = (id: string | null) => wallets.find((w) => w.idWallet === id);
+  const walletName = (id: string | null) => walletOf(id)?.nameWallet ?? "-";
   const categoryOf = (id: string | null) => categories.find((c) => c.idCategory === id);
+  const categoryLabel = (draft: AssistantDraft) => {
+    const category = categoryOf(draft.idCategory);
+    const sub = category?.subCategories.find((s) => s.idSubCategory === draft.idSubCategory);
+    return sub ? `${category?.nameCategory} › ${sub.nameSubCategory}` : category?.nameCategory;
+  };
+  const accountOf = (idInstrument: string | null, idAccount: string | null) =>
+    idInstrument
+      ? resolveLabels(idInstrument, idAccount)
+      : { instrumentName: "-", accountName: null };
   const signed = (value: number) =>
     `${value > 0 ? "+" : value < 0 ? "−" : ""}${format(Math.abs(value))}`;
   const toneOf = (value: number): TxAmountTone =>
@@ -127,68 +165,108 @@ export function AssistantPreviewCard({
     const before = previousDrafts?.find((p) => p.idDraft === draft.idDraft);
     if (!before || !draft.changed?.length) return [];
     const chips: string[] = [];
-    if (draft.changed.includes("amount"))
-      chips.push(`${format(before.amount)} → ${format(draft.amount)}`);
-    if (draft.changed.includes("wallet"))
-      chips.push(
-        `${walletOf(before.idWallet)?.nameWallet ?? "-"} → ${walletOf(draft.idWallet)?.nameWallet ?? "-"}`,
-      );
+    const changed = (field: string) => draft.changed?.includes(field);
+    if (changed("amount")) {
+      // Corrections / value updates are revised by their target, not the delta.
+      const hasTarget = draft.kind === "correction" || draft.kind === "investmentPl";
+      const from = hasTarget ? (before.balanceAfter ?? 0) : before.amount;
+      const to = hasTarget ? (draft.balanceAfter ?? 0) : draft.amount;
+      chips.push(`${format(from)} → ${format(to)}`);
+    }
+    if (changed("wallet")) {
+      const legs = (d: AssistantDraft) =>
+        d.kind === "transfer"
+          ? `${walletName(d.idWalletFrom)} → ${walletName(d.idWalletTo)}`
+          : walletName(d.idWallet);
+      chips.push(`${legs(before)} → ${legs(draft)}`);
+    }
+    if (changed("category"))
+      chips.push(`${categoryLabel(before) ?? "-"} → ${categoryLabel(draft) ?? "-"}`);
+    if (changed("account")) {
+      const name = (d: AssistantDraft) =>
+        accountOf(d.idInstrument, d.idInvestmentAccount).accountName ?? "-";
+      chips.push(`${name(before)} → ${name(draft)}`);
+    }
+    if (changed("date")) {
+      const day = (iso: string) =>
+        new Date(iso).toLocaleDateString(locale, { day: "numeric", month: "short" });
+      chips.push(`${day(before.date)} → ${day(draft.date)}`);
+    }
     return chips;
   }
 
   function renderRow(draft: AssistantDraft) {
     const wallet = walletOf(draft.idWallet);
-    const amount = signedAmount(draft);
+    const source = accountOf(draft.idInstrument, draft.idInvestmentAccount);
+    const sourceLabel = [source.instrumentName, source.accountName].filter(Boolean).join(" · ");
+    const shown = rowAmount(draft);
+    let title = draft.title;
     let icon: ReactNode;
     let color: string | undefined;
     let tone: "neutral" | "income" | "expense" | "investment" | "primary" = "neutral";
     let meta = "";
-    let amountText = signed(amount);
-    let amountTone = toneOf(amount);
+    let amountText = shown === null ? format(draft.amount) : signed(shown);
+    let amountTone: TxAmountTone = shown === null ? "neutral" : toneOf(shown);
 
+    // Same looks as the Transaksi list and the investment ledger rows.
     switch (draft.kind) {
       case "income":
       case "expense": {
         const category = categoryOf(draft.idCategory);
-        const sub = category?.subCategories.find((s) => s.idSubCategory === draft.idSubCategory);
         icon = createElement(category ? resolveCategoryIcon(category.icon) : LuTag);
         color = category?.color;
         tone = draft.kind;
-        meta = [
-          sub ? `${category?.nameCategory} › ${sub.nameSubCategory}` : category?.nameCategory,
-          wallet?.nameWallet,
-        ]
-          .filter(Boolean)
-          .join(" · ");
+        meta = [categoryLabel(draft), wallet?.nameWallet].filter(Boolean).join(" · ");
         break;
       }
       case "transfer":
         icon = <LuArrowLeftRight />;
         color = "#8A94A0";
-        meta = `${walletOf(draft.idWalletFrom)?.nameWallet ?? "?"} → ${walletOf(draft.idWalletTo)?.nameWallet ?? "?"}`;
-        amountText = format(draft.amount);
-        amountTone = "neutral";
+        meta = `${walletName(draft.idWalletFrom)} → ${walletName(draft.idWalletTo)}`;
         break;
       case "correction":
         icon = <LuScale />;
         tone = "primary";
-        meta = `${format(draft.balanceBefore ?? 0)} → ${format(draft.balanceAfter ?? 0)}`;
+        meta = `${wallet?.nameWallet ?? "-"} · ${format(draft.balanceBefore ?? 0)} → ${format(draft.balanceAfter ?? 0)}`;
         break;
       case "investmentIn":
         icon = <LuArrowDownLeft />;
-        tone = "investment";
-        meta = wallet?.nameWallet ?? "";
+        tone = "income";
+        title = source.accountName
+          ? t("investment.row.topUp", { account: source.accountName })
+          : draft.title;
+        meta = `${wallet?.nameWallet ?? "-"} → ${sourceLabel}`;
         break;
       case "investmentOut":
         icon = <LuArrowUpRight />;
-        tone = "investment";
-        meta = wallet?.nameWallet ?? "";
+        tone = "expense";
+        title = wallet
+          ? t("assistant.withdrawTo", { wallet: wallet.nameWallet })
+          : source.accountName
+            ? t("investment.row.withdraw", { account: source.accountName })
+            : draft.title;
+        meta = wallet ? `${sourceLabel} → ${wallet.nameWallet}` : sourceLabel;
         break;
-      default:
-        icon = <LuSparkles />;
-        tone = "investment";
+      case "investmentTransfer": {
+        const destination = accountOf(draft.idInstrumentTo, draft.idInvestmentAccountTo);
+        icon = <LuArrowLeftRight />;
+        tone = "primary";
+        title = destination.accountName
+          ? t("investment.row.transferTo", { account: destination.accountName })
+          : draft.title;
+        meta = `${sourceLabel} → ${destination.accountName ?? "-"}`;
         amountText = format(draft.amount);
         amountTone = "neutral";
+        break;
+      }
+      case "investmentPl":
+        icon = <LuTrendingUpDown />;
+        tone = "investment";
+        title = source.accountName
+          ? t("investment.row.update", { account: source.accountName })
+          : draft.title;
+        meta = `${source.instrumentName} · ${format(draft.balanceBefore ?? 0)} → ${format(draft.balanceAfter ?? 0)}`;
+        break;
     }
 
     const chips = changeChips(draft);
@@ -197,7 +275,7 @@ export function AssistantPreviewCard({
         icon={icon}
         color={color}
         tone={tone}
-        title={draft.title}
+        title={title}
         meta={meta}
         amount={amountText}
         amountTone={amountTone}

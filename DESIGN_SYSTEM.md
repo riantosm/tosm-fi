@@ -250,10 +250,9 @@ Keep durations between 0.18s and 0.5s, and never block input.
 - **UI** (`src/layouts/assistant/`):
   - `CatatCepat` is the container: a 440px floating right panel over a scrim from `lg`, full screen below that.
   - Parts: `ChatBubble` (`AiRow`, `AiBubble`, `UserBubble`, `TypingBubble`, `ChatEntry`), `QuickReplyButton`, `AssistantPreviewCard` (rows via `TxRowBase`), `AssistantErrorBanner` (quota/network), `ChatComposer`.
-- **State**: `hooks/use-assistant-chat.ts`. Confirmed drafts are saved with `useTransactions().createTransaction` using the same payloads as the manual dialogs.
-- **Backend seam**: `services/assistant.service.ts`.
-  - Today it runs a local rule-based mock.
-  - Set `VITE_ASSISTANT_MOCK=false` once `POST /assistant/chat` exists; it returns `{ intent, reply, drafts, quickReplies? }`.
+- **State**: `hooks/use-assistant-chat.ts`. It sends the conversation, the pending drafts, the language and whether a preview is on screen to `POST /assistant/chat` (`{ intent, reply, drafts, quickReplies? }`). A confirmed preview (Simpan, or a typed "ok, catat") goes to `POST /assistant/commit`, which saves the whole batch in one database transaction; the hook then dispatches `addTransaction` / `addInvestmentTransaction` and resyncs wallets, categories and instruments, like a manual entry.
+- **Service**: `services/assistant.service.ts`. A 429 means the free AI quota is full or the model is overloaded (`quota` banner); anything else is `network`. A rejected commit names the failing draft (`AssistantCommitError.idDraft`) and that row turns red.
+- **Preview rows** follow the list they will land in: wallet kinds look like the Transaksi list, investment kinds like the investment ledger (top up +, tarik −, transfer neutral, update nilai ±). The footer total is the net effect on wallets only.
 
 ## 11. Design frames (pen IDs)
 

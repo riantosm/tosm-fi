@@ -1869,6 +1869,125 @@ export const API_DOC_GROUPS: ApiDocGroup[] = [
     ],
   },
   {
+    key: "assistant",
+    titleKey: "apiDoc.groups.assistant",
+    endpoints: [
+      {
+        id: "assistant-chat",
+        title: "Catat Cepat Chat",
+        method: "POST",
+        endpoint: "/assistant/chat",
+        payload: [
+          {
+            name: "history",
+            type: "{ role: 'user' | 'assistant', text: string }[]",
+            required: true,
+          },
+          { name: "drafts", type: "AssistantDraft[]", required: true },
+          { name: "tzOffsetMinutes", type: "number", required: true },
+          { name: "language", type: "'id' | 'en' | 'jp'", required: true },
+          { name: "hasPreview", type: "boolean", required: true },
+        ],
+        successExample: JSON.stringify(
+          {
+            message: "Berhasil memproses pesan",
+            data: {
+              intent: "ask",
+              reply: "Apakah transaksi ini hari ini?",
+              drafts: [
+                {
+                  idDraft: "3f9c1d2e-…",
+                  kind: "expense",
+                  title: "Warteg",
+                  amount: 12000,
+                  date: "2026-10-07T05:30:00.000Z",
+                  notes: "nasi, telor, sayur",
+                  idWallet: "665f1a2b3c4d5e6f7a8b9c0d",
+                  idCategory: "665f1a2b3c4d5e6f7a8b9c11",
+                  idSubCategory: null,
+                  idWalletFrom: null,
+                  idWalletTo: null,
+                  idInstrument: null,
+                  idInvestmentAccount: null,
+                  idInstrumentTo: null,
+                  idInvestmentAccountTo: null,
+                  missing: ["date"],
+                },
+              ],
+              quickReplies: [
+                { label: "Ya, hari ini" },
+                { label: "Kemarin" },
+                { label: "Pilih tanggal", icon: "calendar" },
+              ],
+            },
+            isSuccess: true,
+            status: 200,
+          },
+          null,
+          2,
+        ),
+        errorExample: JSON.stringify(
+          {
+            message: "Kuota AI gratis sedang penuh, coba lagi sebentar",
+            data: { error: "Kuota AI gratis sedang penuh, coba lagi sebentar" },
+            isSuccess: false,
+            status: 429,
+          },
+          null,
+          2,
+        ),
+      },
+      {
+        id: "assistant-commit",
+        title: "Catat Cepat Commit",
+        method: "POST",
+        endpoint: "/assistant/commit",
+        payload: [
+          { name: "drafts", type: "AssistantDraft[]", required: true },
+          { name: "language", type: "'id' | 'en' | 'jp'", required: false },
+          { name: "tzOffsetMinutes", type: "number", required: false },
+        ],
+        successExample: JSON.stringify(
+          {
+            message: "Transaksi berhasil disimpan",
+            data: {
+              transactions: [
+                {
+                  idTransaction: "665f1a2b3c4d5e6f7a8b9c21",
+                  type: "expense",
+                  idWallet: "665f1a2b3c4d5e6f7a8b9c0d",
+                  idCategory: "665f1a2b3c4d5e6f7a8b9c11",
+                  idSubCategory: null,
+                  idWalletFrom: null,
+                  idWalletTo: null,
+                  title: "Warteg",
+                  notes: "nasi, telor, sayur",
+                  amount: 12000,
+                  date: "2026-10-07T05:30:00.000Z",
+                },
+              ],
+              investmentTransactions: [],
+            },
+            isSuccess: true,
+            status: 201,
+          },
+          null,
+          2,
+        ),
+        errorExample: JSON.stringify(
+          {
+            message: "Jumlah penarikan melebihi saldo akun",
+            data: { error: "Jumlah penarikan melebihi saldo akun", idDraft: "3f9c1d2e-…" },
+            isSuccess: false,
+            status: 400,
+          },
+          null,
+          2,
+        ),
+      },
+    ],
+  },
+  {
     key: "clientError",
     titleKey: "apiDoc.groups.clientError",
     endpoints: [

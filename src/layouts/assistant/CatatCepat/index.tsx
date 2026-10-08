@@ -247,6 +247,7 @@ export function CatatCepat() {
               previousDrafts={previousDrafts}
               wallets={chat.wallets}
               categories={chat.categories}
+              instruments={chat.instruments}
               onSave={() => void chat.save()}
               onCancel={chat.cancel}
             />

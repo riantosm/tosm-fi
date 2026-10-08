@@ -1,66 +1,32 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { AssistantError, assistantService } from "@/services/assistant.service";
+import {
+  AssistantCommitError,
+  AssistantError,
+  assistantService,
+} from "@/services/assistant.service";
 import { useCategories } from "@/hooks/use-categories";
+import { useInstruments } from "@/hooks/use-instruments";
+import { useLanguage } from "@/hooks/use-language";
 import { useToast } from "@/hooks/use-toast";
-import { useTransactions } from "@/hooks/use-transactions";
 import { useWallets } from "@/hooks/use-wallets";
+import { addInvestmentTransaction, addTransaction, useAppDispatch } from "@/redux";
 import type {
   AssistantDraft,
   AssistantMessage,
   AssistantReply,
   AssistantRequest,
 } from "@/types/assistant.types";
-import type { TransactionInput } from "@/types/transaction.types";
 
 type PreviewMessage = Extract<AssistantMessage, { kind: "preview" }>;
 
 let messageSeq = 0;
 const newMessageId = () => `m${Date.now().toString(36)}${(messageSeq++).toString(36)}`;
 
-/** Maps a wallet-kind draft to the exact payload AddTransactionModal / BalanceCorrectionModal send. */
-function toTransactionInput(draft: AssistantDraft): TransactionInput | null {
-  const base = {
-    title: draft.title,
-    notes: draft.notes,
-    date: draft.date,
-    idCategory: null,
-    idSubCategory: null,
-    idWallet: null,
-    idWalletFrom: null,
-    idWalletTo: null,
-  };
-  switch (draft.kind) {
-    case "income":
-    case "expense":
-      return {
-        ...base,
-        type: draft.kind,
-        idWallet: draft.idWallet,
-        idCategory: draft.idCategory,
-        idSubCategory: draft.idSubCategory,
-        amount: draft.amount,
-      };
-    case "transfer":
-      return {
-        ...base,
-        type: "transfer",
-        idWalletFrom: draft.idWalletFrom,
-        idWalletTo: draft.idWalletTo,
-        amount: draft.amount,
-      };
-    case "correction":
-      return {
-        ...base,
-        type: "correction",
-        idWallet: draft.idWallet,
-        // Corrections store the signed delta, like BalanceCorrectionModal.
-        amount: (draft.balanceAfter ?? 0) - (draft.balanceBefore ?? 0),
-      };
-    default:
-      // Investment kinds are saved by the real /assistant backend later.
-      return null;
-  }
+/** The date picker's answer, as the local wall-clock time the assistant reasons in. */
+function toLocalDateTime(date: Date): string {
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())} ${pad(date.getHours())}:${pad(date.getMinutes())}`;
 }
 
 function toHistory(messages: AssistantMessage[]): AssistantRequest["history"] {
@@ -76,17 +42,20 @@ function toHistory(messages: AssistantMessage[]): AssistantRequest["history"] {
 }
 
 /**
- * Catat Cepat conversation state. Talks to `assistantService.chat` (mocked
- * locally until the backend exists) and saves confirmed drafts through the
- * regular `useTransactions().createTransaction`, so wallets/categories resync
- * exactly like a manual entry.
+ * Catat Cepat conversation state. `assistantService.chat` turns the
+ * conversation into drafts; a confirmed preview is saved in one go by
+ * `assistantService.commit` (one database transaction for the whole batch,
+ * investment ledger rows included), then the same mutation signals and
+ * resyncs as a manual entry follow.
  */
 export function useAssistantChat() {
   const { t } = useTranslation();
+  const dispatch = useAppDispatch();
+  const { language } = useLanguage();
   const { showToast } = useToast();
   const { wallets, status: walletStatus, loadWallets } = useWallets();
   const { categories, status: categoryStatus, loadCategories } = useCategories();
-  const { createTransaction } = useTransactions();
+  const { instruments, status: instrumentStatus, loadInstruments } = useInstruments();
 
   const [messages, setMessages] = useState<AssistantMessage[]>([]);
   const [drafts, setDrafts] = useState<AssistantDraft[]>([]);
@@ -101,11 +70,19 @@ export function useAssistantChat() {
     draftsRef.current = drafts;
   }, [messages, drafts]);
 
-  /** Matching needs the user's wallets/categories even if no page has loaded them yet. */
+  /** The preview resolves names from these, even if no page has loaded them yet. */
   const ensureData = useCallback(() => {
     if (walletStatus === "idle") void loadWallets();
     if (categoryStatus === "idle") void loadCategories();
-  }, [walletStatus, categoryStatus, loadWallets, loadCategories]);
+    if (instrumentStatus === "idle") void loadInstruments();
+  }, [
+    walletStatus,
+    categoryStatus,
+    instrumentStatus,
+    loadWallets,
+    loadCategories,
+    loadInstruments,
+  ]);
 
   const pendingPreview = useCallback(
     (list: AssistantMessage[]) =>
@@ -137,14 +114,17 @@ export function useAssistantChat() {
     const session = sessionRef.current;
     setPreviewStatus(preview.id, "saving");
 
-    const saved: string[] = [];
     try {
-      for (const draft of preview.drafts) {
-        const input = toTransactionInput(draft);
-        if (!input) throw new Error(t("assistant.notSupported", { what: t("nav.investment") }));
-        await createTransaction(input);
-        saved.push(draft.idDraft);
-      }
+      const result = await assistantService.commit(preview.drafts, language);
+      result.transactions.forEach((transaction) => dispatch(addTransaction(transaction)));
+      result.investmentTransactions.forEach((entry) => dispatch(addInvestmentTransaction(entry)));
+      // Balances, counts and account values moved server-side: resync them.
+      void Promise.all([
+        loadWallets(),
+        loadCategories(),
+        result.investmentTransactions.length > 0 ? loadInstruments() : null,
+      ]).catch(() => {});
+
       if (session !== sessionRef.current) return;
       const count = preview.drafts.length;
       setPreviewStatus(preview.id, "saved", { savedAt: new Date().toISOString() });
@@ -156,13 +136,28 @@ export function useAssistantChat() {
       showToast(t("assistant.savedToast", { count }), "success");
     } catch (error) {
       if (session !== sessionRef.current) return;
-      // Keep only what still needs saving so a retry never duplicates rows.
-      const remaining = preview.drafts.filter((d) => !saved.includes(d.idDraft));
-      setPreviewStatus(preview.id, "pending", { drafts: remaining });
-      setDrafts(remaining);
-      showToast(error instanceof Error ? error.message : t("transaction.genericError"), "error");
+      // The batch is one database transaction, so nothing was saved: keep the
+      // preview and mark the row the backend rejected (if it named one).
+      const message = error instanceof Error ? error.message : t("transaction.genericError");
+      const idDraft = error instanceof AssistantCommitError ? error.idDraft : null;
+      const drafts = preview.drafts.map((d) =>
+        d.idDraft === idDraft ? { ...d, error: message } : d,
+      );
+      setPreviewStatus(preview.id, "pending", { drafts });
+      setDrafts(drafts);
+      showToast(message, "error");
     }
-  }, [pendingPreview, setPreviewStatus, createTransaction, showToast, t]);
+  }, [
+    pendingPreview,
+    setPreviewStatus,
+    language,
+    dispatch,
+    loadWallets,
+    loadCategories,
+    loadInstruments,
+    showToast,
+    t,
+  ]);
 
   const cancel = useCallback(() => {
     const preview = pendingPreview(messagesRef.current);
@@ -196,15 +191,20 @@ export function useAssistantChat() {
               text: reply.reply,
               drafts: reply.drafts,
               status: "pending",
-              revised: Boolean(previous),
+              revised: reply.drafts.some((d) => d.changed?.length),
             },
           ]);
           setDrafts(reply.drafts);
           return;
         }
-        default:
+        default: {
+          // A question about the drafts means the preview on screen is about to
+          // change: retire its Simpan so an outdated batch can't be saved.
+          const stale = reply.intent === "ask" ? pendingPreview(messagesRef.current) : undefined;
           setMessages((list) => [
-            ...list,
+            ...list.map((m) =>
+              stale && m.id === stale.id ? { ...stale, status: "replaced" as const } : m,
+            ),
             {
               id: newMessageId(),
               role: "assistant",
@@ -214,6 +214,7 @@ export function useAssistantChat() {
             },
           ]);
           setDrafts(reply.drafts);
+        }
       }
     },
     [save, cancel, pendingPreview],
@@ -224,14 +225,13 @@ export function useAssistantChat() {
       const session = sessionRef.current;
       setIsThinking(true);
       try {
-        const reply = await assistantService.chat(
-          {
-            history: toHistory(history),
-            drafts: draftsRef.current,
-            tzOffsetMinutes: -new Date().getTimezoneOffset(),
-          },
-          { wallets, categories, t },
-        );
+        const reply = await assistantService.chat({
+          history: toHistory(history),
+          drafts: draftsRef.current,
+          tzOffsetMinutes: new Date().getTimezoneOffset(),
+          language,
+          hasPreview: Boolean(pendingPreview(history)),
+        });
         if (session !== sessionRef.current) return;
         applyReply(reply);
       } catch (error) {
@@ -250,7 +250,7 @@ export function useAssistantChat() {
         if (session === sessionRef.current) setIsThinking(false);
       }
     },
-    [wallets, categories, t, applyReply],
+    [language, pendingPreview, applyReply],
   );
 
   const send = useCallback(
@@ -293,7 +293,7 @@ export function useAssistantChat() {
 
   /** Answer to "Apakah transaksi ini hari ini?" with a date from the picker. */
   const pickDate = useCallback(
-    (date: Date, label: string) => send(label, date.toISOString()),
+    (date: Date, label: string) => send(label, toLocalDateTime(date)),
     [send],
   );
 
@@ -310,6 +310,7 @@ export function useAssistantChat() {
     isThinking,
     wallets,
     categories,
+    instruments,
     ensureData,
     send,
     retry,
