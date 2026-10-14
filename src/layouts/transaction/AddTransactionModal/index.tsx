@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { flushSync } from "react-dom";
 import { useTranslation } from "react-i18next";
 import { AnimatePresence, m } from "motion/react";
 import {
@@ -261,18 +262,30 @@ function AddTransactionDialog({
     };
   }
 
+  // Modal's exit animation replays the dialog's last open render, so the spinner
+  // has to be cleared in its own render before closing — otherwise the dialog
+  // slides out still "loading" while the success toast is already showing.
+  function finishAndClose(successMessage: string) {
+    flushSync(() => {
+      setIsSaving(false);
+      setIsDuplicating(false);
+      setIsDeleting(false);
+    });
+    onClose();
+    showToast(successMessage, "success");
+  }
+
   async function handleSave() {
     const input = buildInput();
     if (!input) return;
 
     setIsSaving(true);
+    let investmentErrorMessage: string | null = null;
     try {
       if (transaction) {
         await editTransaction(transaction.idTransaction, input);
-        showToast(t("transaction.updateSuccess"), "success");
       } else {
         const created = await createTransaction(input);
-        showToast(t("transaction.createSuccess"), "success");
 
         if (type === "expense" && isInvestment && investmentInstrumentId && investmentAccountId) {
           try {
@@ -284,21 +297,21 @@ function AddTransactionDialog({
               idTransaction: created.idTransaction,
             });
           } catch (investmentError) {
-            showToast(
+            investmentErrorMessage =
               investmentError instanceof Error
                 ? investmentError.message
-                : t("investment.moneyInFailedButTransactionSaved"),
-              "error",
-            );
+                : t("investment.moneyInFailedButTransactionSaved");
           }
         }
       }
-      onClose();
     } catch (error) {
-      showToast(error instanceof Error ? error.message : t("transaction.genericError"), "error");
-    } finally {
       setIsSaving(false);
+      showToast(error instanceof Error ? error.message : t("transaction.genericError"), "error");
+      return;
     }
+
+    finishAndClose(transaction ? t("transaction.updateSuccess") : t("transaction.createSuccess"));
+    if (investmentErrorMessage) showToast(investmentErrorMessage, "error");
   }
 
   async function handleDuplicate() {
@@ -308,13 +321,12 @@ function AddTransactionDialog({
     setIsDuplicating(true);
     try {
       await createTransaction(input);
-      showToast(t("transaction.duplicateSuccess"), "success");
-      onClose();
     } catch (error) {
-      showToast(error instanceof Error ? error.message : t("transaction.genericError"), "error");
-    } finally {
       setIsDuplicating(false);
+      showToast(error instanceof Error ? error.message : t("transaction.genericError"), "error");
+      return;
     }
+    finishAndClose(t("transaction.duplicateSuccess"));
   }
 
   async function handleDelete() {
@@ -331,13 +343,12 @@ function AddTransactionDialog({
     setIsDeleting(true);
     try {
       await deleteTransaction(transaction.idTransaction);
-      showToast(t("transaction.deleteSuccess"), "success");
-      onClose();
     } catch (error) {
-      showToast(error instanceof Error ? error.message : t("transaction.genericError"), "error");
-    } finally {
       setIsDeleting(false);
+      showToast(error instanceof Error ? error.message : t("transaction.genericError"), "error");
+      return;
     }
+    finishAndClose(t("transaction.deleteSuccess"));
   }
 
   const isBusy = isSaving || isDuplicating || isDeleting;
