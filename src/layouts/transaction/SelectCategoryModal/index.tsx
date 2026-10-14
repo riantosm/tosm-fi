@@ -48,8 +48,13 @@ export function SelectCategoryModal({
   async function handleCreate(input: Parameters<typeof createCategory>[0]) {
     setIsSubmitting(true);
     try {
-      await createCategory(input);
+      const created = await createCategory(input);
       setIsCreateOpen(false);
+      // A category made from the picker is the one the user wants — pick it straight away.
+      if (created.type === type) {
+        setQuery("");
+        onSelect(created);
+      }
     } catch (error) {
       showToast(error instanceof Error ? error.message : t("category.genericError"), "error");
     } finally {

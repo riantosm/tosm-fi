@@ -137,7 +137,8 @@ function AddScheduleDialog({
     setCategoryId(selected.idCategory);
     setSubCategoryId(null);
     setIsCategoryPickerOpen(false);
-    setIsSubCategoryPickerOpen(true);
+    // Nothing to pick when the category has no subcategories.
+    if (selected.subCategories.length > 0) setIsSubCategoryPickerOpen(true);
   }
 
   function toggleWeekday(day: number) {

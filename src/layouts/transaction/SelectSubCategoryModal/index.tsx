@@ -39,8 +39,9 @@ export function SelectSubCategoryModal({
     if (!category) return;
     setIsSubmitting(true);
     try {
-      await createSubCategory(category.idCategory, input);
+      const created = await createSubCategory(category.idCategory, input);
       setIsCreateOpen(false);
+      onSelect(created);
     } catch (error) {
       showToast(error instanceof Error ? error.message : t("category.genericError"), "error");
     } finally {

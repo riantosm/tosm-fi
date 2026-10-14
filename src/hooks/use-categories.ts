@@ -30,6 +30,7 @@ export function useCategories() {
     async (input: CategoryInput) => {
       const created = await categoryService.createCategory(input);
       dispatch(addCategory(created));
+      return created;
     },
     [dispatch],
   );
@@ -62,6 +63,7 @@ export function useCategories() {
     async (categoryId: string, input: SubCategoryInput) => {
       const created = await categoryService.createSubCategory(categoryId, input);
       dispatch(addSubCategory({ categoryId, subCategory: created }));
+      return created;
     },
     [dispatch],
   );

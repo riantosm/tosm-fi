@@ -120,7 +120,8 @@ function PayOccurrenceFields({
     setCategoryId(selected.idCategory);
     setSubCategoryId(null);
     setIsCategoryPickerOpen(false);
-    setIsSubCategoryPickerOpen(true);
+    // Nothing to pick when the category has no subcategories.
+    if (selected.subCategories.length > 0) setIsSubCategoryPickerOpen(true);
   }
 
   async function handleConfirm() {

@@ -61,8 +61,11 @@ function SelectCategoriesDialog({
   async function handleCreate(input: Parameters<typeof createCategory>[0]) {
     setIsSubmitting(true);
     try {
-      await createCategory(input);
+      const created = await createCategory(input);
       setIsCreateOpen(false);
+      if (created.type === type) {
+        setSelected((prev) => new Set(prev).add(created.idCategory));
+      }
     } catch (error) {
       showToast(error instanceof Error ? error.message : t("category.genericError"), "error");
     } finally {
