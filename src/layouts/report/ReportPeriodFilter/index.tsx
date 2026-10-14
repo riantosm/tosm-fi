@@ -4,7 +4,7 @@ import { LuCalendarRange } from "react-icons/lu";
 import { IconButton } from "@/components/atoms/IconButton";
 import { Popover } from "@/components/molecules/Popover";
 import { SegmentedControl } from "@/components/molecules/SegmentedControl";
-import { DateRangeFields } from "@/layouts/transaction/DateRangeFilterPopover";
+import { DateRangeFields } from "@/layouts/transaction/DateRangeFields";
 import { useFirstTransactionMonth } from "@/hooks/use-first-transaction-month";
 import { useLanguage } from "@/hooks/use-language";
 import { formatShortDate, parseIsoDate } from "@/utils/calendar";

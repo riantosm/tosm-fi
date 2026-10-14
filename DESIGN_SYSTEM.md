@@ -134,11 +134,12 @@ Long labels in tight places (tiles, chips) are one line and `truncate`. They nev
 - **`ReorderRow`**: one row of an "Atur urutan" list: a grip for dragging plus ↑/↓ buttons. Wallet, category and budget reorder items wrap it. `moveByIndex` and `moveItem` in `utils/reorder.ts` do the list moves.
 - **`ViewModeToggle`**: a generic icon pair with a sliding thumb (`options` = value + icon + label). Dompet uses grid/list and Investasi uses carousel/grid. `variant="icon"` is a single phone app-bar button that switches to the next mode.
 - **`BudgetProgressBar`**: the month bar. The fill tracks spending; the "Hari ini" pill and tick track the calendar. Props: `ratio`, `color` (`var(--expense)` once over), `tone="card" | "hero"`, and optional start/end dates (`datesClassName` hides them on phones).
-- **`Popover`**: an anchored panel under its trigger from 640px up and a bottom sheet below. It closes on outside click or Escape. Used by Rentang tanggal and Urutkan.
+- **`Popover`**: an anchored panel under its trigger from 640px up and a bottom sheet below. It closes on outside click or Escape. Used by Laporan's custom range and export menu, Investasi's sort menu and the category card menu.
 - **`Modal placement="center"`**: keeps a centered card on phones. `AlertDialog` uses it, so confirms are never bottom sheets.
 - **Modal footer**: shows its divider only while more content is scrolled below it.
 - **`ChartTooltip`**: the one Recharts tooltip card (title + rows with a dot or line marker). It is used by the investment, cash flow and trend charts.
-- **`DateRangeFields`** (exported from `layouts/transaction/DateRangeFilterPopover`): the Dari/Sampai fields plus the range calendar. Transaksi uses it for "Rentang tanggal" and Laporan for "Custom range".
+- **`DateRangeFields`** (`layouts/transaction/DateRangeFields`): the Dari/Sampai fields plus the range calendar. Transaksi's filter sheet uses it for "Rentang tanggal" and Laporan for "Custom range".
+- **Transaksi filter** (`layouts/transaction/TransactionFilterSheet` + `ActiveFilterBanner`, state helpers in `transaction-filters.ts`): every filter (dompet, tipe, kategori → subkategori, rentang tanggal, urutan) lives in one sheet behind a "Filter" button with a count badge, matching the mobile app. Choices are a draft until "Terapkan"; the sheet's Reset only resets the draft. Under the summary bar, the banner lists the active filters (phones: one tappable line that reopens the sheet; desktop: removable chips) with a Reset that clears filters, sort and search.
 - **Investasi blocks** (`layouts/investment`):
   - `ProfitLossPill`: "▲ 8,4%", or with `showAmount` "↗ +1.860.000 · 6,1%".
   - `MoneyAmount`: a small "IDR" followed by a big number.

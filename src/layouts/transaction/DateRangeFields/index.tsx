@@ -1,12 +1,11 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { AnimatePresence, m } from "motion/react";
-import { LuCalendarRange, LuCheck, LuChevronLeft, LuChevronRight } from "react-icons/lu";
+import { LuCheck, LuChevronLeft, LuChevronRight } from "react-icons/lu";
 import { Button } from "@/components/atoms/Button";
 import { IconButton } from "@/components/atoms/IconButton";
 import { ModalCloseButton } from "@/components/atoms/ModalCloseButton";
 import { ModalActions } from "@/components/molecules/Modal";
-import { Popover } from "@/components/molecules/Popover";
 import { useLanguage } from "@/hooks/use-language";
 import {
   buildMonthWeeks,
@@ -28,98 +27,24 @@ type ActiveField = "from" | "to";
 
 const EASE = [0.22, 1, 0.36, 1] as const;
 
-interface DateRangeFilterPopoverProps {
-  dateRange: DateRangeFilter;
-  onDateRangeChange: (range: DateRangeFilter) => void;
-  /** pill = labelled desktop button; icon = round phone app-bar button. */
-  variant?: "pill" | "icon";
-  align?: "start" | "end";
-}
-
-/** "Rentang tanggal" — trigger + Dari/Sampai range calendar (popover on desktop, sheet on phones). */
-export function DateRangeFilterPopover({
-  dateRange,
-  onDateRangeChange,
-  variant = "pill",
-  align = "start",
-}: DateRangeFilterPopoverProps) {
-  const { t } = useTranslation();
-  const { language } = useLanguage();
-  const locale = toIntlLocale(language);
-  const [isOpen, setIsOpen] = useState(false);
-  const hasDateFilter = Boolean(dateRange.from || dateRange.to);
-
-  const label = hasDateFilter
-    ? dateRange.from === dateRange.to || !dateRange.to
-      ? formatShortDate(parseIsoDate(dateRange.from || dateRange.to), locale)
-      : `${formatShortDate(parseIsoDate(dateRange.from), locale)} – ${formatShortDate(parseIsoDate(dateRange.to), locale)}`
-    : t("transaction.dateFilterTitle");
-
-  const trigger =
-    variant === "icon" ? (
-      <span className="relative inline-flex">
-        <IconButton
-          label={t("transaction.dateFilterTitle")}
-          icon={<LuCalendarRange />}
-          variant={hasDateFilter ? "soft" : "surface"}
-          size="lg"
-          tooltip={false}
-          className={cn(hasDateFilter && "bg-primary-soft text-primary-text")}
-          onClick={() => setIsOpen((prev) => !prev)}
-        />
-        {hasDateFilter && (
-          <span className="absolute top-1.5 right-1.5 size-2 rounded-full bg-primary ring-2 ring-bg" />
-        )}
-      </span>
-    ) : (
-      <button
-        type="button"
-        onClick={() => setIsOpen((prev) => !prev)}
-        aria-expanded={isOpen}
-        className={cn(
-          "pressable flex h-[38px] max-w-[260px] items-center gap-2 rounded-full border px-3.5 text-[13.5px] font-medium transition-colors",
-          hasDateFilter
-            ? "border-primary bg-primary-soft text-primary-text"
-            : "border-border bg-surface text-text-2 hover:bg-surface-2 hover:text-text",
-        )}
-      >
-        <LuCalendarRange className="size-4 shrink-0" />
-        <span className="truncate">{label}</span>
-      </button>
-    );
-
-  return (
-    <Popover
-      isOpen={isOpen}
-      onClose={() => setIsOpen(false)}
-      trigger={trigger}
-      align={align}
-      panelClassName="w-[400px] p-5"
-    >
-      {isOpen && (
-        <DateRangeFields
-          value={dateRange}
-          onClose={() => setIsOpen(false)}
-          onApply={(range) => {
-            onDateRangeChange(range);
-            setIsOpen(false);
-          }}
-        />
-      )}
-    </Popover>
-  );
-}
-
 interface DateRangeFieldsProps {
   value: DateRangeFilter;
   onClose: () => void;
   onApply: (range: DateRangeFilter) => void;
   /** Left button — defaults to clearing the range (onApply with empty dates). */
   onClear?: () => void;
+  /** Month the calendar opens on when no range is set yet (defaults to today's). */
+  initialMonth?: Date;
 }
 
 /** Dari/Sampai fields + range calendar — the body of every "Rentang tanggal" picker. */
-export function DateRangeFields({ value, onClose, onApply, onClear }: DateRangeFieldsProps) {
+export function DateRangeFields({
+  value,
+  onClose,
+  onApply,
+  onClear,
+  initialMonth,
+}: DateRangeFieldsProps) {
   const { t } = useTranslation();
   const { language } = useLanguage();
   const locale = toIntlLocale(language);
@@ -127,7 +52,7 @@ export function DateRangeFields({ value, onClose, onApply, onClear }: DateRangeF
   const [draft, setDraft] = useState<DateRangeFilter>(value);
   const [activeField, setActiveField] = useState<ActiveField>(value.from ? "to" : "from");
   const [viewDate, setViewDate] = useState(() => {
-    const anchor = value.from ? parseIsoDate(value.from) : new Date();
+    const anchor = value.from ? parseIsoDate(value.from) : (initialMonth ?? new Date());
     return new Date(anchor.getFullYear(), anchor.getMonth(), 1);
   });
   const [direction, setDirection] = useState(0);

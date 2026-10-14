@@ -10,18 +10,22 @@ import { Reveal } from "@/components/atoms/Reveal";
 import { Card } from "@/components/molecules/Card";
 import { PageHeader } from "@/components/molecules/PageHeader";
 import { MonthTabs } from "@/layouts/transaction/MonthTabs";
+import { ActiveFilterBanner } from "@/layouts/transaction/ActiveFilterBanner";
 import {
-  TransactionFilterChips,
-  type ActiveFilterChip,
+  TransactionFilterButton,
+  TransactionFilterSheet,
+} from "@/layouts/transaction/TransactionFilterSheet";
+import {
+  DEFAULT_FILTERS,
+  EMPTY_RANGE,
+  countActiveFilters,
+  type TransactionFilters,
   type TransactionTypeFilter,
-} from "@/layouts/transaction/TransactionFilterChips";
+} from "@/layouts/transaction/transaction-filters";
 import {
   TransactionSearchField,
-  TransactionSortMenu,
-  type DateRangeFilter,
   type TransactionSortOption,
 } from "@/layouts/transaction/TransactionToolbar";
-import { DateRangeFilterPopover } from "@/layouts/transaction/DateRangeFilterPopover";
 import { TransactionSummaryBar } from "@/layouts/transaction/TransactionSummaryBar";
 import { TransactionCalendar } from "@/layouts/transaction/TransactionCalendar";
 import { TransactionList } from "@/layouts/dashboard/TransactionList";
@@ -36,7 +40,6 @@ import { useWallets } from "@/hooks/use-wallets";
 import { useTransactions } from "@/hooks/use-transactions";
 import { useScheduleOccurrences } from "@/hooks/use-schedule-occurrences";
 import { useScheduleOccurrenceActions } from "@/hooks/use-schedule-occurrence-actions";
-import { formatShortDate, parseIsoDate } from "@/utils/calendar";
 import { toIntlLocale } from "@/utils/locale";
 import { formatMonthParam, generateMonthRange, startOfMonth } from "@/utils/month";
 import { filterOccurrencesForView } from "@/utils/schedule-occurrence-filter";
@@ -99,20 +102,16 @@ export function TransactionsPage() {
   // category breakdown chart) deep-link here with a type/category/subcategory already selected.
   // Read once at mount via the lazy initializer — navigating here from elsewhere always mounts a
   // fresh TransactionsPage instance, so this never goes stale.
-  const [typeFilter, setTypeFilter] = useState<TransactionTypeFilter>(
-    () => locationState?.typeFilter ?? "all",
-  );
-  const [walletFilter, setWalletFilter] = useState("all");
-  const [categoryFilter, setCategoryFilter] = useState(
-    () => locationState?.categoryFilter ?? "all",
-  );
-  const [subCategoryFilter, setSubCategoryFilter] = useState(
-    () => locationState?.subCategoryFilter ?? "all",
-  );
+  const [filters, setFilters] = useState<TransactionFilters>(() => ({
+    ...DEFAULT_FILTERS,
+    type: locationState?.typeFilter ?? "all",
+    categoryId: locationState?.categoryFilter ?? "all",
+    subCategoryId: locationState?.subCategoryFilter ?? "all",
+  }));
+  const { type: typeFilter, walletId, categoryId, subCategoryId, range: dateRange, sort } = filters;
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
-  const [dateRange, setDateRange] = useState<DateRangeFilter>({ from: "", to: "" });
-  const [sortOption, setSortOption] = useState<TransactionSortOption>("dateDesc");
 
   const [displayedTransactions, setDisplayedTransactions] = useState<Transaction[]>([]);
   const [summary, setSummary] = useState<TransactionSummary | null>(null);
@@ -165,13 +164,13 @@ export function TransactionsPage() {
   const filterParams: Omit<TransactionListParams, "page" | "limit"> = {
     month: formatMonthParam(selectedMonth),
     type: typeFilter !== "all" ? typeFilter : undefined,
-    idWallet: walletFilter !== "all" ? walletFilter : undefined,
-    idCategory: categoryFilter !== "all" ? categoryFilter : undefined,
-    idSubCategory: subCategoryFilter !== "all" ? subCategoryFilter : undefined,
+    idWallet: walletId !== "all" ? walletId : undefined,
+    idCategory: categoryId !== "all" ? categoryId : undefined,
+    idSubCategory: subCategoryId !== "all" ? subCategoryId : undefined,
     dateFrom: dateRange.from || undefined,
     dateTo: dateRange.to || undefined,
     search: debouncedSearch || undefined,
-    sort: sortOption,
+    sort,
   };
   const filterKey = JSON.stringify(filterParams);
 
@@ -230,15 +229,19 @@ export function TransactionsPage() {
   // there's only one source of truth for "which day is filtered".
   const selectedDay = dateRange.from && dateRange.from === dateRange.to ? dateRange.from : null;
 
+  function updateFilters(patch: Partial<TransactionFilters>) {
+    setFilters((current) => ({ ...current, ...patch }));
+  }
+
   function handleSelectDay(day: string | null) {
-    setDateRange(day ? { from: day, to: day } : { from: "", to: "" });
+    updateFilters({ range: day ? { from: day, to: day } : EMPTY_RANGE });
   }
 
   // Selecting a month is a distinct action from picking a day within it —
   // switching months always resets to the "whole month" default view.
   function handleSelectMonth(nextMonth: Date) {
     setSelectedMonth(nextMonth);
-    setDateRange({ from: "", to: "" });
+    updateFilters({ range: EMPTY_RANGE });
   }
 
   // Independent of the paginated list above: fetches every transaction for
@@ -253,9 +256,9 @@ export function TransactionsPage() {
   > = {
     month: formatMonthParam(selectedMonth),
     type: typeFilter !== "all" ? typeFilter : undefined,
-    idWallet: walletFilter !== "all" ? walletFilter : undefined,
-    idCategory: categoryFilter !== "all" ? categoryFilter : undefined,
-    idSubCategory: subCategoryFilter !== "all" ? subCategoryFilter : undefined,
+    idWallet: walletId !== "all" ? walletId : undefined,
+    idCategory: categoryId !== "all" ? categoryId : undefined,
+    idSubCategory: subCategoryId !== "all" ? subCategoryId : undefined,
     search: debouncedSearch || undefined,
   };
   const calendarQueryKey = JSON.stringify({ ...calendarQueryParams, refreshToken });
@@ -294,11 +297,6 @@ export function TransactionsPage() {
     return () => observer.disconnect();
   }, [hasMore, isLoadingMore]);
 
-  function handleSelectCategory(id: string) {
-    setCategoryFilter(id);
-    setSubCategoryFilter("all");
-  }
-
   function handleEditTransaction(transaction: Transaction) {
     if (transaction.type === "correction") {
       const wallet = wallets.find((item) => item.idWallet === transaction.idWallet);
@@ -308,42 +306,22 @@ export function TransactionsPage() {
     setEditingTransaction(transaction);
   }
 
-  const displaySortConfig = DISPLAY_SORT_CONFIG[sortOption];
+  const displaySortConfig = DISPLAY_SORT_CONFIG[sort];
   const hasActiveFilter =
     typeFilter !== "all" ||
-    walletFilter !== "all" ||
-    categoryFilter !== "all" ||
-    subCategoryFilter !== "all" ||
+    walletId !== "all" ||
+    categoryId !== "all" ||
+    subCategoryId !== "all" ||
     Boolean(searchQuery) ||
     Boolean(dateRange.from || dateRange.to);
+  const activeFilterCount = countActiveFilters(filters);
 
   function resetFilters() {
-    setTypeFilter("all");
-    setWalletFilter("all");
-    setCategoryFilter("all");
-    setSubCategoryFilter("all");
+    setFilters(DEFAULT_FILTERS);
     setSearchQuery("");
-    setDateRange({ from: "", to: "" });
   }
 
   const locale = toIntlLocale(language);
-  const extraActiveFilters: ActiveFilterChip[] = [
-    ...(searchQuery
-      ? [{ key: "search", label: `“${searchQuery}”`, onRemove: () => setSearchQuery("") }]
-      : []),
-    ...(dateRange.from || dateRange.to
-      ? [
-          {
-            key: "date",
-            label:
-              dateRange.from === dateRange.to || !dateRange.to
-                ? formatShortDate(parseIsoDate(dateRange.from || dateRange.to), locale)
-                : `${formatShortDate(parseIsoDate(dateRange.from), locale)} – ${formatShortDate(parseIsoDate(dateRange.to), locale)}`,
-            onRemove: () => setDateRange({ from: "", to: "" }),
-          },
-        ]
-      : []),
-  ];
   const monthLabel = new Intl.DateTimeFormat(locale, { month: "long", year: "numeric" }).format(
     selectedMonth,
   );
@@ -366,12 +344,10 @@ export function TransactionsPage() {
               onChange={setSearchQuery}
               className="w-[240px] xl:w-[300px]"
             />
-            <DateRangeFilterPopover
-              dateRange={dateRange}
-              onDateRangeChange={setDateRange}
-              align="end"
+            <TransactionFilterButton
+              count={activeFilterCount}
+              onClick={() => setIsFilterOpen(true)}
             />
-            <TransactionSortMenu value={sortOption} onChange={setSortOption} align="end" />
             <Button type="button" leftIcon={<LuPlus />} onClick={openManualEntry}>
               {t("dashboard.recordTransaction")}
             </Button>
@@ -390,17 +366,10 @@ export function TransactionsPage() {
               }
               onClick={() => setIsMobileSearchOpen((open) => !open)}
             />
-            <DateRangeFilterPopover
-              dateRange={dateRange}
-              onDateRangeChange={setDateRange}
+            <TransactionFilterButton
               variant="icon"
-              align="end"
-            />
-            <TransactionSortMenu
-              value={sortOption}
-              onChange={setSortOption}
-              variant="icon"
-              align="end"
+              count={activeFilterCount}
+              onClick={() => setIsFilterOpen(true)}
             />
           </>
         }
@@ -425,8 +394,7 @@ export function TransactionsPage() {
         )}
       </AnimatePresence>
 
-      {/* Phones show summary before filters; desktop keeps DOM order (filters, then summary). */}
-      <Reveal immediate className="max-lg:order-1">
+      <Reveal immediate>
         <MonthTabs
           months={months}
           selected={selectedMonth}
@@ -435,29 +403,24 @@ export function TransactionsPage() {
         />
       </Reveal>
 
-      <Reveal immediate delay={0.05} className="max-lg:order-3">
-        <TransactionFilterChips
-          wallets={wallets}
-          categories={categories}
-          selectedType={typeFilter}
-          onSelectType={setTypeFilter}
-          selectedWalletId={walletFilter}
-          onSelectWallet={setWalletFilter}
-          selectedCategoryId={categoryFilter}
-          onSelectCategory={handleSelectCategory}
-          selectedSubCategoryId={subCategoryFilter}
-          onSelectSubCategory={setSubCategoryFilter}
-          extraActiveFilters={extraActiveFilters}
-          matchCount={hasActiveFilter ? totalCount : null}
-          onReset={resetFilters}
-        />
-      </Reveal>
-
-      <Reveal immediate delay={0.05} className="max-lg:order-2">
+      <Reveal immediate delay={0.05}>
         <TransactionSummaryBar expense={summary?.expense ?? 0} income={summary?.income ?? 0} />
       </Reveal>
 
-      <div className="grid grid-cols-1 gap-4 max-lg:order-4 lg:grid-cols-[minmax(0,1fr)_400px] lg:items-start xl:grid-cols-[minmax(0,1fr)_480px] 2xl:grid-cols-[minmax(0,1fr)_520px]">
+      <ActiveFilterBanner
+        filters={filters}
+        search={searchQuery}
+        wallets={wallets}
+        categories={categories}
+        locale={locale}
+        matchCount={totalCount}
+        onOpen={() => setIsFilterOpen(true)}
+        onChange={updateFilters}
+        onClearSearch={() => setSearchQuery("")}
+        onReset={resetFilters}
+      />
+
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,1fr)_400px] lg:items-start xl:grid-cols-[minmax(0,1fr)_480px] 2xl:grid-cols-[minmax(0,1fr)_520px]">
         <Reveal delay={0.05}>
           <TransactionCalendar
             month={selectedMonth}
@@ -517,6 +480,17 @@ export function TransactionsPage() {
           </Card>
         </Reveal>
       </div>
+
+      <TransactionFilterSheet
+        isOpen={isFilterOpen}
+        value={filters}
+        wallets={wallets}
+        categories={categories}
+        month={selectedMonth}
+        locale={locale}
+        onApply={setFilters}
+        onClose={() => setIsFilterOpen(false)}
+      />
 
       <AddTransactionModal
         isOpen={editingTransaction !== null}
