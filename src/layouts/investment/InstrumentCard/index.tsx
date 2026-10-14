@@ -113,7 +113,6 @@ export function InstrumentListRow({ instrument, sparkline, onOpen }: InstrumentL
       <InvestmentSparkline
         data={sparkline}
         color={instrument.color}
-        lineOnly
         className="h-7 w-16 shrink-0"
       />
       <span className="flex shrink-0 flex-col items-end gap-px">

@@ -8,8 +8,6 @@ interface InvestmentSparklineProps {
   /** Instrument hex color. */
   color: string;
   className?: string;
-  /** Line only (no gradient fill) — compact list rows. */
-  lineOnly?: boolean;
   strokeWidth?: number;
 }
 
@@ -18,7 +16,6 @@ export function InvestmentSparkline({
   data,
   color,
   className,
-  lineOnly = false,
   strokeWidth = 2,
 }: InvestmentSparklineProps) {
   const gradientId = `spark-${useId().replace(/:/g, "")}`;
@@ -40,7 +37,7 @@ export function InvestmentSparkline({
               dataKey="current"
               stroke={color}
               strokeWidth={strokeWidth}
-              fill={lineOnly ? "none" : `url(#${gradientId})`}
+              fill={`url(#${gradientId})`}
               baseValue="dataMin"
               dot={false}
               activeDot={false}
