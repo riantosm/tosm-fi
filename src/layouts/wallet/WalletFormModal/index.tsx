@@ -1,6 +1,14 @@
 import { useState, type SubmitEvent } from "react";
 import { useTranslation } from "react-i18next";
-import { LuBanknote, LuCheck, LuInfo, LuStar, LuTrash2, LuWallet } from "react-icons/lu";
+import {
+  LuBanknote,
+  LuCheck,
+  LuChevronRight,
+  LuInfo,
+  LuStar,
+  LuTrash2,
+  LuWallet,
+} from "react-icons/lu";
 import { Button } from "@/components/atoms/Button";
 import { IconButton } from "@/components/atoms/IconButton";
 import { Input } from "@/components/atoms/Input";
@@ -24,6 +32,8 @@ interface WalletFormModalProps {
   onSubmit: (input: WalletInput) => void;
   onDelete?: (id: string) => void;
   onSetPrimary?: (id: string) => void;
+  /** Editing only: the balance hint becomes a button that opens Koreksi saldo (as on mobile). */
+  onCorrectBalance?: (wallet: WalletAccount) => void;
 }
 
 const FORM_ID = "wallet-form";
@@ -43,6 +53,7 @@ function WalletFormDialog({
   onSubmit,
   onDelete,
   onSetPrimary,
+  onCorrectBalance,
 }: WalletFormModalProps) {
   const { t } = useTranslation();
   const { format } = useMoneyFormat();
@@ -141,7 +152,18 @@ function WalletFormDialog({
           />
         </FormField>
 
-        {wallet ? (
+        {wallet && onCorrectBalance ? (
+          <button
+            type="button"
+            onClick={() => onCorrectBalance(wallet)}
+            disabled={isBusy}
+            className="group flex items-center gap-2.5 rounded-control bg-surface-2 px-3.5 py-3 text-left text-[12.5px] leading-[1.5] text-text-2 transition-colors duration-200 hover:bg-surface-3 disabled:opacity-60"
+          >
+            <LuInfo className="size-4 shrink-0 text-text-3" />
+            <span className="flex-1">{t("wallet.balanceEditHint")}</span>
+            <LuChevronRight className="size-4 shrink-0 text-text-3 transition-transform duration-200 group-hover:translate-x-0.5" />
+          </button>
+        ) : wallet ? (
           <div className="flex items-start gap-2.5 rounded-control bg-surface-2 px-3.5 py-3 text-[12.5px] leading-[1.5] text-text-2">
             <LuInfo className="mt-0.5 size-4 shrink-0 text-text-3" />
             {t("wallet.balanceEditHint")}

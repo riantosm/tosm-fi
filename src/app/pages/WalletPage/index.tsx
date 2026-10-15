@@ -12,6 +12,7 @@ import { PageHeader } from "@/components/molecules/PageHeader";
 import { WalletCard } from "@/layouts/wallet/WalletCard";
 import { AddWalletCard } from "@/layouts/wallet/AddWalletCard";
 import { WalletFormModal } from "@/layouts/wallet/WalletFormModal";
+import { BalanceCorrectionModal } from "@/layouts/wallet/BalanceCorrectionModal";
 import { WalletReorderItem } from "@/layouts/wallet/WalletReorderItem";
 import { WalletSummaryCard } from "@/layouts/wallet/WalletSummaryCard";
 import { ViewModeToggle } from "@/layouts/wallet/ViewModeToggle";
@@ -65,6 +66,7 @@ export function WalletPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isSettingPrimary, setIsSettingPrimary] = useState(false);
+  const [correctionWallet, setCorrectionWallet] = useState<WalletAccount | null>(null);
 
   const [isReordering, setIsReordering] = useState(false);
   const [localOrder, setLocalOrder] = useState<WalletAccount[]>([]);
@@ -390,6 +392,16 @@ export function WalletPage() {
         onSubmit={handleSubmit}
         onDelete={handleDelete}
         onSetPrimary={handleSetPrimary}
+        onCorrectBalance={(wallet) => {
+          setIsModalOpen(false);
+          setCorrectionWallet(wallet);
+        }}
+      />
+
+      <BalanceCorrectionModal
+        isOpen={correctionWallet !== null}
+        wallet={correctionWallet}
+        onClose={() => setCorrectionWallet(null)}
       />
     </div>
   );
