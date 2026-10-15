@@ -294,6 +294,8 @@ export function ReportsPage() {
             title={t("reports.expenseByCategory.title")}
             periodLabel={t("reports.eyebrow.category")}
             isLoading={isSummaryLoading}
+            // The report period may be a day, week or year, not just "this month".
+            emptyTitle={t("reports.topSpending.empty")}
             className="h-full"
           />
         </Reveal>

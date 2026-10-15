@@ -30,6 +30,8 @@ interface CategoryBreakdownChartProps {
   isLoading?: boolean;
   /** Caption under the donut total (defaults to "total keluar"). */
   centerCaption?: string;
+  /** Empty-state text (defaults to the Dashboard's "this month" wording). */
+  emptyTitle?: string;
   /** When provided, subcategory tiles become clickable. */
   onSelectSubCategory?: (subSlice: ChartSlice, categorySlice: ChartSlice) => void;
   /** When provided, a category tile is clickable directly instead of drilling
@@ -100,6 +102,7 @@ export function CategoryBreakdownChart({
   onAction,
   isLoading = false,
   centerCaption,
+  emptyTitle,
   onSelectSubCategory,
   onSelectCategory,
   className,
@@ -158,7 +161,7 @@ export function CategoryBreakdownChart({
           </div>
         </div>
       ) : isEmpty ? (
-        <EmptyState icon={<LuChartPie />} title={t("dashboard.noExpenseData")} />
+        <EmptyState icon={<LuChartPie />} title={emptyTitle ?? t("dashboard.noExpenseData")} />
       ) : (
         <div
           className={cn("@container transition-opacity duration-300", isLoading && "opacity-60")}
