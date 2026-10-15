@@ -54,7 +54,7 @@ export function LoadingScreen({ variant = "full", className }: LoadingScreenProp
             strokeDasharray="28 72"
           />
         </svg>
-        <LogoMark size={isFull ? "md" : "sm"} className="rounded-[14px]" />
+        <LogoMark size={isFull ? "md" : "sm"} />
       </span>
       {isFull && (
         <span className="flex flex-col items-center gap-0.5">

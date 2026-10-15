@@ -19,14 +19,19 @@ export default defineConfig({
         short_name: "TosmFi",
         description:
           "Tosm Finance (TosmFi) — kelola keuanganmu dengan tenang, satu dashboard untuk semua transaksi.",
-        theme_color: "#09090b",
-        background_color: "#09090b",
+        // Light Mist background (`--bg`) so the install splash matches the app instead of near-black.
+        theme_color: "#f4f5fb",
+        background_color: "#f4f5fb",
         display: "standalone",
         start_url: "/",
         icons: [
+          { src: "/favicon.svg", sizes: "any", type: "image/svg+xml", purpose: "any" },
           { src: "/favicon-32x32.png", sizes: "32x32", type: "image/png" },
           { src: "/apple-touch-icon.png", sizes: "180x180", type: "image/png" },
+          { src: "/pwa-192x192.png", sizes: "192x192", type: "image/png", purpose: "any" },
           { src: "/favicon-512x512.png", sizes: "512x512", type: "image/png", purpose: "any" },
+          // Full-bleed variant with the mark inside the 80% safe zone, for Android's shaped icons.
+          { src: "/maskable-512x512.png", sizes: "512x512", type: "image/png", purpose: "maskable" },
         ],
       },
     }),

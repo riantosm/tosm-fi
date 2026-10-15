@@ -88,7 +88,7 @@ Long labels in tight places (tiles, chips) are one line and `truncate`. They nev
 - **`Checkbox`**: rounded square.
 - **`Badge`**: `tone` = `neutral | primary | income | expense | investment | solid`.
 - **`Avatar`**: initials.
-- **`LogoMark`** / **`Logo`**: brand.
+- **`LogoMark`** / **`Logo`**: brand. `LogoMark` is the app icon drawn inline (lilac gradient tile with the white "TF", peach + lilac leaves), so it looks the same on light, dark and the hero gradient. `Logo` = `LogoMark` + "TosmFi" wordmark. Master files live in `../design/brand/` (icon, mark, mono, lockups) and `src/assets/images/logo/`.
 - **`AiMark`**: the AI identity, a solid primary circle with sparkles. It is the only AI icon.
 - **`Skeleton`**: shimmer block.
 - **`Tooltip`**, **`ThemeToggle`**, **`CopyButton`**, **`MethodBadge`**, **`ModalCloseButton`**, **`IconLoader`**.
