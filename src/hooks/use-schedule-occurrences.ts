@@ -5,6 +5,7 @@ import {
   addTransaction,
   removeOccurrence,
   setOccurrences,
+  setOccurrencesFailed,
   setOccurrencesLoading,
   useAppDispatch,
   useAppSelector,
@@ -21,8 +22,11 @@ export function useScheduleOccurrences() {
 
   const loadPendingOccurrences = useCallback(async () => {
     dispatch(setOccurrencesLoading());
-    const data = await scheduleOccurrenceService.fetchPendingOccurrences();
-    dispatch(setOccurrences(data));
+    try {
+      dispatch(setOccurrences(await scheduleOccurrenceService.fetchPendingOccurrences()));
+    } catch {
+      dispatch(setOccurrencesFailed());
+    }
   }, [dispatch]);
 
   // Paying creates a real Transaction with wallet-balance/category-count side

@@ -24,6 +24,10 @@ export const scheduleSlice = createSlice({
       state.schedules = action.payload;
       state.status = "loaded";
     },
+    // A failed load ends the loading state (keeping whatever was there) instead of a stuck skeleton.
+    setSchedulesFailed: (state) => {
+      state.status = "loaded";
+    },
     addSchedule: (state, action: PayloadAction<Schedule>) => {
       state.schedules.push(action.payload);
     },
@@ -43,6 +47,7 @@ export const scheduleSlice = createSlice({
 export const {
   setSchedulesLoading,
   setSchedules,
+  setSchedulesFailed,
   addSchedule,
   updateSchedule,
   removeSchedule,

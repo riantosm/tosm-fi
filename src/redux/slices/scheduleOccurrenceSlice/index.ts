@@ -24,12 +24,13 @@ export const scheduleOccurrenceSlice = createSlice({
       state.occurrences = action.payload;
       state.status = "loaded";
     },
+    setOccurrencesFailed: (state) => {
+      state.status = "loaded";
+    },
     // Used both after "pay" and after "cancel" — either way the row leaves
     // the pending list.
     removeOccurrence: (state, action: PayloadAction<string>) => {
-      state.occurrences = state.occurrences.filter(
-        (item) => item.idOccurrence !== action.payload,
-      );
+      state.occurrences = state.occurrences.filter((item) => item.idOccurrence !== action.payload);
     },
     resetScheduleOccurrences: () => initialState,
   },
@@ -38,6 +39,7 @@ export const scheduleOccurrenceSlice = createSlice({
 export const {
   setOccurrencesLoading,
   setOccurrences,
+  setOccurrencesFailed,
   removeOccurrence,
   resetScheduleOccurrences,
 } = scheduleOccurrenceSlice.actions;
