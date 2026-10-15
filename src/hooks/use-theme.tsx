@@ -7,25 +7,46 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import type { Theme } from "@/types/theme.types";
+import type { Theme, ThemePreference } from "@/types/theme.types";
 import { THEME_STORAGE_KEY } from "@/constants/storage-keys";
 
 interface ThemeContextValue {
+  /** Theme actually shown (the OS scheme when the preference is "system"). */
   theme: Theme;
+  preference: ThemePreference;
+  setPreference: (preference: ThemePreference) => void;
+  /** Sun/moon buttons: switch to the opposite of what is shown, as an explicit choice. */
   toggleTheme: () => void;
-  setTheme: (theme: Theme) => void;
 }
 
 const ThemeContext = createContext<ThemeContextValue | null>(null);
 
-function getInitialTheme(): Theme {
+const DARK_QUERY = "(prefers-color-scheme: dark)";
+
+function getInitialPreference(): ThemePreference {
   const stored = localStorage.getItem(THEME_STORAGE_KEY);
-  if (stored === "light" || stored === "dark") return stored;
-  return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+  return stored === "light" || stored === "dark" ? stored : "system";
 }
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
-  const [theme, setThemeState] = useState<Theme>(getInitialTheme);
+  const [preference, setPreferenceState] = useState<ThemePreference>(getInitialPreference);
+  const [systemTheme, setSystemTheme] = useState<Theme>(() =>
+    window.matchMedia(DARK_QUERY).matches ? "dark" : "light",
+  );
+  const theme = preference === "system" ? systemTheme : preference;
+
+  // Track the OS scheme live so "system" switches without a reload.
+  useEffect(() => {
+    const query = window.matchMedia(DARK_QUERY);
+    const onChange = (event: MediaQueryListEvent) =>
+      setSystemTheme(event.matches ? "dark" : "light");
+    query.addEventListener("change", onChange);
+    return () => query.removeEventListener("change", onChange);
+  }, []);
+
+  useEffect(() => {
+    localStorage.setItem(THEME_STORAGE_KEY, preference);
+  }, [preference]);
 
   useEffect(() => {
     const root = document.documentElement;
@@ -34,7 +55,6 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     // interactions keep their own (faster) transitions.
     root.classList.add("theme-switching");
     root.classList.toggle("dark", theme === "dark");
-    localStorage.setItem(THEME_STORAGE_KEY, theme);
     document
       .querySelector('meta[name="theme-color"]')
       ?.setAttribute("content", theme === "dark" ? "#25263a" : "#f4f5fb");
@@ -42,13 +62,16 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     return () => window.clearTimeout(timeout);
   }, [theme]);
 
-  const setTheme = useCallback((next: Theme) => setThemeState(next), []);
+  const setPreference = useCallback((next: ThemePreference) => setPreferenceState(next), []);
   const toggleTheme = useCallback(
-    () => setThemeState((prev) => (prev === "dark" ? "light" : "dark")),
-    [],
+    () => setPreferenceState(theme === "dark" ? "light" : "dark"),
+    [theme],
   );
 
-  const value = useMemo(() => ({ theme, toggleTheme, setTheme }), [theme, toggleTheme, setTheme]);
+  const value = useMemo(
+    () => ({ theme, preference, setPreference, toggleTheme }),
+    [theme, preference, setPreference, toggleTheme],
+  );
 
   return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>;
 }

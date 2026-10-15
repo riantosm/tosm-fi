@@ -222,7 +222,10 @@
     "genericError": "Terjadi kesalahan, coba lagi."
   },
   "theme": {
-    "toggle": "Ubah tema"
+    "toggle": "Ubah tema",
+    "light": "Terang",
+    "dark": "Gelap",
+    "system": "Ikuti sistem"
   },
   "footer": {
     "copyright": "© {{year}} TosmFi. Dibuat dengan ♥."

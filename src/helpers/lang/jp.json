@@ -222,7 +222,10 @@
     "genericError": "エラーが発生しました。もう一度お試しください。"
   },
   "theme": {
-    "toggle": "テーマを切り替え"
+    "toggle": "テーマを切り替え",
+    "light": "ライト",
+    "dark": "ダーク",
+    "system": "システムに合わせる"
   },
   "footer": {
     "copyright": "© {{year}} TosmFi. ♥を込めて。"

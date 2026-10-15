@@ -222,7 +222,10 @@
     "genericError": "Something went wrong, please try again."
   },
   "theme": {
-    "toggle": "Toggle theme"
+    "toggle": "Toggle theme",
+    "light": "Light",
+    "dark": "Dark",
+    "system": "Follow system"
   },
   "footer": {
     "copyright": "© {{year}} TosmFi. Made with ♥."
