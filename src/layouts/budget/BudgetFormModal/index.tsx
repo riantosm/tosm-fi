@@ -61,8 +61,11 @@ function BudgetFormDialog({
   const [scope, setScope] = useState<BudgetScope>(
     budgetCategoryIds.length > 0 ? "category" : "all",
   );
-  const [selectedCategories, setSelectedCategories] = useState<Category[]>(() =>
-    categories.filter((category) => budgetCategoryIds.includes(category.idCategory)),
+  // Ids, not Category objects: the chips are derived from the live list, so they still appear
+  // when categories finish loading after the dialog opened (same as mobile).
+  const [selectedIds, setSelectedIds] = useState<string[]>(budgetCategoryIds);
+  const selectedCategories = categories.filter(
+    (category) => category.type === "expense" && selectedIds.includes(category.idCategory),
   );
   const [limitInput, setLimitInput] = useState(
     budget ? formatNumberInput(String(budget.limitAmount)) : "",
@@ -70,7 +73,7 @@ function BudgetFormDialog({
   const [isPickingCategories, setIsPickingCategories] = useState(false);
 
   const isScopeValid = scope === "all" || selectedCategories.length > 0;
-  const canSubmit = Boolean(name.trim()) && isScopeValid && limitInput.trim() !== "";
+  const canSubmit = Boolean(name.trim()) && isScopeValid && parseFormattedNumber(limitInput) > 0;
 
   function handleSubmit(event: SubmitEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -90,7 +93,7 @@ function BudgetFormDialog({
   }
 
   function removeCategory(idCategory: string) {
-    setSelectedCategories((prev) => prev.filter((category) => category.idCategory !== idCategory));
+    setSelectedIds((prev) => prev.filter((id) => id !== idCategory));
   }
 
   return (
@@ -245,7 +248,7 @@ function BudgetFormDialog({
         selectedIds={selectedCategories.map((category) => category.idCategory)}
         onClose={() => setIsPickingCategories(false)}
         onConfirm={(categoriesPicked) => {
-          setSelectedCategories(categoriesPicked);
+          setSelectedIds(categoriesPicked.map((category) => category.idCategory));
           setIsPickingCategories(false);
         }}
       />
