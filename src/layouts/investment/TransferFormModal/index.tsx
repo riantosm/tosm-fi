@@ -197,7 +197,12 @@ function TransferFormDialog({ isOpen, onClose }: TransferFormModalProps) {
 
       <InvestmentTargetModal
         isOpen={picking !== null}
-        idInstrument={pickingRef?.idInstrument ?? null}
+        // An empty side starts on the other side's instrument (transfers are usually within one).
+        idInstrument={
+          pickingRef?.idInstrument ??
+          (picking === "to" ? from?.idInstrument : to?.idInstrument) ??
+          null
+        }
         idInvestmentAccount={pickingRef?.idInvestmentAccount ?? null}
         excludeAccountId={picking === "to" ? from?.idInvestmentAccount : to?.idInvestmentAccount}
         title={t("investment.pickAccountTitle")}
