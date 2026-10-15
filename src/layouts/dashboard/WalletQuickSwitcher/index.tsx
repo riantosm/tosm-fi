@@ -18,6 +18,8 @@ import { cn } from "@/utils/cn";
 
 interface WalletQuickSwitcherProps {
   onCorrectBalance: (wallet: WalletAccount) => void;
+  /** "Tambah dompet" opens the wallet form here instead of going to the Wallet page. */
+  onAddWallet?: () => void;
 }
 
 const EASE = [0.22, 1, 0.36, 1] as const;
@@ -26,7 +28,7 @@ const EASE = [0.22, 1, 0.36, 1] as const;
  * Dashboard "Saldo · Dompet" card. Tapping the primary wallet opens a balance
  * correction; tapping any other wallet makes it the primary one.
  */
-export function WalletQuickSwitcher({ onCorrectBalance }: WalletQuickSwitcherProps) {
+export function WalletQuickSwitcher({ onCorrectBalance, onAddWallet }: WalletQuickSwitcherProps) {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { wallets, status, loadWallets, setPrimaryWallet } = useWallets();
@@ -146,7 +148,7 @@ export function WalletQuickSwitcher({ onCorrectBalance }: WalletQuickSwitcherPro
         variant="soft"
         fullWidth
         leftIcon={<LuPlus />}
-        onClick={() => navigate(ROUTES.WALLET)}
+        onClick={() => (onAddWallet ? onAddWallet() : navigate(ROUTES.WALLET))}
         className="mt-1"
       >
         {t("dashboard.addWallet")}

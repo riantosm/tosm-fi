@@ -14,9 +14,11 @@ import { BudgetsSummary } from "@/layouts/dashboard/BudgetsSummary";
 import { WalletQuickSwitcher } from "@/layouts/dashboard/WalletQuickSwitcher";
 import { AddTransactionModal } from "@/layouts/transaction/AddTransactionModal";
 import { BalanceCorrectionModal } from "@/layouts/wallet/BalanceCorrectionModal";
+import { WalletFormModal } from "@/layouts/wallet/WalletFormModal";
 import { PayOccurrenceModal } from "@/layouts/schedule/PayOccurrenceModal";
 import { useCategories } from "@/hooks/use-categories";
 import { useWallets } from "@/hooks/use-wallets";
+import { useToast } from "@/hooks/use-toast";
 import { useTransactions } from "@/hooks/use-transactions";
 import { useBudgets } from "@/hooks/use-budgets";
 import { useBudgetSpending } from "@/hooks/use-budget-spending";
@@ -27,7 +29,7 @@ import { formatMonthParam, startOfMonth } from "@/utils/month";
 import { filterOccurrencesForView } from "@/utils/schedule-occurrence-filter";
 import { ROUTES } from "@/constants/routes";
 import type { Transaction, TransactionSummary } from "@/types/transaction.types";
-import type { WalletAccount } from "@/types/wallet.types";
+import type { WalletAccount, WalletInput } from "@/types/wallet.types";
 
 const MONTH_LIST_PAGE_SIZE = 10;
 
@@ -38,9 +40,10 @@ interface CorrectionState {
 
 export function DashboardPage() {
   const { t } = useTranslation();
+  const { showToast } = useToast();
   const navigate = useNavigate();
   const { categories, status: categoriesStatus, loadCategories } = useCategories();
-  const { wallets, status: walletsStatus, loadWallets } = useWallets();
+  const { wallets, status: walletsStatus, loadWallets, createWallet } = useWallets();
   // `transactions` is used only as a change-detection dependency below (the
   // reference changes after any create/edit/delete anywhere in the app) —
   // its contents are never rendered. Dashboard fetches its own month-scoped
@@ -56,6 +59,20 @@ export function DashboardPage() {
 
   const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
   const [correctionState, setCorrectionState] = useState<CorrectionState | null>(null);
+  const [isAddWalletOpen, setIsAddWalletOpen] = useState(false);
+  const [isCreatingWallet, setIsCreatingWallet] = useState(false);
+
+  async function handleCreateWallet(input: WalletInput) {
+    setIsCreatingWallet(true);
+    try {
+      await createWallet(input);
+      setIsAddWalletOpen(false);
+    } catch (error) {
+      showToast(error instanceof Error ? error.message : t("wallet.genericError"), "error");
+    } finally {
+      setIsCreatingWallet(false);
+    }
+  }
 
   const [displayedTransactions, setDisplayedTransactions] = useState<Transaction[]>([]);
   const [monthTotal, setMonthTotal] = useState(0);
@@ -222,6 +239,7 @@ export function DashboardPage() {
           <Reveal className="order-5 lg:order-none" delay={0.05}>
             <WalletQuickSwitcher
               onCorrectBalance={(wallet) => setCorrectionState({ wallet, transaction: null })}
+              onAddWallet={() => setIsAddWalletOpen(true)}
             />
           </Reveal>
           <Reveal className="order-1 lg:order-none" delay={0.1}>
@@ -238,6 +256,13 @@ export function DashboardPage() {
         isOpen={editingTransaction !== null}
         transaction={editingTransaction}
         onClose={() => setEditingTransaction(null)}
+      />
+
+      <WalletFormModal
+        isOpen={isAddWalletOpen}
+        isSubmitting={isCreatingWallet}
+        onClose={() => setIsAddWalletOpen(false)}
+        onSubmit={(input) => void handleCreateWallet(input)}
       />
 
       <BalanceCorrectionModal
