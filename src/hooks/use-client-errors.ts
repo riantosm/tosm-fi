@@ -3,6 +3,7 @@ import { clientErrorService } from "@/services/client-error.service";
 import {
   removeClientError,
   setClientErrors,
+  setClientErrorsFailed,
   setClientErrorsLoading,
   useAppDispatch,
   useAppSelector,
@@ -17,8 +18,12 @@ export function useClientErrors() {
   const loadClientErrors = useCallback(
     async (params?: ClientErrorListParams) => {
       dispatch(setClientErrorsLoading());
-      const data = await clientErrorService.fetchErrors(params);
-      dispatch(setClientErrors(data));
+      try {
+        dispatch(setClientErrors(await clientErrorService.fetchErrors(params)));
+      } catch (error) {
+        dispatch(setClientErrorsFailed());
+        throw error;
+      }
     },
     [dispatch],
   );

@@ -24,12 +24,16 @@ export const clientErrorSlice = createSlice({
       state.errors = action.payload;
       state.status = "loaded";
     },
+    // A failed load ends the loading state instead of leaving the skeleton up.
+    setClientErrorsFailed: (state) => {
+      state.status = "loaded";
+    },
     removeClientError: (state, action: PayloadAction<string>) => {
       state.errors = state.errors.filter((error) => error.idClientError !== action.payload);
     },
   },
 });
 
-export const { setClientErrorsLoading, setClientErrors, removeClientError } =
+export const { setClientErrorsLoading, setClientErrors, setClientErrorsFailed, removeClientError } =
   clientErrorSlice.actions;
 export default clientErrorSlice.reducer;

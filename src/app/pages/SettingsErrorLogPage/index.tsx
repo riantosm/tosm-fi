@@ -63,7 +63,11 @@ export function SettingsErrorLogPage() {
     const key = JSON.stringify(params);
     if (requestedKeyRef.current === key) return;
     requestedKeyRef.current = key;
-    void loadClientErrors(params);
+    loadClientErrors(params).catch((err: unknown) => {
+      // Let the same filters be retried, and say why the list is empty (same as mobile).
+      requestedKeyRef.current = null;
+      showToast(err instanceof Error ? err.message : t("errorLog.genericError"), "error");
+    });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [debouncedSearch, environmentFilter]);
 
