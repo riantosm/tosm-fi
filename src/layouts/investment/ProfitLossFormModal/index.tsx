@@ -211,15 +211,18 @@ function ProfitLossFormDialog({
                   ? t("investment.lossAmount", { amount: formatNumber(Math.abs(delta)) })
                   : t("investment.profitAmount", { amount: formatNumber(delta) })}
               </span>
-              <span className="text-[12.5px]">
-                {isLoss
-                  ? t("investment.downFromRecorded", {
-                      percent: formatPercent(deltaPercent, language),
-                    })
-                  : t("investment.upFromRecorded", {
-                      percent: formatPercent(deltaPercent, language),
-                    })}
-              </span>
+              {/* No percentage against a recorded value of 0 (it would always read 0%). */}
+              {recordedValue > 0 && (
+                <span className="text-[12.5px]">
+                  {isLoss
+                    ? t("investment.downFromRecorded", {
+                        percent: formatPercent(deltaPercent, language),
+                      })
+                    : t("investment.upFromRecorded", {
+                        percent: formatPercent(deltaPercent, language),
+                      })}
+                </span>
+              )}
             </span>
           )}
         </div>
