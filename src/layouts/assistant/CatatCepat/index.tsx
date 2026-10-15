@@ -17,6 +17,7 @@ import { IconButton } from "@/components/atoms/IconButton";
 import { ROUTES } from "@/constants/routes";
 import { useAssistantChat } from "@/hooks/use-assistant-chat";
 import { useAuth } from "@/hooks/use-auth";
+import { useHistoryExamples } from "@/hooks/use-history-examples";
 import { useLanguage } from "@/hooks/use-language";
 import { DESKTOP_QUERY, useMediaQuery } from "@/hooks/use-media-query";
 import { useQuickAdd } from "@/hooks/use-quick-add";
@@ -40,6 +41,7 @@ import type {
 import { toIntlLocale } from "@/utils/locale";
 
 const EASE = [0.22, 1, 0.36, 1] as const;
+/** Built-in examples, used while the history has no recurring transaction yet. */
 const EXAMPLE_KEYS = ["example1", "example2", "example3", "example4", "example5"] as const;
 
 /**
@@ -56,6 +58,14 @@ export function CatatCepat() {
   const isDesktop = useMediaQuery(DESKTOP_QUERY);
   const chat = useAssistantChat();
   const { ensureData } = chat;
+  // Examples from recurring transactions in the history; no pattern yet → built-in examples.
+  const historyExamples = useHistoryExamples(isAssistantOpen);
+  const examples =
+    historyExamples === null
+      ? null
+      : historyExamples.length > 0
+        ? historyExamples
+        : EXAMPLE_KEYS.map((key) => t(`assistant.${key}`));
 
   const [isDatePickerOpen, setDatePickerOpen] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -315,23 +325,25 @@ export function CatatCepat() {
               transition={{ duration: 0.25, ease: EASE }}
               className="flex flex-col gap-3 overflow-hidden"
             >
-              <div className="flex flex-col items-start gap-2 pt-1 pl-9">
-                <span className="text-[12px] text-text-3">{t("assistant.examplesLabel")}</span>
-                {EXAMPLE_KEYS.map((key, i) => (
-                  <m.div
-                    key={key}
-                    initial={{ opacity: 0, x: -6 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ duration: 0.3, ease: EASE, delay: 0.1 + i * 0.05 }}
-                    className="max-w-full"
-                  >
-                    <QuickReplyButton
-                      reply={{ label: t(`assistant.${key}`) }}
-                      onSelect={(reply) => chat.send(reply.label)}
-                    />
-                  </m.div>
-                ))}
-              </div>
+              {examples && (
+                <div className="flex flex-col items-start gap-2 pt-1 pl-9">
+                  <span className="text-[12px] text-text-3">{t("assistant.examplesLabel")}</span>
+                  {examples.map((label, i) => (
+                    <m.div
+                      key={label}
+                      initial={{ opacity: 0, x: -6 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ duration: 0.3, ease: EASE, delay: 0.1 + i * 0.05 }}
+                      className="max-w-full"
+                    >
+                      <QuickReplyButton
+                        reply={{ label }}
+                        onSelect={(reply) => chat.send(reply.label)}
+                      />
+                    </m.div>
+                  ))}
+                </div>
+              )}
               <div className="flex items-start gap-2 rounded-control bg-surface-2 px-3.5 py-3">
                 <LuInfo className="mt-0.5 size-[15px] shrink-0 text-text-3" />
                 <p className="text-[12.5px] leading-[1.45] text-text-2">
