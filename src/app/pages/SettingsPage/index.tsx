@@ -19,15 +19,16 @@ export function SettingsPage() {
   const { user } = useAuth();
   const { currency, decimalPlaces } = useCurrency();
   const { resetData } = useResetData();
-  const { users, status: usersStatus, loadUsers } = useUserApproval();
+  const { users, loadUsers } = useUserApproval();
   const { confirm } = useConfirmDialog();
   const { showToast } = useToast();
   const isAdmin = user.role === "admin";
 
-  // Admins see how many registrations wait for approval (read-only list fetch).
+  // Admins see how many registrations wait for approval. Refetched on every visit (not only the
+  // first) so the badge drops right after approving someone, as on mobile.
   useEffect(() => {
-    if (isAdmin && usersStatus === "idle") void loadUsers().catch(() => {});
-  }, [isAdmin, usersStatus, loadUsers]);
+    if (isAdmin) void loadUsers().catch(() => {});
+  }, [isAdmin, loadUsers]);
 
   const pendingCount = users.filter((item) => item.status !== "active").length;
   const currencyMeta = `${currency} · ${t("settingsMenu.decimalCount", { n: decimalPlaces })}`;
