@@ -65,7 +65,7 @@ import type {
   NetWorthTimelineGranularity,
 } from "@/types/investment-transaction.types";
 
-const SEARCH_DEBOUNCE_MS = 2000;
+const SEARCH_DEBOUNCE_MS = 1000;
 const PAGE_SIZE = 20;
 const EASE = [0.22, 1, 0.36, 1] as const;
 const VIEW_MOTION = {

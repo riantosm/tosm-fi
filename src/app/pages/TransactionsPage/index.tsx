@@ -52,7 +52,7 @@ import type { WalletAccount } from "@/types/wallet.types";
 
 const EASE = [0.22, 1, 0.36, 1] as const;
 
-const SEARCH_DEBOUNCE_MS = 2000;
+const SEARCH_DEBOUNCE_MS = 1000;
 const PAGE_SIZE = 20;
 
 interface CorrectionState {
