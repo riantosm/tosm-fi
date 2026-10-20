@@ -30,6 +30,8 @@ export interface AuthUser {
   role: UserRole;
   status: UserStatus;
   createdAt: string;
+  /** Shared demo account: the backend rejects reset data and username changes. */
+  isDemo?: boolean;
   netWorth?: number;
 }
 
