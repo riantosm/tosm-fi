@@ -221,6 +221,7 @@ function ChangePasswordForm() {
         <fieldset disabled={isDemo} className="contents">
           <FormField label={t("profile.currentPasswordLabel")} htmlFor="profile-current-password">
             <PasswordInput
+              disabled={isDemo}
               id="profile-current-password"
               value={currentPassword}
               onChange={(event) => setCurrentPassword(event.target.value)}
@@ -232,6 +233,7 @@ function ChangePasswordForm() {
           <div className="grid gap-4 lg:grid-cols-2">
             <FormField label={t("profile.newPasswordLabel")} htmlFor="profile-new-password">
               <PasswordInput
+                disabled={isDemo}
                 id="profile-new-password"
                 value={newPassword}
                 onChange={(event) => setNewPassword(event.target.value)}
@@ -245,6 +247,7 @@ function ChangePasswordForm() {
               error={isMismatch ? t("profile.passwordMismatchError") : undefined}
             >
               <PasswordInput
+                disabled={isDemo}
                 id="profile-confirm-password"
                 value={confirmPassword}
                 onChange={(event) => setConfirmPassword(event.target.value)}
