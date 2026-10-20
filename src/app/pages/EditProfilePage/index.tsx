@@ -103,6 +103,7 @@ function AccountInfoForm() {
   const [name, setName] = useState(user.nameUser ?? "");
   const [username, setUsername] = useState(user.username ?? "");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const isDemo = user.isDemo === true;
   const isUnchanged =
     name.trim() === (user.nameUser ?? "") && username.trim() === (user.username ?? "");
 
@@ -145,7 +146,11 @@ function AccountInfoForm() {
               required
             />
           </FormField>
-          <FormField label={t("profile.usernameLabel")} htmlFor="profile-username">
+          <FormField
+            label={t("profile.usernameLabel")}
+            htmlFor="profile-username"
+            helper={isDemo ? t("profile.demoUsernameLocked") : undefined}
+          >
             <Input
               id="profile-username"
               value={username}
@@ -153,6 +158,7 @@ function AccountInfoForm() {
               placeholder={t("profile.usernamePlaceholder")}
               startIcon={<LuAtSign />}
               autoComplete="username"
+              disabled={isDemo}
               required
             />
           </FormField>
@@ -174,7 +180,8 @@ function AccountInfoForm() {
 function ChangePasswordForm() {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const { changePassword } = useAuth();
+  const { user, changePassword } = useAuth();
+  const isDemo = user.isDemo === true;
   const { showToast } = useToast();
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
@@ -210,41 +217,44 @@ function ChangePasswordForm() {
   return (
     <SettingsPanel icon={<LuKeyRound />} title={t("profile.changePasswordTitle")}>
       <form onSubmit={(event) => void handleSubmit(event)} className="flex flex-col gap-4 lg:gap-5">
-        <FormField label={t("profile.currentPasswordLabel")} htmlFor="profile-current-password">
-          <PasswordInput
-            id="profile-current-password"
-            value={currentPassword}
-            onChange={(event) => setCurrentPassword(event.target.value)}
-            autoComplete="current-password"
-            required
-          />
-        </FormField>
+        {/* Shared demo account: the backend refuses password changes, so the fields stay locked. */}
+        <fieldset disabled={isDemo} className="contents">
+          <FormField label={t("profile.currentPasswordLabel")} htmlFor="profile-current-password">
+            <PasswordInput
+              id="profile-current-password"
+              value={currentPassword}
+              onChange={(event) => setCurrentPassword(event.target.value)}
+              autoComplete="current-password"
+              required
+            />
+          </FormField>
 
-        <div className="grid gap-4 lg:grid-cols-2">
-          <FormField label={t("profile.newPasswordLabel")} htmlFor="profile-new-password">
-            <PasswordInput
-              id="profile-new-password"
-              value={newPassword}
-              onChange={(event) => setNewPassword(event.target.value)}
-              autoComplete="new-password"
-              required
-            />
-          </FormField>
-          <FormField
-            label={t("profile.confirmPasswordLabel")}
-            htmlFor="profile-confirm-password"
-            error={isMismatch ? t("profile.passwordMismatchError") : undefined}
-          >
-            <PasswordInput
-              id="profile-confirm-password"
-              value={confirmPassword}
-              onChange={(event) => setConfirmPassword(event.target.value)}
-              autoComplete="new-password"
-              hasError={isMismatch}
-              required
-            />
-          </FormField>
-        </div>
+          <div className="grid gap-4 lg:grid-cols-2">
+            <FormField label={t("profile.newPasswordLabel")} htmlFor="profile-new-password">
+              <PasswordInput
+                id="profile-new-password"
+                value={newPassword}
+                onChange={(event) => setNewPassword(event.target.value)}
+                autoComplete="new-password"
+                required
+              />
+            </FormField>
+            <FormField
+              label={t("profile.confirmPasswordLabel")}
+              htmlFor="profile-confirm-password"
+              error={isMismatch ? t("profile.passwordMismatchError") : undefined}
+            >
+              <PasswordInput
+                id="profile-confirm-password"
+                value={confirmPassword}
+                onChange={(event) => setConfirmPassword(event.target.value)}
+                autoComplete="new-password"
+                hasError={isMismatch}
+                required
+              />
+            </FormField>
+          </div>
+        </fieldset>
 
         <div className="flex items-start gap-3 rounded-control bg-primary-soft px-3.5 py-3">
           <span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-surface text-primary-text">
@@ -252,10 +262,10 @@ function ChangePasswordForm() {
           </span>
           <span className="flex min-w-0 flex-col gap-0.5">
             <span className="text-[13.5px] font-semibold text-primary-text">
-              {t("profile.changePasswordHintTitle")}
+              {isDemo ? t("profile.demoLockedTitle") : t("profile.changePasswordHintTitle")}
             </span>
             <span className="text-[12.5px] leading-relaxed text-text-2">
-              {t("profile.changePasswordHint")}
+              {isDemo ? t("profile.demoPasswordLocked") : t("profile.changePasswordHint")}
             </span>
           </span>
         </div>
@@ -264,7 +274,7 @@ function ChangePasswordForm() {
           type="submit"
           leftIcon={<LuKeyRound />}
           isLoading={isSubmitting}
-          disabled={isSubmitting || !currentPassword || !newPassword || !confirmPassword}
+          disabled={isDemo || isSubmitting || !currentPassword || !newPassword || !confirmPassword}
           className="w-full lg:w-auto lg:self-end"
         >
           {t("profile.changePasswordAction")}

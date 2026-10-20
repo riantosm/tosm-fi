@@ -23,6 +23,7 @@ export function SettingsPage() {
   const { confirm } = useConfirmDialog();
   const { showToast } = useToast();
   const isAdmin = user.role === "admin";
+  const isDemo = user.isDemo === true;
 
   // Admins see how many registrations wait for approval. Refetched on every visit (not only the
   // first) so the badge drops right after approving someone, as on mobile.
@@ -123,7 +124,7 @@ export function SettingsPage() {
                 {t("settingsDanger.title")}
               </span>
               <span className="text-[13px] leading-relaxed text-text-2">
-                {t("settingsDanger.description")}
+                {t(isDemo ? "settingsDanger.demoLocked" : "settingsDanger.description")}
               </span>
             </span>
           </div>
@@ -132,6 +133,7 @@ export function SettingsPage() {
             variant="danger"
             leftIcon={<LuRotateCcw />}
             onClick={() => void handleResetData()}
+            disabled={isDemo}
             className="w-full shrink-0 lg:w-auto"
           >
             {t("settingsDanger.resetButton")}

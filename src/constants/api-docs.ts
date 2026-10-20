@@ -121,6 +121,7 @@ export const API_DOC_GROUPS: ApiDocGroup[] = [
               role: "admin",
               status: "active",
               createdAt: "2026-01-05T02:15:00.000Z",
+              isDemo: false,
             },
             isSuccess: true,
             status: 200,
@@ -158,6 +159,7 @@ export const API_DOC_GROUPS: ApiDocGroup[] = [
               role: "admin",
               status: "active",
               createdAt: "2026-01-05T02:15:00.000Z",
+              isDemo: false,
             },
             isSuccess: true,
             status: 200,
@@ -1857,10 +1859,10 @@ export const API_DOC_GROUPS: ApiDocGroup[] = [
         ),
         errorExample: JSON.stringify(
           {
-            message: "Unauthorized",
+            message: "Akun demo tidak bisa mereset data",
             data: {},
             isSuccess: false,
-            status: 401,
+            status: 403,
           },
           null,
           2,
