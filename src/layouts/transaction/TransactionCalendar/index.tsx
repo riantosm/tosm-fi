@@ -154,8 +154,10 @@ export function TransactionCalendar({
                   className={cn(
                     "group relative flex flex-col items-center gap-1 rounded-full transition-[background-color,border-color,transform] duration-200",
                     "h-11 pt-1 lg:h-[86px] lg:items-stretch lg:justify-between lg:rounded-control lg:border-2 lg:px-2.5 lg:py-2",
+                    // Selected = solid primary block; today = primary outline only, so the two
+                    // never look alike when both are on screen.
                     isSelected
-                      ? "lg:border-primary lg:bg-primary-soft"
+                      ? "lg:border-primary lg:bg-primary"
                       : isToday
                         ? "lg:border-primary lg:bg-surface-2"
                         : cn(
@@ -170,10 +172,11 @@ export function TransactionCalendar({
                   <span
                     className={cn(
                       "flex size-8 items-center justify-center rounded-full font-num text-[13.5px] transition-colors duration-200 lg:hidden",
-                      isToday
+                      // Same rule as desktop: selected is filled, today is only ringed.
+                      isSelected
                         ? "bg-primary font-semibold text-primary-fg"
-                        : isSelected
-                          ? "bg-primary-soft font-semibold text-primary-text ring-2 ring-primary"
+                        : isToday
+                          ? "font-semibold text-primary-text ring-2 ring-primary"
                           : "font-medium text-text group-hover:bg-surface-2",
                       isToday &&
                         isSelected &&
@@ -188,20 +191,32 @@ export function TransactionCalendar({
                     <span
                       className={cn(
                         "font-num text-[13.5px]",
-                        isToday || isSelected
-                          ? "font-semibold text-primary-text"
-                          : "font-medium text-text",
+                        isSelected
+                          ? "font-semibold text-primary-fg"
+                          : isToday
+                            ? "font-semibold text-primary-text"
+                            : "font-medium text-text",
                       )}
                     >
                       {day.date.getDate()}
                     </span>
                     {isToday && (
                       <>
-                        <span className="hidden truncate rounded-full bg-primary px-1.5 text-[10px] leading-[14px] font-semibold text-primary-fg xl:inline">
+                        <span
+                          className={cn(
+                            "hidden truncate rounded-full px-1.5 text-[10px] leading-[14px] font-semibold xl:inline",
+                            isSelected
+                              ? "bg-primary-fg text-primary"
+                              : "bg-primary text-primary-fg",
+                          )}
+                        >
                           {t("transaction.today")}
                         </span>
                         <span
-                          className="size-2 rounded-full bg-primary xl:hidden"
+                          className={cn(
+                            "size-2 rounded-full xl:hidden",
+                            isSelected ? "bg-primary-fg" : "bg-primary",
+                          )}
                           aria-label={t("transaction.today")}
                         />
                       </>
@@ -223,7 +238,11 @@ export function TransactionCalendar({
                         <span
                           className={cn(
                             "hidden max-w-full truncate font-num text-[12px] leading-none font-semibold tabular lg:block",
-                            aggregate.net > 0 ? "text-income-text" : "text-expense-text",
+                            isSelected
+                              ? "text-primary-fg"
+                              : aggregate.net > 0
+                                ? "text-income-text"
+                                : "text-expense-text",
                           )}
                         >
                           {signedCompact(aggregate.net)}

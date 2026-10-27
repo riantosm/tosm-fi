@@ -8,6 +8,7 @@ import { IconButton } from "@/components/atoms/IconButton";
 import { IconLoader } from "@/components/atoms/IconLoader";
 import { Reveal } from "@/components/atoms/Reveal";
 import { Card } from "@/components/molecules/Card";
+import { SegmentedControl } from "@/components/molecules/SegmentedControl";
 import { PageHeader } from "@/components/molecules/PageHeader";
 import { MonthTabs } from "@/layouts/transaction/MonthTabs";
 import { ActiveFilterBanner } from "@/layouts/transaction/ActiveFilterBanner";
@@ -29,6 +30,10 @@ import {
 } from "@/layouts/transaction/TransactionToolbar";
 import { TransactionSummaryBar } from "@/layouts/transaction/TransactionSummaryBar";
 import { TransactionCalendar } from "@/layouts/transaction/TransactionCalendar";
+import {
+  TransactionYearCalendar,
+  type YearMonthSummary,
+} from "@/layouts/transaction/TransactionYearCalendar";
 import { TransactionList } from "@/layouts/dashboard/TransactionList";
 import { AddTransactionModal } from "@/layouts/transaction/AddTransactionModal";
 import { BalanceCorrectionModal } from "@/layouts/wallet/BalanceCorrectionModal";
@@ -56,6 +61,24 @@ const EASE = [0.22, 1, 0.36, 1] as const;
 
 const SEARCH_DEBOUNCE_MS = 1000;
 const PAGE_SIZE = 20;
+
+type CalendarViewMode = "month" | "year";
+
+/** "YYYY-MM" when `range` covers exactly one whole calendar month, else null. */
+function wholeMonthOf(range: { from: string; to: string }): string | null {
+  if (!range.from || !range.to || !range.from.endsWith("-01")) return null;
+  const start = parseIsoDate(range.from);
+  const end = toIsoDate(new Date(start.getFullYear(), start.getMonth() + 1, 0));
+  return range.to === end ? range.from.slice(0, 7) : null;
+}
+
+function monthRangeOf(monthKey: string): { from: string; to: string } {
+  const start = parseIsoDate(`${monthKey}-01`);
+  return {
+    from: toIsoDate(start),
+    to: toIsoDate(new Date(start.getFullYear(), start.getMonth() + 1, 0)),
+  };
+}
 
 interface CorrectionState {
   wallet: WalletAccount;
@@ -116,9 +139,16 @@ export function TransactionsPage() {
   const focusSearchToken = shouldFocusSearch ? location.key : "";
 
   const months = useMemo(() => generateMonthRange(new Date(), 24, 12), []);
+  const years = useMemo(() => {
+    const currentYear = new Date().getFullYear();
+    return Array.from({ length: 7 }, (_, index) => new Date(currentYear - 5 + index, 0, 1));
+  }, []);
+  const [viewMode, setViewMode] = useState<CalendarViewMode>("month");
   const [selectedMonth, setSelectedMonth] = useState(() =>
     monthForRange(locationState?.dateFrom, locationState?.dateTo),
   );
+  const selectedYear = selectedMonth.getFullYear();
+  const isYearView = viewMode === "year";
   // Lets other pages (e.g. MonthlySummaryCard's Pemasukan/Pengeluaran rows, or the dashboard's
   // category breakdown chart) deep-link here with a type/category/subcategory already selected.
   // Read once at mount via the lazy initializer — navigating here from elsewhere always mounts a
@@ -167,6 +197,7 @@ export function TransactionsPage() {
 
   const [calendarTransactions, setCalendarTransactions] = useState<Transaction[]>([]);
   const [completedCalendarKey, setCompletedCalendarKey] = useState<string | null>(null);
+  const [yearMonths, setYearMonths] = useState<YearMonthSummary[]>([]);
 
   const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
   const [correctionState, setCorrectionState] = useState<CorrectionState | null>(null);
@@ -197,12 +228,13 @@ export function TransactionsPage() {
   const rangeSpansMonths =
     Boolean(dateRange.from && dateRange.to) &&
     dateRange.from.slice(0, 7) !== dateRange.to.slice(0, 7);
+  // The year view lists the whole year until a month (or any range) is picked.
   const filterParams: Omit<TransactionListParams, "page" | "limit"> = {
-    month: rangeSpansMonths ? undefined : formatMonthParam(selectedMonth),
+    month: isYearView || rangeSpansMonths ? undefined : formatMonthParam(selectedMonth),
     type: typeFilter !== "all" ? typeFilter : undefined,
     ...idFilterParams,
-    dateFrom: dateRange.from || undefined,
-    dateTo: dateRange.to || undefined,
+    dateFrom: dateRange.from || (isYearView ? `${selectedYear}-01-01` : undefined),
+    dateTo: dateRange.to || (isYearView ? `${selectedYear}-12-31` : undefined),
     search: debouncedSearch || undefined,
     sort,
   };
@@ -262,6 +294,8 @@ export function TransactionsPage() {
   // range pick that happens to be one day highlights the same cell too, so
   // there's only one source of truth for "which day is filtered".
   const selectedDay = dateRange.from && dateRange.from === dateRange.to ? dateRange.from : null;
+  // Same idea one level up: the year grid highlights a month whenever the range is that month.
+  const selectedYearMonth = wholeMonthOf(dateRange);
 
   function updateFilters(patch: Partial<TransactionFilters>) {
     setFilters((current) => ({ ...current, ...patch }));
@@ -276,6 +310,30 @@ export function TransactionsPage() {
   function handleSelectMonth(nextMonth: Date) {
     setSelectedMonth(nextMonth);
     updateFilters({ range: EMPTY_RANGE });
+  }
+
+  // Keeps the month-of-year so switching back to the month view lands on the same month.
+  function handleSelectYear(nextYear: Date) {
+    handleSelectMonth(new Date(nextYear.getFullYear(), selectedMonth.getMonth(), 1));
+  }
+
+  function handleSelectYearMonth(monthKey: string | null) {
+    updateFilters({ range: monthKey ? monthRangeOf(monthKey) : EMPTY_RANGE });
+  }
+
+  // Leaving the year view with a month picked opens that month's calendar.
+  function handleViewModeChange(nextMode: CalendarViewMode) {
+    setViewMode(nextMode);
+    if (nextMode === "month" && selectedYearMonth) {
+      handleSelectMonth(parseIsoDate(`${selectedYearMonth}-01`));
+    } else {
+      updateFilters({ range: EMPTY_RANGE });
+    }
+  }
+
+  function handleOpenMonth(month: Date) {
+    setViewMode("month");
+    handleSelectMonth(month);
   }
 
   // Independent of the paginated list above: fetches every transaction for
@@ -293,12 +351,38 @@ export function TransactionsPage() {
     ...idFilterParams,
     search: debouncedSearch || undefined,
   };
-  const calendarQueryKey = JSON.stringify({ ...calendarQueryParams, refreshToken });
+  const calendarQueryKey = JSON.stringify({ ...calendarQueryParams, viewMode, refreshToken });
 
   const isCalendarLoading = completedCalendarKey !== calendarQueryKey;
 
+  // The year grid only needs each month's totals, never its rows: one `limit: 1` query per month
+  // returns the server-side `summary` (and `total`) without shipping the year's transactions.
   useEffect(() => {
     let cancelled = false;
+
+    if (isYearView) {
+      const monthsOfYear = Array.from(
+        { length: 12 },
+        (_, index) => new Date(selectedYear, index, 1),
+      );
+      void Promise.all(
+        monthsOfYear.map((month) =>
+          queryTransactions({
+            ...calendarQueryParams,
+            month: formatMonthParam(month),
+            page: 1,
+            limit: 1,
+          }).then((result) => ({ month, summary: result.summary, count: result.total ?? 0 })),
+        ),
+      ).then((results) => {
+        if (cancelled) return;
+        setYearMonths(results);
+        setCompletedCalendarKey(calendarQueryKey);
+      });
+      return () => {
+        cancelled = true;
+      };
+    }
 
     void queryTransactions(calendarQueryParams).then((result) => {
       if (cancelled) return;
@@ -354,9 +438,9 @@ export function TransactionsPage() {
   }
 
   const locale = toIntlLocale(language);
-  const monthLabel = new Intl.DateTimeFormat(locale, { month: "long", year: "numeric" }).format(
-    selectedMonth,
-  );
+  const monthLabel = isYearView
+    ? String(selectedYear)
+    : new Intl.DateTimeFormat(locale, { month: "long", year: "numeric" }).format(selectedMonth);
   const subtitle =
     totalCount !== null
       ? `${monthLabel} · ${t("transaction.countLabel", { count: totalCount })}`
@@ -426,13 +510,40 @@ export function TransactionsPage() {
         )}
       </AnimatePresence>
 
-      <Reveal immediate>
-        <MonthTabs
-          months={months}
-          selected={selectedMonth}
-          onSelect={handleSelectMonth}
-          onGoToCurrent={() => handleSelectMonth(startOfMonth(new Date()))}
+      <Reveal immediate className="flex items-center gap-2">
+        <SegmentedControl<CalendarViewMode>
+          options={[
+            { value: "month", label: t("transaction.viewMonth") },
+            { value: "year", label: t("transaction.viewYear") },
+          ]}
+          value={viewMode}
+          onChange={handleViewModeChange}
+          variant="solid"
+          ariaLabel={t("transaction.calendarView")}
+          activeClassName="text-primary-text"
+          thumbClassName="bg-primary-soft shadow-none"
+          className="shrink-0"
         />
+        {isYearView ? (
+          <MonthTabs
+            key="year"
+            unit="year"
+            months={years}
+            selected={selectedMonth}
+            onSelect={handleSelectYear}
+            onGoToCurrent={() => handleSelectYear(new Date())}
+            className="min-w-0 flex-1"
+          />
+        ) : (
+          <MonthTabs
+            key="month"
+            months={months}
+            selected={selectedMonth}
+            onSelect={handleSelectMonth}
+            onGoToCurrent={() => handleSelectMonth(startOfMonth(new Date()))}
+            className="min-w-0 flex-1"
+          />
+        )}
       </Reveal>
 
       <Reveal immediate delay={0.05}>
@@ -454,14 +565,25 @@ export function TransactionsPage() {
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,1fr)_400px] lg:items-start xl:grid-cols-[minmax(0,1fr)_480px] 2xl:grid-cols-[minmax(0,1fr)_520px]">
         <Reveal delay={0.05}>
-          <TransactionCalendar
-            month={selectedMonth}
-            transactions={calendarTransactions}
-            categories={categories}
-            selectedDay={selectedDay}
-            onSelectDay={handleSelectDay}
-            isLoading={isCalendarLoading}
-          />
+          {isYearView ? (
+            <TransactionYearCalendar
+              year={selectedYear}
+              months={yearMonths}
+              selectedMonth={selectedYearMonth}
+              onSelectMonth={handleSelectYearMonth}
+              onOpenMonth={handleOpenMonth}
+              isLoading={isCalendarLoading}
+            />
+          ) : (
+            <TransactionCalendar
+              month={selectedMonth}
+              transactions={calendarTransactions}
+              categories={categories}
+              selectedDay={selectedDay}
+              onSelectDay={handleSelectDay}
+              isLoading={isCalendarLoading}
+            />
+          )}
         </Reveal>
 
         <Reveal delay={0.1}>

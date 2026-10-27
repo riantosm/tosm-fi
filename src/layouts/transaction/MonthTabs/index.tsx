@@ -13,8 +13,15 @@ interface MonthTabsProps {
   months: Date[];
   selected: Date;
   onSelect: (date: Date) => void;
-  /** "Bulan ini" shortcut. */
+  /** "Bulan ini" / "Tahun ini" shortcut. */
   onGoToCurrent?: () => void;
+  /** "year" turns the strip into a year strip (one tab per year, `months` = Jan 1 of each). */
+  unit?: "month" | "year";
+  className?: string;
+}
+
+function isSameYearAs(a: Date, b: Date): boolean {
+  return a.getFullYear() === b.getFullYear();
 }
 
 function formatMonthLabel(date: Date, locale: string, withYear: boolean): string {
@@ -22,8 +29,15 @@ function formatMonthLabel(date: Date, locale: string, withYear: boolean): string
   return withYear ? `${label} ${date.getFullYear()}` : label;
 }
 
-/** Scrollable month strip with a sliding primary pill (design 04 · MonthTabs). */
-export function MonthTabs({ months, selected, onSelect, onGoToCurrent }: MonthTabsProps) {
+/** Scrollable month (or year) strip with a sliding primary pill (design 04 · MonthTabs). */
+export function MonthTabs({
+  months,
+  selected,
+  onSelect,
+  onGoToCurrent,
+  unit = "month",
+  className,
+}: MonthTabsProps) {
   const { t } = useTranslation();
   const { language } = useLanguage();
   const locale = toIntlLocale(language);
@@ -32,7 +46,8 @@ export function MonthTabs({ months, selected, onSelect, onGoToCurrent }: MonthTa
   const selectedRef = useRef<HTMLButtonElement>(null);
   const isFirstCenter = useRef(true);
   const currentYear = new Date().getFullYear();
-  const isCurrentMonth = isSameMonthAs(selected, new Date());
+  const isSame = unit === "year" ? isSameYearAs : isSameMonthAs;
+  const isCurrent = isSame(selected, new Date());
 
   function centerSelected(behavior: ScrollBehavior) {
     const container = containerRef.current;
@@ -60,7 +75,7 @@ export function MonthTabs({ months, selected, onSelect, onGoToCurrent }: MonthTa
   }
 
   return (
-    <div className="flex items-center gap-2">
+    <div className={cn("flex items-center gap-2", className)}>
       <IconButton
         label={t("common.previous")}
         icon={<LuChevronLeft />}
@@ -75,7 +90,7 @@ export function MonthTabs({ months, selected, onSelect, onGoToCurrent }: MonthTa
         className="relative flex min-w-0 flex-1 gap-1 overflow-x-auto rounded-full bg-surface p-1 shadow-card scrollbar-hide"
       >
         {months.map((month) => {
-          const isSelected = isSameMonthAs(month, selected);
+          const isSelected = isSame(month, selected);
           return (
             <button
               key={month.toISOString()}
@@ -100,7 +115,13 @@ export function MonthTabs({ months, selected, onSelect, onGoToCurrent }: MonthTa
                 />
               )}
               <span className="relative z-10">
-                {formatMonthLabel(month, locale, isSelected || month.getFullYear() !== currentYear)}
+                {unit === "year"
+                  ? month.getFullYear()
+                  : formatMonthLabel(
+                      month,
+                      locale,
+                      isSelected || month.getFullYear() !== currentYear,
+                    )}
               </span>
             </button>
           );
@@ -123,9 +144,9 @@ export function MonthTabs({ months, selected, onSelect, onGoToCurrent }: MonthTa
           variant="soft"
           leftIcon={<LuCalendarCheck />}
           onClick={onGoToCurrent}
-          className={cn("shrink-0", isCurrentMonth && "max-lg:hidden")}
+          className={cn("shrink-0", isCurrent && "max-lg:hidden")}
         >
-          {t("transaction.goToCurrentMonth")}
+          {t(unit === "year" ? "transaction.goToCurrentYear" : "transaction.goToCurrentMonth")}
         </Button>
       )}
     </div>
