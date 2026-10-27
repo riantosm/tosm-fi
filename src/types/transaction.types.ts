@@ -20,13 +20,24 @@ export type TransactionInput = Omit<Transaction, "idTransaction">;
 
 export type TransactionSortOption = "dateDesc" | "dateAsc" | "amountDesc" | "amountAsc";
 
+export type TransactionFilterMode = "include" | "exclude";
+
 export interface TransactionListParams {
   /** "YYYY-MM" */
   month?: string;
   type?: TransactionType;
+  /** One id or a comma-separated list. */
   idWallet?: string;
+  /** Default "include"; "exclude" hides transactions touching any `idWallet`. */
+  walletMode?: TransactionFilterMode;
+  /** One id or a comma-separated list. */
   idCategory?: string;
+  /** Default "include"; "exclude" hides transactions in any `idCategory`. */
+  categoryMode?: TransactionFilterMode;
+  /** One id or a comma-separated list. */
   idSubCategory?: string;
+  /** Default "include"; "exclude" hides transactions in any `idSubCategory`. */
+  subCategoryMode?: TransactionFilterMode;
   /** "YYYY-MM-DD" */
   dateFrom?: string;
   /** "YYYY-MM-DD" */

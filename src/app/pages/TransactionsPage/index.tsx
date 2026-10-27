@@ -18,6 +18,7 @@ import {
 import {
   DEFAULT_FILTERS,
   EMPTY_RANGE,
+  buildIdFilterParams,
   countActiveFilters,
   type TransactionFilters,
   type TransactionTypeFilter,
@@ -105,10 +106,11 @@ export function TransactionsPage() {
   const [filters, setFilters] = useState<TransactionFilters>(() => ({
     ...DEFAULT_FILTERS,
     type: locationState?.typeFilter ?? "all",
-    categoryId: locationState?.categoryFilter ?? "all",
-    subCategoryId: locationState?.subCategoryFilter ?? "all",
+    categoryIds: locationState?.categoryFilter ? [locationState.categoryFilter] : [],
+    subCategoryIds: locationState?.subCategoryFilter ? [locationState.subCategoryFilter] : [],
   }));
-  const { type: typeFilter, walletId, categoryId, subCategoryId, range: dateRange, sort } = filters;
+  const { type: typeFilter, range: dateRange, sort } = filters;
+  const idFilterParams = buildIdFilterParams(filters);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
@@ -164,9 +166,7 @@ export function TransactionsPage() {
   const filterParams: Omit<TransactionListParams, "page" | "limit"> = {
     month: formatMonthParam(selectedMonth),
     type: typeFilter !== "all" ? typeFilter : undefined,
-    idWallet: walletId !== "all" ? walletId : undefined,
-    idCategory: categoryId !== "all" ? categoryId : undefined,
-    idSubCategory: subCategoryId !== "all" ? subCategoryId : undefined,
+    ...idFilterParams,
     dateFrom: dateRange.from || undefined,
     dateTo: dateRange.to || undefined,
     search: debouncedSearch || undefined,
@@ -256,9 +256,7 @@ export function TransactionsPage() {
   > = {
     month: formatMonthParam(selectedMonth),
     type: typeFilter !== "all" ? typeFilter : undefined,
-    idWallet: walletId !== "all" ? walletId : undefined,
-    idCategory: categoryId !== "all" ? categoryId : undefined,
-    idSubCategory: subCategoryId !== "all" ? subCategoryId : undefined,
+    ...idFilterParams,
     search: debouncedSearch || undefined,
   };
   const calendarQueryKey = JSON.stringify({ ...calendarQueryParams, refreshToken });
@@ -309,9 +307,9 @@ export function TransactionsPage() {
   const displaySortConfig = DISPLAY_SORT_CONFIG[sort];
   const hasActiveFilter =
     typeFilter !== "all" ||
-    walletId !== "all" ||
-    categoryId !== "all" ||
-    subCategoryId !== "all" ||
+    filters.walletIds.length > 0 ||
+    filters.categoryIds.length > 0 ||
+    filters.subCategoryIds.length > 0 ||
     Boolean(searchQuery) ||
     Boolean(dateRange.from || dateRange.to);
   const activeFilterCount = countActiveFilters(filters);

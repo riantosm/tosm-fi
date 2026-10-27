@@ -9,10 +9,25 @@ export interface OccurrenceViewFilter {
   dateFrom?: string; // "YYYY-MM-DD"
   dateTo?: string; // "YYYY-MM-DD"
   type?: string;
-  idWallet?: string;
-  idCategory?: string;
-  idSubCategory?: string;
+  idWallet?: string; // one id or a comma-separated list
+  walletMode?: "include" | "exclude";
+  idCategory?: string; // one id or a comma-separated list
+  categoryMode?: "include" | "exclude";
+  idSubCategory?: string; // one id or a comma-separated list
+  subCategoryMode?: "include" | "exclude";
   search?: string;
+}
+
+// Same semantics as the backend's list filter: include keeps only ids in the
+// list, exclude drops them (and keeps a null id, like Mongo's $nin).
+function matchesIdList(
+  id: string | null,
+  list: string | undefined,
+  mode: "include" | "exclude" = "include",
+): boolean {
+  if (!list) return true;
+  const isListed = id !== null && list.split(",").includes(id);
+  return mode === "exclude" ? !isListed : isListed;
 }
 
 export function filterOccurrencesForView(
@@ -29,9 +44,11 @@ export function filterOccurrencesForView(
     if (filter.dateFrom && dueDateKey < filter.dateFrom) return false;
     if (filter.dateTo && dueDateKey > filter.dateTo) return false;
     if (filter.type && occurrence.type !== filter.type) return false;
-    if (filter.idWallet && occurrence.idWallet !== filter.idWallet) return false;
-    if (filter.idCategory && occurrence.idCategory !== filter.idCategory) return false;
-    if (filter.idSubCategory && occurrence.idSubCategory !== filter.idSubCategory) return false;
+    if (!matchesIdList(occurrence.idWallet, filter.idWallet, filter.walletMode)) return false;
+    if (!matchesIdList(occurrence.idCategory, filter.idCategory, filter.categoryMode)) return false;
+    if (!matchesIdList(occurrence.idSubCategory, filter.idSubCategory, filter.subCategoryMode)) {
+      return false;
+    }
     if (filter.search && !occurrence.title.toLowerCase().includes(filter.search.toLowerCase())) {
       return false;
     }

@@ -7,6 +7,7 @@ import {
   EMPTY_RANGE,
   TYPE_FILTERS,
   formatRangeLabel,
+  getSubCategoryParent,
   type TransactionFilters,
 } from "@/layouts/transaction/transaction-filters";
 import type { Category } from "@/types/category.types";
@@ -45,32 +46,65 @@ export function ActiveFilterBanner({
   onReset,
 }: ActiveFilterBannerProps) {
   const { t } = useTranslation();
-  const wallet = wallets.find((item) => item.idWallet === filters.walletId);
   const typeFilter = TYPE_FILTERS.find((item) => item.value === filters.type);
-  const category = categories.find((item) => item.idCategory === filters.categoryId);
-  const sub = category?.subCategories.find((item) => item.idSubCategory === filters.subCategoryId);
+  const subParent = categories.find((item) => item.idCategory === getSubCategoryParent(filters));
+
+  // "GoPay, BCA +2", prefixed "Kecuali …" in exclude mode.
+  function formatSelection(names: string[], mode: TransactionFilters["walletMode"]): string {
+    if (names.length === 0) return "";
+    const shown = names.slice(0, 2).join(", ");
+    const label =
+      names.length > 2
+        ? `${shown} ${t("transaction.moreCount", { count: names.length - 2 })}`
+        : shown;
+    return mode === "exclude" ? t("transaction.excludeLabel", { names: label }) : label;
+  }
+  const walletLabel = formatSelection(
+    wallets
+      .filter((item) => filters.walletIds.includes(item.idWallet))
+      .map((item) => item.nameWallet),
+    filters.walletMode,
+  );
+  const categoryLabel = formatSelection(
+    categories
+      .filter((item) => filters.categoryIds.includes(item.idCategory))
+      .map((item) => item.nameCategory),
+    filters.categoryMode,
+  );
+  const subCategoryLabel = formatSelection(
+    (subParent?.subCategories ?? [])
+      .filter((item) => filters.subCategoryIds.includes(item.idSubCategory))
+      .map((item) => item.nameSubCategory),
+    filters.subCategoryMode,
+  );
   const rangeLabel = formatRangeLabel(filters.range, locale);
 
   const items = [
-    wallet && {
+    walletLabel && {
       key: "wallet",
-      label: wallet.nameWallet,
-      onRemove: () => onChange({ walletId: "all" }),
+      label: walletLabel,
+      onRemove: () => onChange({ walletIds: [], walletMode: "include" }),
     },
     typeFilter && {
       key: "type",
       label: t(typeFilter.labelKey),
       onRemove: () => onChange({ type: "all" }),
     },
-    category && {
+    categoryLabel && {
       key: "category",
-      label: category.nameCategory,
-      onRemove: () => onChange({ categoryId: "all", subCategoryId: "all" }),
+      label: categoryLabel,
+      onRemove: () =>
+        onChange({
+          categoryIds: [],
+          categoryMode: "include",
+          subCategoryIds: [],
+          subCategoryMode: "include",
+        }),
     },
-    sub && {
+    subCategoryLabel && {
       key: "sub",
-      label: sub.nameSubCategory,
-      onRemove: () => onChange({ subCategoryId: "all" }),
+      label: subCategoryLabel,
+      onRemove: () => onChange({ subCategoryIds: [], subCategoryMode: "include" }),
     },
     search && { key: "search", label: `“${search}”`, onRemove: onClearSearch },
     rangeLabel && {

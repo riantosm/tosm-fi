@@ -16,18 +16,22 @@ import { IconButton } from "@/components/atoms/IconButton";
 import { Chip } from "@/components/molecules/Chip";
 import { Modal, ModalActions } from "@/components/molecules/Modal";
 import { PickerField } from "@/components/molecules/PickerField";
+import { SegmentedControl } from "@/components/molecules/SegmentedControl";
 import { resolveCategoryIcon } from "@/constants/category-icons";
 import { DateRangeFields } from "@/layouts/transaction/DateRangeFields";
 import {
   DEFAULT_FILTERS,
   TYPE_FILTERS,
   formatRangeLabel,
+  getSubCategoryParent,
+  toggleId,
   type TransactionFilters,
 } from "@/layouts/transaction/transaction-filters";
 import type { TransactionSortOption } from "@/layouts/transaction/TransactionToolbar";
 import { useDialogSession } from "@/hooks/use-dialog-session";
 import { cn } from "@/utils/cn";
 import type { Category } from "@/types/category.types";
+import type { TransactionFilterMode } from "@/types/transaction.types";
 import type { WalletAccount } from "@/types/wallet.types";
 
 type IconComponent = ComponentType<{ className?: string }>;
@@ -103,14 +107,47 @@ export function TransactionFilterButton({
   );
 }
 
-function Section({ title, children }: { title: string; children: ReactNode }) {
+function Section({
+  title,
+  action,
+  children,
+}: {
+  title: string;
+  /** Right-aligned control on the title row. */
+  action?: ReactNode;
+  children: ReactNode;
+}) {
   return (
     <section className="flex flex-col gap-2.5">
-      <h3 className="text-[11.5px] font-semibold tracking-[0.08em] text-text-3 uppercase">
-        {title}
-      </h3>
+      <div className="flex min-h-[30px] items-center justify-between gap-3">
+        <h3 className="text-[11.5px] font-semibold tracking-[0.08em] text-text-3 uppercase">
+          {title}
+        </h3>
+        {action}
+      </div>
       {children}
     </section>
+  );
+}
+
+/** "Termasuk / Kecuali" toggle for a multi-select section. */
+function ModeToggle({
+  value,
+  onChange,
+}: {
+  value: TransactionFilterMode;
+  onChange: (mode: TransactionFilterMode) => void;
+}) {
+  const { t } = useTranslation();
+  return (
+    <SegmentedControl
+      options={[
+        { value: "include", label: t("transaction.filterInclude") },
+        { value: "exclude", label: t("transaction.filterExclude") },
+      ]}
+      value={value}
+      onChange={onChange}
+    />
   );
 }
 
@@ -130,6 +167,7 @@ interface TransactionFilterSheetProps {
 
 /**
  * Transactions filter sheet: wallet, type, category → subcategory, date range, sort.
+ * Wallets and categories are multi-select, each with an include/exclude mode.
  * Choices stay a draft until "Terapkan", so the list doesn't refetch on every chip tap.
  */
 export function TransactionFilterSheet(props: TransactionFilterSheetProps) {
@@ -154,7 +192,16 @@ function FilterSheetDialog({
 
   const set = (patch: Partial<TransactionFilters>) =>
     setDraft((current) => ({ ...current, ...patch }));
-  const category = categories.find((item) => item.idCategory === draft.categoryId);
+  const subCategoryParent = getSubCategoryParent(draft);
+  const category = categories.find((item) => item.idCategory === subCategoryParent);
+  // Subcategories only survive while their single included category does.
+  const setCategories = (patch: Pick<TransactionFilters, "categoryIds" | "categoryMode">) => {
+    const next = { ...draft, ...patch };
+    set({
+      ...patch,
+      subCategoryIds: getSubCategoryParent(next) === subCategoryParent ? draft.subCategoryIds : [],
+    });
+  };
 
   // Keep the last category's subcategories rendered while the row animates closed.
   const [renderedCategory, setRenderedCategory] = useState(category);
@@ -187,17 +234,22 @@ function FilterSheetDialog({
         }
       >
         <div className="flex flex-col gap-5">
-          <Section title={t("transaction.filterWallet")}>
+          <Section
+            title={t("transaction.filterWallet")}
+            action={
+              <ModeToggle value={draft.walletMode} onChange={(walletMode) => set({ walletMode })} />
+            }
+          >
             <div className="flex flex-wrap gap-2">
-              <Chip active={draft.walletId === "all"} onClick={() => set({ walletId: "all" })}>
+              <Chip active={draft.walletIds.length === 0} onClick={() => set({ walletIds: [] })}>
                 {t("transaction.allWallets")}
               </Chip>
               {wallets.map((wallet) => (
                 <Chip
                   key={wallet.idWallet}
-                  active={draft.walletId === wallet.idWallet}
+                  active={draft.walletIds.includes(wallet.idWallet)}
                   dot={wallet.color}
-                  onClick={() => set({ walletId: wallet.idWallet })}
+                  onClick={() => set({ walletIds: toggleId(draft.walletIds, wallet.idWallet) })}
                   className="max-w-[220px]"
                 >
                   {wallet.nameWallet}
@@ -224,20 +276,35 @@ function FilterSheetDialog({
             </div>
           </Section>
 
-          <Section title={t("transaction.filterCategory")}>
+          <Section
+            title={t("transaction.filterCategory")}
+            action={
+              <ModeToggle
+                value={draft.categoryMode}
+                onChange={(categoryMode) =>
+                  setCategories({ categoryIds: draft.categoryIds, categoryMode })
+                }
+              />
+            }
+          >
             <div className="flex flex-wrap gap-2">
               <Chip
-                active={draft.categoryId === "all"}
-                onClick={() => set({ categoryId: "all", subCategoryId: "all" })}
+                active={draft.categoryIds.length === 0}
+                onClick={() => setCategories({ categoryIds: [], categoryMode: draft.categoryMode })}
               >
                 {t("transaction.allCategories")}
               </Chip>
               {categories.map((item) => (
                 <Chip
                   key={item.idCategory}
-                  active={draft.categoryId === item.idCategory}
+                  active={draft.categoryIds.includes(item.idCategory)}
                   icon={createElement(resolveCategoryIcon(item.icon))}
-                  onClick={() => set({ categoryId: item.idCategory, subCategoryId: "all" })}
+                  onClick={() =>
+                    setCategories({
+                      categoryIds: toggleId(draft.categoryIds, item.idCategory),
+                      categoryMode: draft.categoryMode,
+                    })
+                  }
                   className="max-w-[220px]"
                 >
                   {item.nameCategory}
@@ -257,21 +324,33 @@ function FilterSheetDialog({
                 className="-mt-5 overflow-hidden"
               >
                 <div className="pt-5">
-                  <Section title={t("transaction.filterSubCategory")}>
+                  <Section
+                    title={t("transaction.filterSubCategory")}
+                    action={
+                      <ModeToggle
+                        value={draft.subCategoryMode}
+                        onChange={(subCategoryMode) => set({ subCategoryMode })}
+                      />
+                    }
+                  >
                     <div className="flex flex-wrap gap-2">
                       <Chip
-                        active={draft.subCategoryId === "all"}
+                        active={draft.subCategoryIds.length === 0}
                         icon={<LuLayers />}
-                        onClick={() => set({ subCategoryId: "all" })}
+                        onClick={() => set({ subCategoryIds: [] })}
                       >
                         {t("transaction.allSub")}
                       </Chip>
                       {renderedCategory.subCategories.map((sub) => (
                         <Chip
                           key={sub.idSubCategory}
-                          active={draft.subCategoryId === sub.idSubCategory}
+                          active={draft.subCategoryIds.includes(sub.idSubCategory)}
                           icon={createElement(resolveCategoryIcon(sub.icon))}
-                          onClick={() => set({ subCategoryId: sub.idSubCategory })}
+                          onClick={() =>
+                            set({
+                              subCategoryIds: toggleId(draft.subCategoryIds, sub.idSubCategory),
+                            })
+                          }
                           className="max-w-[220px]"
                         >
                           {sub.nameSubCategory}
