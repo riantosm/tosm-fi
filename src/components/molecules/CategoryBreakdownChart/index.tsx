@@ -39,6 +39,15 @@ interface CategoryBreakdownChartProps {
    * "Other" bucket inside a drilled-in category (it has no real subcategory id
    * to navigate with, only the parent category). */
   onSelectCategory?: (categorySlice: ChartSlice) => void;
+  /** Overrides `onSelectCategory` for the "Other" bucket inside a drilled-in category
+   * (Reports: only the transactions without a subcategory). */
+  onSelectOtherSubCategory?: (categorySlice: ChartSlice) => void;
+  /** Header link shown instead of `actionLabel` while drilled into a category
+   * (Reports' "Lihat detail" → every transaction of that category). */
+  drillActionLabel?: string;
+  onDrillAction?: (categorySlice: ChartSlice) => void;
+  /** Category to start drilled into — Reports restores it when the user comes back. */
+  defaultExpandedCategoryId?: string | null;
   className?: string;
 }
 
@@ -50,10 +59,9 @@ interface SliceTileProps {
   value: string;
   onClick?: () => void;
   onHoverChange: (isHovering: boolean) => void;
-  hasChildren: boolean;
 }
 
-function SliceTile({ slice, name, value, onClick, onHoverChange, hasChildren }: SliceTileProps) {
+function SliceTile({ slice, name, value, onClick, onHoverChange }: SliceTileProps) {
   const Tag = onClick ? "button" : "div";
   const Icon = slice.icon ? resolveCategoryIcon(slice.icon) : LuTag;
 
@@ -85,7 +93,8 @@ function SliceTile({ slice, name, value, onClick, onHoverChange, hasChildren }: 
       <span className="shrink-0 text-[12.5px] font-semibold text-text-3 tabular">
         {Math.round(slice.percentage)}%
       </span>
-      {hasChildren && (
+      {/* Every clickable tile (drill in, or open Transactions) gets the arrow. */}
+      {onClick && (
         <LuChevronRight className="-ml-1 size-3.5 shrink-0 text-text-3 transition-transform duration-200 group-hover:translate-x-0.5" />
       )}
     </Tag>
@@ -105,11 +114,17 @@ export function CategoryBreakdownChart({
   emptyTitle,
   onSelectSubCategory,
   onSelectCategory,
+  onSelectOtherSubCategory,
+  drillActionLabel,
+  onDrillAction,
+  defaultExpandedCategoryId = null,
   className,
 }: CategoryBreakdownChartProps) {
   const { t } = useTranslation();
   const { formatNumber, formatCompact } = useMoneyFormat();
-  const [expandedCategoryId, setExpandedCategoryId] = useState<string | null>(null);
+  const [expandedCategoryId, setExpandedCategoryId] = useState<string | null>(
+    defaultExpandedCategoryId,
+  );
   const [hoveredSliceId, setHoveredSliceId] = useState<string | null>(null);
 
   const expandedCategory = expandedCategoryId
@@ -136,7 +151,8 @@ export function CategoryBreakdownChart({
       return canDrill || onSelectCategory ? () => handleCategoryClick(slice) : undefined;
     }
     if (slice.id === OTHER_SUB_CATEGORY_ID) {
-      return onSelectCategory ? () => onSelectCategory(expandedCategory) : undefined;
+      const selectOther = onSelectOtherSubCategory ?? onSelectCategory;
+      return selectOther ? () => selectOther(expandedCategory) : undefined;
     }
     return onSelectSubCategory ? () => onSelectSubCategory(slice, expandedCategory) : undefined;
   }
@@ -147,8 +163,9 @@ export function CategoryBreakdownChart({
         eyebrow={periodLabel}
         title={title}
         right={headerAction}
-        actionLabel={actionLabel}
-        onAction={onAction}
+        {...(expandedCategory && drillActionLabel && onDrillAction
+          ? { actionLabel: drillActionLabel, onAction: () => onDrillAction(expandedCategory) }
+          : { actionLabel, onAction })}
       />
 
       {isInitialLoading ? (
@@ -231,7 +248,6 @@ export function CategoryBreakdownChart({
                       name={nameOf(slice)}
                       value={formatNumber(slice.total)}
                       onClick={tileClickFor(slice)}
-                      hasChildren={!expandedCategory && (slice.subSlices?.length ?? 0) > 0}
                       onHoverChange={(isHovering) =>
                         setHoveredSliceId(isHovering ? slice.id : null)
                       }

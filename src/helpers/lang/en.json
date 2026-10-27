@@ -1011,6 +1011,9 @@
     "expenseByCategory": {
       "title": "Spending by category"
     },
+    "categoryDetail": {
+      "seeDetail": "See details"
+    },
     "monthlyTrend": {
       "title": "Monthly Trend",
       "metrics": {

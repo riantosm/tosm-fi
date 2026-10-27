@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { useLocation, useNavigate } from "react-router-dom";
 import { Reveal } from "@/components/atoms/Reveal";
 import { CategoryBreakdownChart } from "@/components/molecules/CategoryBreakdownChart";
 import { PageHeader } from "@/components/molecules/PageHeader";
@@ -14,7 +15,12 @@ import { useReports } from "@/hooks/use-reports";
 import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/hooks/use-language";
 import { useCurrency } from "@/hooks/use-currency";
-import { buildCategoryBreakdown } from "@/utils/category-breakdown";
+import { ROUTES } from "@/constants/routes";
+import {
+  OTHER_SUB_CATEGORY_ID,
+  buildCategoryBreakdown,
+  type CategorySlice,
+} from "@/utils/category-breakdown";
 import { toIntlLocale } from "@/utils/locale";
 import { parseIsoDateLocal } from "@/utils/report-period";
 import type { ExportDocument } from "@/utils/report-export-types";
@@ -26,6 +32,12 @@ import type {
 
 const MONTHLY_TREND_MONTHS_COUNT = 12;
 
+/** Saved on this page's history entry before jumping to Transactions, so Back restores it. */
+interface ReportsPageLocationState {
+  period?: ReportPeriodFilterValue;
+  expandedCategoryId?: string | null;
+}
+
 type ExportFormat = Exclude<ReportExportFormat, "print">;
 
 export function ReportsPage() {
@@ -34,12 +46,18 @@ export function ReportsPage() {
   const locale = toIntlLocale(language);
   const { format: formatCurrency } = useCurrency();
   const { showToast } = useToast();
+  const navigate = useNavigate();
+  const location = useLocation();
+  const restoredState = location.state as ReportsPageLocationState | null;
 
-  const [period, setPeriod] = useState<ReportPeriodFilterValue>({
-    preset: "month",
-    dateFrom: "",
-    dateTo: "",
-  });
+  const [period, setPeriod] = useState<ReportPeriodFilterValue>(
+    () =>
+      restoredState?.period ?? {
+        preset: "month",
+        dateFrom: "",
+        dateTo: "",
+      },
+  );
   const [monthlyTrendMetric, setMonthlyTrendMetric] = useState<MonthlyTrendMetric>("expense");
   const [exportingFormat, setExportingFormat] = useState<ExportFormat | null>(null);
 
@@ -256,6 +274,31 @@ export function ReportsPage() {
     [categoryBreakdown],
   );
 
+  /**
+   * Opens Transactions filtered to one category (optionally narrowed to a subcategory) over the
+   * report period. This page's period and drilled-in category are first saved onto its own
+   * history entry, so the browser's Back lands on the same view instead of the defaults.
+   */
+  function openCategoryTransactions(
+    category: CategorySlice,
+    narrow: { subCategoryFilter?: string; subCategoryExcludeFilter?: string[] } = {},
+    expandedCategoryId: string | null = category.id,
+  ) {
+    navigate(ROUTES.REPORTS, {
+      replace: true,
+      state: { period, expandedCategoryId } satisfies ReportsPageLocationState,
+    });
+    navigate(ROUTES.TRANSACTIONS, {
+      state: {
+        typeFilter: "expense",
+        categoryFilter: category.id,
+        ...narrow,
+        dateFrom: resolvedPeriod.dateFrom,
+        dateTo: resolvedPeriod.dateTo,
+      },
+    });
+  }
+
   return (
     <div className="flex flex-col gap-4 lg:gap-5">
       <PageHeader
@@ -297,6 +340,22 @@ export function ReportsPage() {
             // The report period may be a day, week or year, not just "this month".
             emptyTitle={t("reports.topSpending.empty")}
             className="h-full"
+            defaultExpandedCategoryId={restoredState?.expandedCategoryId}
+            onSelectSubCategory={(sub, category) =>
+              openCategoryTransactions(category, { subCategoryFilter: sub.id })
+            }
+            // A category without subcategories has nothing to drill into — open it directly.
+            onSelectCategory={(category) => openCategoryTransactions(category, {}, null)}
+            // "Other" = only the transactions without a subcategory.
+            onSelectOtherSubCategory={(category) =>
+              openCategoryTransactions(category, {
+                subCategoryExcludeFilter: (category.subSlices ?? [])
+                  .filter((sub) => sub.id !== OTHER_SUB_CATEGORY_ID)
+                  .map((sub) => sub.id),
+              })
+            }
+            drillActionLabel={t("reports.categoryDetail.seeDetail")}
+            onDrillAction={(category) => openCategoryTransactions(category)}
           />
         </Reveal>
         <Reveal delay={0.04} className="min-w-0 lg:col-start-1 lg:row-start-2">

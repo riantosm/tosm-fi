@@ -43,6 +43,7 @@ import { useScheduleOccurrences } from "@/hooks/use-schedule-occurrences";
 import { useScheduleOccurrenceActions } from "@/hooks/use-schedule-occurrence-actions";
 import { toIntlLocale } from "@/utils/locale";
 import { formatMonthParam, generateMonthRange, startOfMonth } from "@/utils/month";
+import { parseIsoDate, toIsoDate } from "@/utils/calendar";
 import { filterOccurrencesForView } from "@/utils/schedule-occurrence-filter";
 import type {
   Transaction,
@@ -66,6 +67,23 @@ interface TransactionsPageLocationState {
   typeFilter?: TransactionTypeFilter;
   categoryFilter?: string;
   subCategoryFilter?: string;
+  /** Reports' "Other" subcategory bucket: hide every named subcategory of `categoryFilter`. */
+  subCategoryExcludeFilter?: string[];
+  /** "YYYY-MM-DD" range — the report period the user came from. */
+  dateFrom?: string;
+  dateTo?: string;
+}
+
+/**
+ * Month to open on for a deep-linked range: the current month when today falls inside the range,
+ * otherwise the range's last month.
+ */
+function monthForRange(dateFrom?: string, dateTo?: string): Date {
+  const today = new Date();
+  if (!dateFrom) return startOfMonth(today);
+  const end = dateTo ?? dateFrom;
+  const todayIso = toIsoDate(today);
+  return startOfMonth(dateFrom <= todayIso && todayIso <= end ? today : parseIsoDate(end));
 }
 
 interface DisplaySortConfig {
@@ -98,17 +116,28 @@ export function TransactionsPage() {
   const focusSearchToken = shouldFocusSearch ? location.key : "";
 
   const months = useMemo(() => generateMonthRange(new Date(), 24, 12), []);
-  const [selectedMonth, setSelectedMonth] = useState(() => startOfMonth(new Date()));
+  const [selectedMonth, setSelectedMonth] = useState(() =>
+    monthForRange(locationState?.dateFrom, locationState?.dateTo),
+  );
   // Lets other pages (e.g. MonthlySummaryCard's Pemasukan/Pengeluaran rows, or the dashboard's
   // category breakdown chart) deep-link here with a type/category/subcategory already selected.
   // Read once at mount via the lazy initializer — navigating here from elsewhere always mounts a
   // fresh TransactionsPage instance, so this never goes stale.
-  const [filters, setFilters] = useState<TransactionFilters>(() => ({
-    ...DEFAULT_FILTERS,
-    type: locationState?.typeFilter ?? "all",
-    categoryIds: locationState?.categoryFilter ? [locationState.categoryFilter] : [],
-    subCategoryIds: locationState?.subCategoryFilter ? [locationState.subCategoryFilter] : [],
-  }));
+  const [filters, setFilters] = useState<TransactionFilters>(() => {
+    const excluded = locationState?.subCategoryExcludeFilter ?? [];
+    const dateFrom = locationState?.dateFrom;
+    return {
+      ...DEFAULT_FILTERS,
+      type: locationState?.typeFilter ?? "all",
+      categoryIds: locationState?.categoryFilter ? [locationState.categoryFilter] : [],
+      subCategoryIds: locationState?.subCategoryFilter
+        ? [locationState.subCategoryFilter]
+        : excluded,
+      subCategoryMode:
+        !locationState?.subCategoryFilter && excluded.length > 0 ? "exclude" : "include",
+      range: dateFrom ? { from: dateFrom, to: locationState?.dateTo ?? dateFrom } : EMPTY_RANGE,
+    };
+  });
   const { type: typeFilter, range: dateRange, sort } = filters;
   const idFilterParams = buildIdFilterParams(filters);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
@@ -163,8 +192,13 @@ export function TransactionsPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // The backend intersects `month` with dateFrom/dateTo, so a range crossing a month boundary
+  // (a week/year/custom report period) drops `month` to show the whole range.
+  const rangeSpansMonths =
+    Boolean(dateRange.from && dateRange.to) &&
+    dateRange.from.slice(0, 7) !== dateRange.to.slice(0, 7);
   const filterParams: Omit<TransactionListParams, "page" | "limit"> = {
-    month: formatMonthParam(selectedMonth),
+    month: rangeSpansMonths ? undefined : formatMonthParam(selectedMonth),
     type: typeFilter !== "all" ? typeFilter : undefined,
     ...idFilterParams,
     dateFrom: dateRange.from || undefined,

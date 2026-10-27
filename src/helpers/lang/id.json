@@ -1011,6 +1011,9 @@
     "expenseByCategory": {
       "title": "Pengeluaran berdasarkan kategori"
     },
+    "categoryDetail": {
+      "seeDetail": "Lihat detail"
+    },
     "monthlyTrend": {
       "title": "Tren Bulanan",
       "metrics": {
