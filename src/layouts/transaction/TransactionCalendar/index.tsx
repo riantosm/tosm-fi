@@ -63,9 +63,10 @@ export function TransactionCalendar({
   const year = month.getFullYear();
   const monthIndex = month.getMonth();
   const todayIso = toIsoDate(new Date());
-  const weeks = useMemo(() => buildMonthWeeks(year, monthIndex), [year, monthIndex]);
-  const weekdayLabels = useMemo(() => getWeekdayLabels(locale), [locale]);
-  const narrowLabels = useMemo(() => getWeekdayLabels(locale, "narrow"), [locale]);
+  // Unlike the date pickers, this calendar starts its weeks on Sunday (M S S R K J S).
+  const weeks = useMemo(() => buildMonthWeeks(year, monthIndex, "sunday"), [year, monthIndex]);
+  const weekdayLabels = useMemo(() => getWeekdayLabels(locale, "short", "sunday"), [locale]);
+  const narrowLabels = useMemo(() => getWeekdayLabels(locale, "narrow", "sunday"), [locale]);
 
   const aggregates = useMemo(() => {
     const colorOf = new Map(categories.map((category) => [category.idCategory, category.color]));
@@ -102,7 +103,14 @@ export function TransactionCalendar({
 
       <div className="grid grid-cols-7 gap-1.5">
         {weekdayLabels.map((label, index) => (
-          <span key={label + index} className="text-center text-[12px] font-semibold text-text-3">
+          <span
+            key={label + index}
+            className={cn(
+              "text-center text-[12px] font-semibold text-text-3",
+              // Sunday-first: Minggu & Sabtu are the outer columns — dimmed as the weekend.
+              (index === 0 || index === 6) && "opacity-50",
+            )}
+          >
             <span className="lg:hidden">{narrowLabels[index]}</span>
             <span className="hidden lg:inline">{label.replace(".", "")}</span>
           </span>
