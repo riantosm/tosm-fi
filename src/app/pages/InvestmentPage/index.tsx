@@ -42,6 +42,7 @@ import {
 import { InvestmentTransactionList } from "@/layouts/investment/InvestmentTransactionList";
 import { EditInvestmentTransactionModal } from "@/layouts/investment/EditInvestmentTransactionModal";
 import { TransactionSearchField } from "@/layouts/transaction/TransactionToolbar";
+import { useUpgrade } from "@/hooks/use-upgrade";
 import { useInstruments } from "@/hooks/use-instruments";
 import { useInstrumentViewMode } from "@/hooks/use-instrument-view-mode";
 import { useInvestmentTransactions } from "@/hooks/use-investment-transactions";
@@ -104,6 +105,7 @@ export function InvestmentPage() {
     editInvestmentAccount,
     deleteInvestmentAccount,
   } = useInstruments();
+  const { guardLimit } = useUpgrade();
   const { investmentTransactions, queryInvestmentTransactions, fetchTimelines } =
     useInvestmentTransactions();
   const { confirm } = useConfirmDialog();
@@ -451,7 +453,10 @@ export function InvestmentPage() {
   const subtitle = isEmpty
     ? t("investment.noInstruments")
     : `${t("investment.instrumentCount", { count: instruments.length })} · ${t("investment.accountsShort", { count: accountCount })}`;
-  const openCreateInstrument = () => setInstrumentModalState({ idInstrument: null });
+  const openCreateInstrument = () => {
+    if (guardLimit("instruments", instruments.length))
+      setInstrumentModalState({ idInstrument: null });
+  };
 
   const transactionList = (
     <InvestmentTransactionList

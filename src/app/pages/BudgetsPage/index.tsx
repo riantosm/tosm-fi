@@ -14,6 +14,7 @@ import { BudgetDetailView } from "@/layouts/budget/BudgetDetailView";
 import { BudgetFormModal } from "@/layouts/budget/BudgetFormModal";
 import { BudgetReorderItem } from "@/layouts/budget/BudgetReorderItem";
 import { useBudgetPeriod } from "@/layouts/budget/budget-ui";
+import { useUpgrade } from "@/hooks/use-upgrade";
 import { useBudgets } from "@/hooks/use-budgets";
 import { useBudgetSpending } from "@/hooks/use-budget-spending";
 import { useCategories } from "@/hooks/use-categories";
@@ -51,6 +52,7 @@ export function BudgetsPage() {
     reorderBudgets,
     setChildLimit,
   } = useBudgets();
+  const { guardLimit } = useUpgrade();
   const { categoryBreakdown, isLoading: isSpendingLoading } = useBudgetSpending();
   const { confirm } = useConfirmDialog();
   const { showToast } = useToast();
@@ -192,7 +194,9 @@ export function BudgetsPage() {
     </>
   );
 
-  const openCreate = () => setFormState({ mode: "create" });
+  const openCreate = () => {
+    if (guardLimit("budgets", budgets.length)) setFormState({ mode: "create" });
+  };
 
   return (
     <>

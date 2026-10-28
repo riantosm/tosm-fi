@@ -13,6 +13,7 @@ import { CategoryCard } from "@/layouts/category/CategoryCard";
 import { CategoryReorderItem } from "@/layouts/category/CategoryReorderItem";
 import { CategoryFormModal } from "@/layouts/category/CategoryFormModal";
 import { SubCategoryFormModal } from "@/layouts/category/SubCategoryFormModal";
+import { useUpgrade } from "@/hooks/use-upgrade";
 import { useCategories } from "@/hooks/use-categories";
 import { useConfirmDialog } from "@/hooks/use-confirm-dialog";
 import { useToast } from "@/hooks/use-toast";
@@ -54,6 +55,7 @@ export function CategoriesPage() {
     deleteSubCategory,
     reorderSubCategories,
   } = useCategories();
+  const { guardLimit, guardPro } = useUpgrade();
   const { confirm } = useConfirmDialog();
   const { showToast } = useToast();
 
@@ -100,6 +102,7 @@ export function CategoriesPage() {
     : null;
 
   function openCreateCategoryModal(type: CategoryType) {
+    if (!guardLimit("categories", categories.length)) return;
     setCategoryModalState({ categoryId: null, defaultType: type });
   }
 
@@ -112,6 +115,7 @@ export function CategoriesPage() {
   }
 
   function openCreateSubCategoryModal(categoryId: string) {
+    if (!guardPro("subCategories")) return;
     setSubCategoryModalState({ categoryId, subCategoryId: null });
   }
 

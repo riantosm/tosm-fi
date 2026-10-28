@@ -57,7 +57,7 @@
     "nameLabel": "氏名",
     "namePlaceholder": "氏名",
     "registerSubmit": "登録する",
-    "registerSuccess": "登録が完了しました。管理者の承認後にログインしてください。",
+    "registerSuccess": "アカウントを作成しました。TosmFi へようこそ！",
     "alreadyHaveAccount": "すでにアカウントをお持ちですか?",
     "loginLink": "ログイン",
     "heroBadge": "個人の家計管理",
@@ -75,8 +75,8 @@
     "pendingTitle": "アカウントはまだ有効ではありません",
     "pendingDescription": "ログインする前に、管理者によるアカウントの承認が必要です。",
     "sessionExpiredTitle": "セッションの有効期限が切れました",
-    "approvalInfoTitle": "管理者の承認が必要です",
-    "approvalInfoDescription": "登録後、管理者がアカウントを有効化するとログインできます。",
+    "approvalInfoTitle": "すぐに利用可能",
+    "approvalInfoDescription": "新しいアカウントは Free プランですぐに使えます。いつでも Pro にアップグレードできます。",
     "registerHeroTitle": "最初の取引から、きちんと管理。"
   },
   "nav": {
@@ -235,8 +235,8 @@
   },
   "settingsMenu": {
     "userApproval": {
-      "title": "ユーザー申請",
-      "description": "新規ユーザー登録を確認して有効化する"
+      "title": "ユーザー管理",
+      "description": "ユーザーの一覧と Free / Pro の切り替え"
     },
     "errorLog": {
       "title": "エラーログ",
@@ -258,15 +258,26 @@
     "decimalCount": "小数 {{n}} 桁"
   },
   "userApproval": {
-    "title": "ユーザー申請",
-    "subtitle": "新規ユーザー登録を確認し、アカウントを有効化します。",
-    "empty": "まだユーザー登録がありません",
+    "title": "ユーザー管理",
+    "subtitle": "すべてのユーザーを確認し、Pro を無料で付与できます。",
+    "empty": "まだユーザーがいません",
     "registeredAt": "{{date}} に登録",
     "statusActive": "有効",
     "activateButton": "有効化",
     "activateSuccess": "ユーザーを有効化しました",
     "pendingLabel": "有効化待ち",
-    "genericError": "エラーが発生しました。もう一度お試しください。"
+    "genericError": "エラーが発生しました。もう一度お試しください。",
+    "freeLabel": "Free ユーザー",
+    "proLabel": "Pro ユーザー",
+    "adminPro": "管理者 · Pro",
+    "makePro": "Pro にする",
+    "makeFree": "Free に戻す",
+    "makeProConfirmTitle": "Pro を無料で付与しますか？",
+    "makeProConfirmDescription": "{{name}} さんは支払いなしで Pro のすべての機能をずっと使えるようになります。",
+    "makeFreeConfirmTitle": "Free に戻しますか？",
+    "makeFreeConfirmDescription": "{{name}} さんは Free プランの上限に戻ります。データはそのまま残りますが、上限を超えて追加できなくなります。",
+    "makeProSuccess": "{{name}} さんは Pro になりました",
+    "makeFreeSuccess": "{{name}} さんは Free になりました"
   },
   "errorLog": {
     "title": "エラーログ",
@@ -314,6 +325,7 @@
       "investment": "投資",
       "investmentTransaction": "投資取引",
       "report": "レポート",
+      "payment": "支払い",
       "budget": "予算"
     },
     "payload": "Payload",
@@ -1133,6 +1145,200 @@
     "historyNoWallet": "{{label}} {{amount}}",
     "historyTransfer": "{{from}}から{{to}}へ{{amount}}振替",
     "today": "今日",
-    "yesterday": "昨日"
+    "yesterday": "昨日",
+    "planLimitTitle": "クイック記録の上限に達しました",
+    "planLimitBody": "Free プランは月 {{count}} メッセージまでです。Pro にアップグレードするか、今は手動で記録してください。",
+    "planLimitBodyPro": "今月の {{count}} メッセージを使い切りました。来月初めにリセットされます。"
+  },
+  "plan": {
+    "genericError": "プランを読み込めませんでした。もう一度お試しください。",
+    "checkoutError": "支払いを開始できませんでした。少し待ってからお試しください。",
+    "paymentSuccess": "支払いが完了しました。Pro になりました！",
+    "paymentPending": "支払いは保留中です。支払いが完了すると Pro が自動で有効になります。",
+    "paymentFailed": "支払いが失敗したか、キャンセルされました。",
+    "alreadyProTitle": "すでに Pro です",
+    "alreadyProBody": "Pro のすべての機能が使えます。ありがとうございます！",
+    "upgradeTitle": "Pro にアップグレード",
+    "upgradeSubtitle": "一度の支払いで、すべての機能をずっと使えます。",
+    "later": "あとで",
+    "payButton": "{{price}} を支払う",
+    "proLifetime": "Pro Lifetime",
+    "sandboxNotice": "デモモード（Midtrans サンドボックス）：実際には請求されません。Midtrans のテストカードかシミュレーターで支払いを完了してください。",
+    "bannerTitle": "Pro にアップグレード",
+    "bannerBody": "ウォレットと予算が無制限、レポート全機能、PDF/Excel エクスポート — 一度きり {{price}}。",
+    "upgradeCta": "Pro にアップグレード",
+    "lockedTrendTitle": "12か月の推移は Pro 限定",
+    "lockedTrendBody": "Pro なら一年を通した収入と支出の傾向が見られます。",
+    "reason": {
+      "wallets": "Free プランのウォレットは {{count}} 個までです。",
+      "categories": "Free プランのカテゴリは {{count}} 個までです。",
+      "subCategories": "サブカテゴリは Pro プランの機能です。",
+      "budgets": "Free プランの予算は {{count}} 件までです。",
+      "schedules": "Free プランのスケジュールは {{count}} 件までです。",
+      "instruments": "Free プランの投資銘柄は {{count}} 件までです。",
+      "reportRange": "Free プランのレポートは今月と先月のみです。",
+      "monthlyTrend": "12か月の推移は Pro プランの機能です。",
+      "aiMessages": "Free プランのクイック記録（月 {{count}} メッセージ）を使い切りました。",
+      "receiptScan": "レシートのスキャンは Pro プランの機能です。",
+      "export": "PDF と Excel のエクスポートは Pro プランの機能です。"
+    }
+  },
+  "landing": {
+    "nav": {
+      "features": "機能",
+      "quickEntry": "クイック記録",
+      "pricing": "料金",
+      "faq": "FAQ",
+      "dashboard": "ダッシュボードを開く",
+      "login": "ログイン",
+      "tryFree": "無料で試す"
+    },
+    "hero": {
+      "eyebrow": "新機能：チャットするだけで記録",
+      "title": "お金の行き先が、やっとわかる。",
+      "subtitle": "TosmFi はウォレット、予算、支払い予定、投資をひとつにまとめます。「コーヒー 25k GoPay」と入力するだけで、あとは TosmFi が記録します。",
+      "ctaPrimary": "無料ではじめる",
+      "ctaSecondary": "料金を見る",
+      "reassureFree": "ずっと無料",
+      "reassureNoCard": "クレジットカード不要",
+      "reassurePlatforms": "Web・Android・iOS",
+      "shotAlt": "TosmFi のダッシュボード"
+    },
+    "features": {
+      "eyebrow": "機能",
+      "title": "お金のことは、ぜんぶひとつのアプリで。",
+      "subtitle": "毎日の買い物から投資信託まで — きちんと整理され、自動で集計され、どこでも見られます。",
+      "netWorth": {
+        "title": "純資産がひと目でわかる",
+        "body": "現金と投資を自動で合計。資産配分と家計の健康スコアも表示します。"
+      },
+      "budget": {
+        "title": "知らせてくれる予算",
+        "body": "カテゴリごとに月の上限を設定し、使いすぎる前に残りを確認できます。"
+      },
+      "schedule": {
+        "title": "支払いを忘れない",
+        "body": "毎日から毎年までの定期取引。期日になったら「支払う」を押すだけ。"
+      },
+      "investment": {
+        "title": "投資もしっかり把握",
+        "body": "投資信託・株・金 — 入出金を記録し、評価額と元本の推移を確認できます。"
+      },
+      "reports": {
+        "title": "語りかけるレポート",
+        "body": "キャッシュフロー、12か月の推移、支出ランキング。PDF・Excel・CSV に出力できます。"
+      },
+      "wallets": {
+        "title": "すべてのウォレットをひとつに",
+        "body": "銀行、電子マネー、現金をそれぞれの色で。IDR・USD・JPY に対応。"
+      }
+    },
+    "ai": {
+      "eyebrow": "クイック記録 · AI",
+      "title": "入力するだけ。あとは TosmFi が記録。",
+      "subtitle": "友だちにチャットするように書くだけ。AI が金額・カテゴリ・ウォレットを読み取り、あなたは確認して確定するだけです。",
+      "step1Title": "取引を入力",
+      "step1Body": "「昨日 ガソリン 50k Jago で」",
+      "step2Title": "プレビューを確認",
+      "step2Body": "カテゴリとウォレットは入力済み、変更もできます",
+      "step3Title": "確定",
+      "step3Body": "残高と予算がすぐに更新されます",
+      "chatName": "クイック記録",
+      "chatStatus": "記録の準備OK",
+      "userMessage": "ランチ 45k BCA、コーヒー 25k gopay",
+      "botMessage": "了解！今日の取引が 2 件あります。確認してください：",
+      "lunchTitle": "ランチ",
+      "lunchMeta": "食費 · BCA",
+      "coffeeTitle": "コーヒー",
+      "coffeeMeta": "間食 · GoPay",
+      "saveAll": "すべて記録",
+      "edit": "編集",
+      "composer": "取引を入力…"
+    },
+    "pricing": {
+      "eyebrow": "料金",
+      "title": "一度払えば、ずっと使える。",
+      "subtitle": "サブスクなし、月額料金なし。無料ではじめて、準備ができたら一度だけアップグレード。",
+      "launchTag": "リリース記念価格",
+      "launchSaving": "早期購入で {{amount}} お得",
+      "unlimited": "無制限",
+      "trust": "QRIS、電子マネー、バーチャル口座で一括払い。7日間の返金保証つき。",
+      "free": {
+        "name": "Free",
+        "tagline": "毎日の家計をきちんと記録したい方に。",
+        "per": "/ ずっと",
+        "note": "クレジットカード不要",
+        "cta": "無料ではじめる",
+        "listTitle": "含まれるもの",
+        "transactions": "取引は無制限",
+        "wallets": "ウォレット {{count}} 個",
+        "categories": "カテゴリ {{count}} 個",
+        "budgets": "月の予算 {{count}} 件",
+        "schedules": "定期取引 {{count}} 件",
+        "instruments": "投資銘柄 {{count}} 件",
+        "reports": "今月と先月のレポート",
+        "export": "CSV エクスポート",
+        "ai": "クイック記録 AI · 月 {{count}} メッセージ"
+      },
+      "pro": {
+        "name": "Pro",
+        "tagline": "すべての機能をずっと — 月額料金なし、今後のアップデートも含みます。",
+        "badge": "一括払い",
+        "per": "/ 一括払い",
+        "note": "永久アクセス",
+        "cta": "一度買って、ずっと使う",
+        "listTitle": "Free のすべてに加えて",
+        "wallets": "ウォレット・カテゴリ・サブカテゴリ無制限",
+        "budgets": "カテゴリ別の予算を無制限に",
+        "schedules": "定期取引を無制限に",
+        "investment": "投資銘柄を無制限に",
+        "reports": "カスタム期間、比較、12か月の推移",
+        "export": "PDF と Excel のエクスポート",
+        "ai": "クイック記録 AI · 月 {{count}} メッセージ + レシートスキャン",
+        "updates": "今後の Pro アップデートも無料"
+      }
+    },
+    "compare": {
+      "title": "プランを比較",
+      "proLifetime": "Pro Lifetime",
+      "groupRecording": "記録",
+      "groupAnalysis": "分析",
+      "groupAi": "クイック記録 AI",
+      "price": "料金",
+      "priceOnce": "{{price}}（一括）",
+      "transactions": "取引",
+      "wallets": "ウォレット",
+      "categories": "カテゴリ",
+      "subCategories": "サブカテゴリ",
+      "schedules": "定期取引",
+      "budgets": "月の予算",
+      "instruments": "投資銘柄",
+      "reportPeriod": "レポート期間",
+      "reportFree": "直近 2 か月",
+      "reportPro": "カスタム + 12か月の推移",
+      "export": "エクスポート",
+      "aiMessages": "月のメッセージ数",
+      "receiptScan": "レシートスキャン（モバイルアプリ）"
+    },
+    "faq": {
+      "eyebrow": "FAQ",
+      "title": "よくある質問",
+      "subtitle": "解決しない場合はメッセージをお送りください。できるだけ早くお手伝いします。",
+      "lifetimeQ": "Pro は本当に一度払うだけですか？",
+      "lifetimeA": "はい。一度の支払いで Pro のすべての機能がずっと使えます。今後のアップデートも含まれ、月額料金や自動更新はありません。",
+      "freeQ": "Free プランは本当にずっと無料ですか？",
+      "freeA": "はい。クレジットカードなしで取引を無制限に記録できます。高度な機能が必要なときだけ Pro にアップグレードしてください。",
+      "aiQuotaQ": "クイック記録の上限に達したらどうなりますか？",
+      "aiQuotaA": "上限は毎月初めにリセットされます。その間も、これまでどおり手動で記録できます。",
+      "refundQ": "満足できなかったら？",
+      "refundA": "支払いから 7 日以内にご連絡いただければ返金します。データは Free プランでそのまま残ります。",
+      "paymentQ": "どの支払い方法が使えますか？",
+      "paymentA": "支払いは Midtrans で処理されます：QRIS、GoPay、ShopeePay、銀行のバーチャル口座、クレジット／デビットカード。"
+    },
+    "finalCta": {
+      "title": "来月は、あなたが主導権を握る。",
+      "subtitle": "30 秒で登録。無料、クレジットカード不要。",
+      "cta": "今すぐ無料ではじめる"
+    }
   }
 }

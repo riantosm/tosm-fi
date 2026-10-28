@@ -1,5 +1,6 @@
 import axios from "axios";
 import i18n from "@/helpers/i18n";
+import { PLAN_LIMIT_CODE } from "@/constants/plans";
 import { getApiErrorMessage, httpClient } from "@/services/http-client";
 import type {
   AssistantCommitResult,
@@ -40,8 +41,14 @@ export const assistantService = {
       return data.data as AssistantReply;
     } catch (error) {
       // 429 = the free AI quota is full or the model is overloaded ("AI lagi sibuk").
-      const status = axios.isAxiosError(error) ? error.response?.status : undefined;
-      const kind: AssistantErrorKind = status === 429 ? "quota" : "network";
+      // 403 PLAN_LIMIT = the user's own monthly Catat Cepat messages are used up.
+      const response = axios.isAxiosError(error) ? error.response : undefined;
+      const kind: AssistantErrorKind =
+        response?.status === 429
+          ? "quota"
+          : response?.status === 403 && response.data?.data?.code === PLAN_LIMIT_CODE
+            ? "plan"
+            : "network";
       throw new AssistantError(kind, getApiErrorMessage(error, i18n.t("assistant.networkBody")), {
         cause: error,
       });

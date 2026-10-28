@@ -22,6 +22,7 @@ export interface ChangePasswordInput {
 
 export type UserRole = "admin" | "user";
 export type UserStatus = "pending" | "active";
+export type UserPlan = "free" | "pro";
 
 export interface AuthUser {
   idUser: string;
@@ -30,6 +31,9 @@ export interface AuthUser {
   role: UserRole;
   status: UserStatus;
   createdAt: string;
+  /** Effective plan from the backend — admins are always "pro". */
+  plan?: UserPlan;
+  proSince?: string | null;
   /** Shared demo account: the backend rejects reset data and username changes. */
   isDemo?: boolean;
   netWorth?: number;

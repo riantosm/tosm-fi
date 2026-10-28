@@ -19,6 +19,7 @@ import {
   monthlyEquivalent,
   ruleFromSchedule,
 } from "@/layouts/schedule/schedule-utils";
+import { useUpgrade } from "@/hooks/use-upgrade";
 import { useSchedules } from "@/hooks/use-schedules";
 import { useCategories } from "@/hooks/use-categories";
 import { useWallets } from "@/hooks/use-wallets";
@@ -41,6 +42,7 @@ export function SchedulePage() {
     setScheduleActive,
     deleteSchedule,
   } = useSchedules();
+  const { guardLimit } = useUpgrade();
   const { confirm } = useConfirmDialog();
   const { showToast } = useToast();
 
@@ -61,6 +63,7 @@ export function SchedulePage() {
   }, [schedulesStatus, loadSchedules]);
 
   function openCreateModal() {
+    if (!guardLimit("schedules", schedules.length)) return;
     setEditingSchedule(null);
     setIsScheduleModalOpen(true);
   }

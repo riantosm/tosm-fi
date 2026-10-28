@@ -21,7 +21,12 @@ import type {
 const TOP_SPENDING_LIMIT = 10;
 const MONTHLY_TREND_MONTHS = 12;
 
-export function useReports(period: ReportPeriodFilter, monthlyTrendMetric: MonthlyTrendMetric) {
+export function useReports(
+  period: ReportPeriodFilter,
+  monthlyTrendMetric: MonthlyTrendMetric,
+  /** Off on the Free plan: the trend endpoint is Pro-only, so it isn't requested at all. */
+  includeMonthlyTrend = true,
+) {
   const { queryTransactions } = useTransactions();
   const { wallets, status: walletsStatus, loadWallets } = useWallets();
   const { categories, status: categoriesStatus, loadCategories } = useCategories();
@@ -166,9 +171,11 @@ export function useReports(period: ReportPeriodFilter, monthlyTrendMetric: Month
   // Doesn't depend on resolvedPeriod — it's always the trailing MONTHLY_TREND_MONTHS from now,
   // independent of the selected report period, so switching periods never refetches this.
   const monthlyTrendRequestKey = language;
-  const isMonthlyTrendLoading = monthlyTrendCompletedKey !== monthlyTrendRequestKey;
+  const isMonthlyTrendLoading =
+    includeMonthlyTrend && monthlyTrendCompletedKey !== monthlyTrendRequestKey;
 
   useEffect(() => {
+    if (!includeMonthlyTrend) return;
     let cancelled = false;
 
     void reportService
@@ -188,7 +195,7 @@ export function useReports(period: ReportPeriodFilter, monthlyTrendMetric: Month
       cancelled = true;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [language]);
+  }, [language, includeMonthlyTrend]);
 
   const walletUsageRequestKey = JSON.stringify(resolvedPeriod);
   const isWalletUsageLoading = walletUsageCompletedKey !== walletUsageRequestKey;

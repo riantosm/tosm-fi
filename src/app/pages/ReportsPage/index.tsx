@@ -12,6 +12,9 @@ import { MonthlyTrendChart } from "@/layouts/report/MonthlyTrendChart";
 import { WalletUsageCard } from "@/layouts/report/WalletUsageCard";
 import { TopSpendingList } from "@/layouts/report/TopSpendingList";
 import { useReports } from "@/hooks/use-reports";
+import { usePlan } from "@/hooks/use-plan";
+import { useUpgrade } from "@/hooks/use-upgrade";
+import { ProLockedCard } from "@/layouts/plan/ProLockedCard";
 import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/hooks/use-language";
 import { useCurrency } from "@/hooks/use-currency";
@@ -58,6 +61,9 @@ export function ReportsPage() {
         dateTo: "",
       },
   );
+  const { limits } = usePlan();
+  const { openUpgrade, guardPro } = useUpgrade();
+  const lockedExportFormats: ExportFormat[] = limits.exportPdfExcel ? [] : ["pdf", "excel"];
   const [monthlyTrendMetric, setMonthlyTrendMetric] = useState<MonthlyTrendMetric>("expense");
   const [exportingFormat, setExportingFormat] = useState<ExportFormat | null>(null);
 
@@ -78,7 +84,7 @@ export function ReportsPage() {
     wallets,
     incomeExpenseTransactions,
     exportReport,
-  } = useReports(period, monthlyTrendMetric);
+  } = useReports(period, monthlyTrendMetric, limits.monthlyTrend);
 
   const periodLabel = period.preset.startsWith("month:")
     ? new Intl.DateTimeFormat(locale, { month: "long", year: "numeric" }).format(
@@ -244,6 +250,7 @@ export function ReportsPage() {
   }
 
   async function handleExport(format: ExportFormat) {
+    if (lockedExportFormats.includes(format) && !guardPro("exportPdfExcel")) return;
     setExportingFormat(format);
     try {
       const result = await exportReport(format);
@@ -304,22 +311,37 @@ export function ReportsPage() {
       <PageHeader
         title={t("nav.reports")}
         subtitle={rangeLabel}
-        actions={<ReportExportMenu onExport={handleExport} exportingFormat={exportingFormat} />}
+        actions={
+          <ReportExportMenu
+            onExport={handleExport}
+            exportingFormat={exportingFormat}
+            lockedFormats={lockedExportFormats}
+          />
+        }
         mobileActions={
           <ReportExportMenu
             onExport={handleExport}
             exportingFormat={exportingFormat}
+            lockedFormats={lockedExportFormats}
             variant="icon"
           />
         }
       />
 
-      <ReportPeriodFilter value={period} onChange={setPeriod} />
+      <ReportPeriodFilter
+        value={period}
+        onChange={setPeriod}
+        pastMonthsLimit={limits.reportMonthsBack}
+        lockedPresets={limits.customReportRange ? [] : ["year"]}
+        isCustomLocked={!limits.customReportRange}
+        onLockedSelect={() => openUpgrade("reportRange")}
+      />
 
       <ReportSummaryCards
         summary={summary}
         previousLabel={t("reports.summary.previousPeriod")}
         isLoading={isSummaryLoading}
+        showComparison={limits.customReportRange}
       />
 
       <Reveal delay={0.04}>
@@ -359,14 +381,24 @@ export function ReportsPage() {
           />
         </Reveal>
         <Reveal delay={0.04} className="min-w-0 lg:col-start-1 lg:row-start-2">
-          <MonthlyTrendChart
-            data={monthlyTrend}
-            metric={monthlyTrendMetric}
-            onMetricChange={setMonthlyTrendMetric}
-            eyebrow={t("reports.eyebrow.monthlyTrend", { count: MONTHLY_TREND_MONTHS_COUNT })}
-            isLoading={isMonthlyTrendLoading}
-            className="h-full"
-          />
+          {limits.monthlyTrend ? (
+            <MonthlyTrendChart
+              data={monthlyTrend}
+              metric={monthlyTrendMetric}
+              onMetricChange={setMonthlyTrendMetric}
+              eyebrow={t("reports.eyebrow.monthlyTrend", { count: MONTHLY_TREND_MONTHS_COUNT })}
+              isLoading={isMonthlyTrendLoading}
+              className="h-full"
+            />
+          ) : (
+            <ProLockedCard
+              eyebrow={t("reports.eyebrow.monthlyTrend", { count: MONTHLY_TREND_MONTHS_COUNT })}
+              title={t("plan.lockedTrendTitle")}
+              description={t("plan.lockedTrendBody")}
+              onUpgrade={() => openUpgrade("monthlyTrend")}
+              className="h-full"
+            />
+          )}
         </Reveal>
         <Reveal delay={0.06} className="min-w-0 lg:col-start-2 lg:row-start-1">
           <TopSpendingList

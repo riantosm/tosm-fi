@@ -57,7 +57,7 @@
     "nameLabel": "Nama Lengkap",
     "namePlaceholder": "nama lengkap",
     "registerSubmit": "Daftar",
-    "registerSuccess": "Registrasi berhasil. Tunggu persetujuan admin, lalu masuk.",
+    "registerSuccess": "Akun berhasil dibuat. Selamat datang di TosmFi!",
     "alreadyHaveAccount": "Sudah punya akun?",
     "loginLink": "Masuk",
     "heroBadge": "Pencatat keuangan pribadi",
@@ -75,8 +75,8 @@
     "pendingTitle": "Akun belum aktif",
     "pendingDescription": "Admin perlu menyetujui akunmu sebelum kamu bisa masuk.",
     "sessionExpiredTitle": "Sesi berakhir",
-    "approvalInfoTitle": "Perlu persetujuan admin",
-    "approvalInfoDescription": "Setelah daftar, kamu bisa masuk begitu admin mengaktifkan akunmu.",
+    "approvalInfoTitle": "Langsung aktif",
+    "approvalInfoDescription": "Akun baru langsung aktif dengan paket Free. Upgrade ke Pro kapan saja.",
     "registerHeroTitle": "Mulai rapi sejak transaksi pertama."
   },
   "nav": {
@@ -235,8 +235,8 @@
   },
   "settingsMenu": {
     "userApproval": {
-      "title": "Permintaan Pengguna",
-      "description": "Tinjau dan aktifkan pendaftaran pengguna baru"
+      "title": "Kelola Pengguna",
+      "description": "Lihat pengguna dan ubah paket Free / Pro"
     },
     "errorLog": {
       "title": "Log Error",
@@ -258,15 +258,26 @@
     "decimalCount": "{{n}} desimal"
   },
   "userApproval": {
-    "title": "Permintaan Pengguna",
-    "subtitle": "Tinjau pendaftaran pengguna baru dan aktifkan akun mereka.",
-    "empty": "Belum ada pendaftaran pengguna",
+    "title": "Kelola Pengguna",
+    "subtitle": "Lihat semua pengguna dan berikan paket Pro secara gratis.",
+    "empty": "Belum ada pengguna",
     "registeredAt": "Daftar pada {{date}}",
     "statusActive": "Aktif",
     "activateButton": "Aktifkan",
     "activateSuccess": "Pengguna berhasil diaktifkan",
     "pendingLabel": "Menunggu aktivasi",
-    "genericError": "Terjadi kesalahan, coba lagi."
+    "genericError": "Terjadi kesalahan, coba lagi.",
+    "freeLabel": "Pengguna Free",
+    "proLabel": "Pengguna Pro",
+    "adminPro": "Admin · Pro",
+    "makePro": "Jadikan Pro",
+    "makeFree": "Jadikan Free",
+    "makeProConfirmTitle": "Jadikan Pro gratis?",
+    "makeProConfirmDescription": "{{name}} akan mendapat semua fitur Pro selamanya tanpa membayar.",
+    "makeFreeConfirmTitle": "Kembalikan ke Free?",
+    "makeFreeConfirmDescription": "{{name}} kembali ke batas paket Free. Datanya tetap aman, hanya tidak bisa menambah melebihi batas.",
+    "makeProSuccess": "{{name}} sekarang Pro",
+    "makeFreeSuccess": "{{name}} sekarang Free"
   },
   "errorLog": {
     "title": "Log Error",
@@ -314,6 +325,7 @@
       "investment": "Investasi",
       "investmentTransaction": "Transaksi Investasi",
       "report": "Laporan",
+      "payment": "Pembayaran",
       "budget": "Anggaran"
     },
     "payload": "Payload",
@@ -1133,6 +1145,200 @@
     "historyNoWallet": "{{label}} {{amount}}",
     "historyTransfer": "Transfer {{amount}} dari {{from}} ke {{to}}",
     "today": "Hari ini",
-    "yesterday": "Kemarin"
+    "yesterday": "Kemarin",
+    "planLimitTitle": "Kuota Catat Cepat habis",
+    "planLimitBody": "Paket Free dapat {{count}} pesan per bulan. Upgrade ke Pro untuk kuota lebih besar, atau catat manual dulu.",
+    "planLimitBodyPro": "Kuota {{count}} pesan bulan ini sudah terpakai. Kuota terisi lagi awal bulan depan."
+  },
+  "plan": {
+    "genericError": "Gagal memuat paket, coba lagi.",
+    "checkoutError": "Gagal membuat pembayaran, coba lagi sebentar.",
+    "paymentSuccess": "Pembayaran berhasil — akunmu sekarang Pro!",
+    "paymentPending": "Pembayaran menunggu diselesaikan. Pro aktif otomatis setelah dibayar.",
+    "paymentFailed": "Pembayaran gagal atau dibatalkan.",
+    "alreadyProTitle": "Kamu sudah Pro",
+    "alreadyProBody": "Semua fitur Pro sudah terbuka untuk akunmu. Terima kasih!",
+    "upgradeTitle": "Upgrade ke Pro",
+    "upgradeSubtitle": "Sekali bayar, semua fitur terbuka selamanya.",
+    "later": "Nanti saja",
+    "payButton": "Bayar {{price}}",
+    "proLifetime": "Pro Lifetime",
+    "sandboxNotice": "Mode demo (Midtrans sandbox): tidak ada uang yang ditagih. Pakai kartu uji atau simulator Midtrans untuk menyelesaikan pembayaran.",
+    "bannerTitle": "Upgrade ke Pro",
+    "bannerBody": "Buka dompet & budget tanpa batas, laporan lengkap, dan export PDF/Excel — cukup {{price}} sekali bayar.",
+    "upgradeCta": "Upgrade ke Pro",
+    "lockedTrendTitle": "Tren 12 bulan khusus Pro",
+    "lockedTrendBody": "Lihat pola pemasukan dan pengeluaranmu sepanjang tahun dengan paket Pro.",
+    "reason": {
+      "wallets": "Paket Free maksimal {{count}} dompet.",
+      "categories": "Paket Free maksimal {{count}} kategori.",
+      "subCategories": "Subkategori hanya tersedia di paket Pro.",
+      "budgets": "Paket Free maksimal {{count}} budget.",
+      "schedules": "Paket Free maksimal {{count}} jadwal.",
+      "instruments": "Paket Free maksimal {{count}} instrumen investasi.",
+      "reportRange": "Paket Free hanya bisa melihat laporan bulan ini dan bulan lalu.",
+      "monthlyTrend": "Tren 12 bulan hanya tersedia di paket Pro.",
+      "aiMessages": "Kuota Catat Cepat paket Free ({{count}} pesan/bulan) sudah habis.",
+      "receiptScan": "Scan foto struk hanya tersedia di paket Pro.",
+      "export": "Export PDF & Excel hanya tersedia di paket Pro."
+    }
+  },
+  "landing": {
+    "nav": {
+      "features": "Fitur",
+      "quickEntry": "Catat Cepat",
+      "pricing": "Harga",
+      "faq": "FAQ",
+      "dashboard": "Buka dashboard",
+      "login": "Masuk",
+      "tryFree": "Coba gratis"
+    },
+    "hero": {
+      "eyebrow": "Baru: catat transaksi cukup dengan chat",
+      "title": "Akhirnya tahu ke mana uangmu pergi.",
+      "subtitle": "TosmFi merangkum dompet, budget, jadwal tagihan, dan investasi di satu tempat. Ketik \"kopi 25rb pakai GoPay\", sisanya biar TosmFi yang catat.",
+      "ctaPrimary": "Mulai gratis",
+      "ctaSecondary": "Lihat harga",
+      "reassureFree": "Gratis selamanya",
+      "reassureNoCard": "Tanpa kartu kredit",
+      "reassurePlatforms": "Web, Android & iOS",
+      "shotAlt": "Dashboard TosmFi"
+    },
+    "features": {
+      "eyebrow": "Fitur",
+      "title": "Semua urusan uang, di satu aplikasi.",
+      "subtitle": "Dari jajan harian sampai portofolio reksa dana — semuanya rapi, otomatis terhitung, dan bisa dibuka di mana saja.",
+      "netWorth": {
+        "title": "Kekayaan bersih sekilas",
+        "body": "Kas + investasi dijumlah otomatis, lengkap dengan alokasi aset dan skor kesehatan finansial."
+      },
+      "budget": {
+        "title": "Budget yang mengingatkan",
+        "body": "Pasang limit bulanan per kategori dan lihat sisa jatahmu sebelum kebablasan."
+      },
+      "schedule": {
+        "title": "Tagihan tak terlewat",
+        "body": "Transaksi berulang harian sampai tahunan, tinggal tekan Bayar saat jatuh tempo."
+      },
+      "investment": {
+        "title": "Investasi terpantau",
+        "body": "Reksa dana, saham, emas — catat setor, tarik, dan lihat nilai vs modal dari waktu ke waktu."
+      },
+      "reports": {
+        "title": "Laporan yang bercerita",
+        "body": "Cash flow, tren 12 bulan, dan top pengeluaran. Export ke PDF, Excel, atau CSV."
+      },
+      "wallets": {
+        "title": "Semua dompet, satu tempat",
+        "body": "Bank, e-wallet, dan tunai dengan warna sendiri. Mendukung IDR, USD, dan JPY."
+      }
+    },
+    "ai": {
+      "eyebrow": "Catat Cepat · AI",
+      "title": "Cukup ketik. Sisanya TosmFi yang catat.",
+      "subtitle": "Tulis seperti chat ke teman. AI mengenali nominal, kategori, dan dompet — kamu tinggal cek lalu konfirmasi.",
+      "step1Title": "Ketik transaksimu",
+      "step1Body": "\"bensin 50rb pakai Jago kemarin\"",
+      "step2Title": "Cek pratinjau",
+      "step2Body": "Kategori & dompet sudah terisi, bisa diubah",
+      "step3Title": "Konfirmasi",
+      "step3Body": "Saldo dan budget langsung ter-update",
+      "chatName": "Catat Cepat",
+      "chatStatus": "Siap mencatat",
+      "userMessage": "makan siang 45rb pakai BCA, kopi 25rb gopay",
+      "botMessage": "Siap! Ada 2 transaksi hari ini. Cek dulu ya:",
+      "lunchTitle": "Makan siang",
+      "lunchMeta": "Makanan · BCA",
+      "coffeeTitle": "Kopi",
+      "coffeeMeta": "Jajan · GoPay",
+      "saveAll": "Catat semua",
+      "edit": "Ubah",
+      "composer": "Tulis transaksi…"
+    },
+    "pricing": {
+      "eyebrow": "Harga",
+      "title": "Bayar sekali. Pakai selamanya.",
+      "subtitle": "Tanpa langganan, tanpa tagihan bulanan. Mulai gratis, lalu upgrade sekali saat kamu siap.",
+      "launchTag": "Harga peluncuran",
+      "launchSaving": "Hemat {{amount}} untuk pembeli awal",
+      "unlimited": "Tanpa batas",
+      "trust": "Bayar sekali via QRIS, e-wallet, atau virtual account. Garansi uang kembali 7 hari.",
+      "free": {
+        "name": "Gratis",
+        "tagline": "Untuk mulai rapi mencatat keuangan harian.",
+        "per": "/ selamanya",
+        "note": "Tanpa kartu kredit",
+        "cta": "Mulai gratis",
+        "listTitle": "Yang kamu dapat",
+        "transactions": "Transaksi tanpa batas",
+        "wallets": "{{count}} dompet",
+        "categories": "{{count}} kategori",
+        "budgets": "{{count}} budget bulanan",
+        "schedules": "{{count}} jadwal transaksi berulang",
+        "instruments": "{{count}} instrumen investasi",
+        "reports": "Laporan bulan ini & bulan lalu",
+        "export": "Export CSV",
+        "ai": "Catat Cepat AI · {{count}} pesan/bulan"
+      },
+      "pro": {
+        "name": "Pro",
+        "tagline": "Buka semua fitur selamanya — tanpa tagihan bulanan, termasuk update berikutnya.",
+        "badge": "Sekali bayar",
+        "per": "/ sekali bayar",
+        "note": "Akses selamanya",
+        "cta": "Beli sekali, pakai selamanya",
+        "listTitle": "Semua di Gratis, plus",
+        "wallets": "Dompet, kategori & subkategori tanpa batas",
+        "budgets": "Budget tanpa batas per kategori",
+        "schedules": "Jadwal berulang tanpa batas",
+        "investment": "Instrumen investasi tanpa batas",
+        "reports": "Laporan custom, perbandingan & tren 12 bulan",
+        "export": "Export PDF & Excel",
+        "ai": "Catat Cepat AI · {{count}} pesan/bulan + scan struk",
+        "updates": "Semua update fitur Pro berikutnya, gratis"
+      }
+    },
+    "compare": {
+      "title": "Bandingkan paket",
+      "proLifetime": "Pro Lifetime",
+      "groupRecording": "Pencatatan",
+      "groupAnalysis": "Analisis",
+      "groupAi": "Catat Cepat AI",
+      "price": "Harga",
+      "priceOnce": "{{price}} sekali",
+      "transactions": "Transaksi",
+      "wallets": "Dompet",
+      "categories": "Kategori",
+      "subCategories": "Subkategori",
+      "schedules": "Jadwal transaksi berulang",
+      "budgets": "Budget bulanan",
+      "instruments": "Instrumen investasi",
+      "reportPeriod": "Periode laporan",
+      "reportFree": "2 bulan terakhir",
+      "reportPro": "Custom + tren 12 bulan",
+      "export": "Export",
+      "aiMessages": "Pesan per bulan",
+      "receiptScan": "Scan foto struk (aplikasi mobile)"
+    },
+    "faq": {
+      "eyebrow": "FAQ",
+      "title": "Pertanyaan yang sering muncul",
+      "subtitle": "Belum terjawab? Kirim pesan ke kami, kami bantu secepatnya.",
+      "lifetimeQ": "Benarkah Pro cukup dibayar sekali?",
+      "lifetimeA": "Ya. Sekali bayar, semua fitur Pro terbuka selamanya — termasuk update fitur berikutnya. Tidak ada tagihan bulanan atau perpanjangan otomatis.",
+      "freeQ": "Apakah paket Gratis benar-benar gratis selamanya?",
+      "freeA": "Ya. Kamu bisa mencatat transaksi tanpa batas tanpa memasukkan kartu kredit. Upgrade ke Pro hanya kalau butuh fitur lanjutan.",
+      "aiQuotaQ": "Kuota Catat Cepat habis, lalu bagaimana?",
+      "aiQuotaA": "Kuota terisi lagi setiap awal bulan. Sementara itu kamu tetap bisa mencatat transaksi secara manual seperti biasa.",
+      "refundQ": "Bagaimana kalau aku tidak puas?",
+      "refundA": "Hubungi kami dalam 7 hari setelah pembayaran dan uangmu kami kembalikan. Datamu tetap aman di paket Gratis.",
+      "paymentQ": "Metode pembayaran apa saja yang tersedia?",
+      "paymentA": "Pembayaran diproses Midtrans: QRIS, GoPay, ShopeePay, virtual account bank, dan kartu kredit/debit."
+    },
+    "finalCta": {
+      "title": "Bulan depan, kamu yang pegang kendali.",
+      "subtitle": "Daftar dalam 30 detik. Gratis, tanpa kartu kredit.",
+      "cta": "Mulai gratis sekarang"
+    }
   }
 }

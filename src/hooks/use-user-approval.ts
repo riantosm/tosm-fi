@@ -1,5 +1,6 @@
 import { useCallback } from "react";
 import { userApprovalService } from "@/services/user-approval.service";
+import type { UserPlan } from "@/types/auth.types";
 import {
   setUserApprovalList,
   setUserApprovalListLoading,
@@ -27,5 +28,13 @@ export function useUserApproval() {
     [dispatch],
   );
 
-  return { users, status, loadUsers, acceptUser };
+  const setUserPlan = useCallback(
+    async (idUser: string, plan: UserPlan) => {
+      const updated = await userApprovalService.setPlan(idUser, plan);
+      dispatch(updateUserApprovalUser(updated));
+    },
+    [dispatch],
+  );
+
+  return { users, status, loadUsers, acceptUser, setUserPlan };
 }

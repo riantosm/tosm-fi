@@ -43,24 +43,40 @@ function formatMonthLabel(month: string, locale: string): string {
 interface ReportPeriodFilterProps {
   value: ReportPeriodFilterValue;
   onChange: (value: ReportPeriodFilterValue) => void;
+  /** Free plan: only this many past months are offered (null = all). */
+  pastMonthsLimit?: number | null;
+  /** Free plan: presets (and the custom range) that open the Upgrade dialog instead. */
+  lockedPresets?: ReportPeriodPreset[];
+  isCustomLocked?: boolean;
+  onLockedSelect?: () => void;
 }
 
 /**
  * Period strip: past months (from the first transaction) + Hari/Minggu/Bulan/Tahun ini,
  * plus "Custom Range". Phones keep only the four presets and a calendar button.
  */
-export function ReportPeriodFilter({ value, onChange }: ReportPeriodFilterProps) {
+export function ReportPeriodFilter({
+  value,
+  onChange,
+  pastMonthsLimit = null,
+  lockedPresets = [],
+  isCustomLocked = false,
+  onLockedSelect,
+}: ReportPeriodFilterProps) {
   const { t } = useTranslation();
   const { language } = useLanguage();
   const locale = toIntlLocale(language);
   const stripRef = useRef<HTMLDivElement>(null);
 
   const firstTransactionMonth = useFirstTransactionMonth();
-  const pastMonthPresets = useMemo(
-    () =>
-      firstTransactionMonth ? generatePastMonthPresets(firstTransactionMonth, new Date()) : [],
-    [firstTransactionMonth],
-  );
+  const pastMonthPresets = useMemo(() => {
+    const months = firstTransactionMonth
+      ? generatePastMonthPresets(firstTransactionMonth, new Date())
+      : [];
+    return pastMonthsLimit === null
+      ? months
+      : months.slice(Math.max(0, months.length - pastMonthsLimit));
+  }, [firstTransactionMonth, pastMonthsLimit]);
 
   // Newest months sit next to "Hari ini" — start scrolled to the end.
   useEffect(() => {
@@ -82,6 +98,10 @@ export function ReportPeriodFilter({ value, onChange }: ReportPeriodFilterProps)
   }));
 
   function selectPreset(preset: ReportPeriodPreset) {
+    if (lockedPresets.includes(preset)) {
+      onLockedSelect?.();
+      return;
+    }
     onChange({ preset, dateFrom: "", dateTo: "" });
   }
 
@@ -119,6 +139,7 @@ export function ReportPeriodFilter({ value, onChange }: ReportPeriodFilterProps)
             : t("reports.period.custom")
         }
         onApply={(from, to) => onChange({ preset: "custom", dateFrom: from, dateTo: to })}
+        onLockedSelect={isCustomLocked ? onLockedSelect : undefined}
         onClear={() => selectPreset(DEFAULT_PRESET)}
       />
     </div>
@@ -131,17 +152,27 @@ interface CustomRangeButtonProps {
   label: string;
   onApply: (from: string, to: string) => void;
   onClear: () => void;
+  /** Set when the custom range isn't in the plan: the trigger calls this instead of opening. */
+  onLockedSelect?: () => void;
 }
 
-function CustomRangeButton({ value, isActive, label, onApply, onClear }: CustomRangeButtonProps) {
+function CustomRangeButton({
+  value,
+  isActive,
+  label,
+  onApply,
+  onClear,
+  onLockedSelect,
+}: CustomRangeButtonProps) {
   const { t } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
+  const toggle = () => (onLockedSelect ? onLockedSelect() : setIsOpen((prev) => !prev));
 
   const trigger = (
     <>
       <button
         type="button"
-        onClick={() => setIsOpen((prev) => !prev)}
+        onClick={toggle}
         aria-expanded={isOpen}
         className={cn(
           "pressable hidden h-[46px] max-w-[260px] shrink-0 items-center gap-2 rounded-full border px-4 text-[13.5px] font-medium shadow-card transition-colors lg:flex",
@@ -160,7 +191,7 @@ function CustomRangeButton({ value, isActive, label, onApply, onClear }: CustomR
         size="md"
         tooltip={false}
         className={cn("lg:hidden", isActive && "bg-primary-soft text-primary-text")}
-        onClick={() => setIsOpen((prev) => !prev)}
+        onClick={toggle}
       />
     </>
   );

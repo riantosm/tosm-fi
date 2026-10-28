@@ -57,7 +57,8 @@ export interface AssistantReply {
   quickReplies?: AssistantQuickReply[];
 }
 
-export type AssistantErrorKind = "quota" | "network";
+/** quota = AI busy (429); plan = this month's Catat Cepat messages are used up (403 PLAN_LIMIT). */
+export type AssistantErrorKind = "quota" | "plan" | "network";
 
 export type AssistantMessage =
   | {

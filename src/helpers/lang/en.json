@@ -57,7 +57,7 @@
     "nameLabel": "Full Name",
     "namePlaceholder": "full name",
     "registerSubmit": "Sign up",
-    "registerSuccess": "Registration successful. Wait for admin approval, then sign in.",
+    "registerSuccess": "Account created. Welcome to TosmFi!",
     "alreadyHaveAccount": "Already have an account?",
     "loginLink": "Sign in",
     "heroBadge": "Personal finance tracker",
@@ -75,8 +75,8 @@
     "pendingTitle": "Account not active yet",
     "pendingDescription": "An admin needs to approve your account before you can sign in.",
     "sessionExpiredTitle": "Session expired",
-    "approvalInfoTitle": "Admin approval required",
-    "approvalInfoDescription": "After signing up, you can sign in as soon as an admin activates your account.",
+    "approvalInfoTitle": "Active right away",
+    "approvalInfoDescription": "New accounts are active immediately on the Free plan. Upgrade to Pro anytime.",
     "registerHeroTitle": "Stay organized from your very first transaction."
   },
   "nav": {
@@ -235,8 +235,8 @@
   },
   "settingsMenu": {
     "userApproval": {
-      "title": "User Requests",
-      "description": "Review and activate new user registrations"
+      "title": "Manage Users",
+      "description": "See users and switch them between Free and Pro"
     },
     "errorLog": {
       "title": "Error Log",
@@ -258,15 +258,26 @@
     "decimalCount": "{{n}} decimals"
   },
   "userApproval": {
-    "title": "User Requests",
-    "subtitle": "Review new user registrations and activate their accounts.",
-    "empty": "No user registrations yet",
+    "title": "Manage Users",
+    "subtitle": "See every user and give them Pro for free.",
+    "empty": "No users yet",
     "registeredAt": "Registered on {{date}}",
     "statusActive": "Active",
     "activateButton": "Activate",
     "activateSuccess": "User activated successfully",
     "pendingLabel": "Awaiting activation",
-    "genericError": "Something went wrong, please try again."
+    "genericError": "Something went wrong, please try again.",
+    "freeLabel": "Free users",
+    "proLabel": "Pro users",
+    "adminPro": "Admin · Pro",
+    "makePro": "Make Pro",
+    "makeFree": "Make Free",
+    "makeProConfirmTitle": "Give Pro for free?",
+    "makeProConfirmDescription": "{{name}} gets every Pro feature for life without paying.",
+    "makeFreeConfirmTitle": "Move back to Free?",
+    "makeFreeConfirmDescription": "{{name}} goes back to the Free plan limits. Their data stays safe; they just can't add beyond the limits.",
+    "makeProSuccess": "{{name}} is now Pro",
+    "makeFreeSuccess": "{{name}} is now Free"
   },
   "errorLog": {
     "title": "Error Log",
@@ -314,6 +325,7 @@
       "investment": "Investment",
       "investmentTransaction": "Investment Transaction",
       "report": "Report",
+      "payment": "Payments",
       "budget": "Budget"
     },
     "payload": "Payload",
@@ -1133,6 +1145,200 @@
     "historyNoWallet": "{{label}} {{amount}}",
     "historyTransfer": "Transfer {{amount}} from {{from}} to {{to}}",
     "today": "Today",
-    "yesterday": "Yesterday"
+    "yesterday": "Yesterday",
+    "planLimitTitle": "Quick Entry quota used up",
+    "planLimitBody": "The Free plan includes {{count}} messages a month. Upgrade to Pro for a bigger quota, or add it manually for now.",
+    "planLimitBodyPro": "This month's {{count}} messages are used up. The quota refills at the start of next month."
+  },
+  "plan": {
+    "genericError": "Couldn't load your plan, please try again.",
+    "checkoutError": "Couldn't start the payment, please try again shortly.",
+    "paymentSuccess": "Payment complete — your account is now Pro!",
+    "paymentPending": "The payment is still pending. Pro activates automatically once it's paid.",
+    "paymentFailed": "The payment failed or was cancelled.",
+    "alreadyProTitle": "You're already Pro",
+    "alreadyProBody": "Every Pro feature is unlocked on your account. Thank you!",
+    "upgradeTitle": "Upgrade to Pro",
+    "upgradeSubtitle": "Pay once, unlock everything for life.",
+    "later": "Not now",
+    "payButton": "Pay {{price}}",
+    "proLifetime": "Pro Lifetime",
+    "sandboxNotice": "Demo mode (Midtrans sandbox): nothing is charged. Use a Midtrans test card or the simulator to finish the payment.",
+    "bannerTitle": "Upgrade to Pro",
+    "bannerBody": "Unlimited wallets & budgets, full reports and PDF/Excel export — just {{price}}, paid once.",
+    "upgradeCta": "Upgrade to Pro",
+    "lockedTrendTitle": "The 12-month trend is Pro-only",
+    "lockedTrendBody": "See your income and spending patterns across the year with Pro.",
+    "reason": {
+      "wallets": "The Free plan allows up to {{count}} wallets.",
+      "categories": "The Free plan allows up to {{count}} categories.",
+      "subCategories": "Subcategories are a Pro feature.",
+      "budgets": "The Free plan allows up to {{count}} budget.",
+      "schedules": "The Free plan allows up to {{count}} schedules.",
+      "instruments": "The Free plan allows up to {{count}} investment instrument.",
+      "reportRange": "The Free plan shows reports for this month and last month only.",
+      "monthlyTrend": "The 12-month trend is a Pro feature.",
+      "aiMessages": "The Free plan's Quick Entry quota ({{count}} messages/month) is used up.",
+      "receiptScan": "Receipt scanning is a Pro feature.",
+      "export": "PDF & Excel export are Pro features."
+    }
+  },
+  "landing": {
+    "nav": {
+      "features": "Features",
+      "quickEntry": "Quick Entry",
+      "pricing": "Pricing",
+      "faq": "FAQ",
+      "dashboard": "Open dashboard",
+      "login": "Log in",
+      "tryFree": "Try for free"
+    },
+    "hero": {
+      "eyebrow": "New: log transactions just by chatting",
+      "title": "Finally know where your money goes.",
+      "subtitle": "TosmFi brings wallets, budgets, bill schedules and investments together. Type \"coffee 25k with GoPay\" and TosmFi records the rest.",
+      "ctaPrimary": "Start for free",
+      "ctaSecondary": "See pricing",
+      "reassureFree": "Free forever",
+      "reassureNoCard": "No credit card",
+      "reassurePlatforms": "Web, Android & iOS",
+      "shotAlt": "TosmFi dashboard"
+    },
+    "features": {
+      "eyebrow": "Features",
+      "title": "All your money matters, in one app.",
+      "subtitle": "From daily snacks to your mutual fund portfolio — tidy, totalled automatically, and available anywhere.",
+      "netWorth": {
+        "title": "Net worth at a glance",
+        "body": "Cash plus investments added up for you, with asset allocation and a financial health score."
+      },
+      "budget": {
+        "title": "Budgets that nudge you",
+        "body": "Set monthly limits per category and see what's left before you overspend."
+      },
+      "schedule": {
+        "title": "Never miss a bill",
+        "body": "Recurring transactions from daily to yearly — just tap Pay when they're due."
+      },
+      "investment": {
+        "title": "Investments on track",
+        "body": "Mutual funds, stocks, gold — log deposits and withdrawals and track value vs. capital over time."
+      },
+      "reports": {
+        "title": "Reports that tell a story",
+        "body": "Cash flow, a 12-month trend and top spending. Export to PDF, Excel or CSV."
+      },
+      "wallets": {
+        "title": "Every wallet, one place",
+        "body": "Banks, e-wallets and cash, each with its own colour. Supports IDR, USD and JPY."
+      }
+    },
+    "ai": {
+      "eyebrow": "Quick Entry · AI",
+      "title": "Just type. TosmFi records the rest.",
+      "subtitle": "Write like you're texting a friend. The AI picks up the amount, category and wallet — you check and confirm.",
+      "step1Title": "Type your transaction",
+      "step1Body": "\"fuel 50k with Jago yesterday\"",
+      "step2Title": "Check the preview",
+      "step2Body": "Category & wallet are filled in, and you can change them",
+      "step3Title": "Confirm",
+      "step3Body": "Balances and budgets update instantly",
+      "chatName": "Quick Entry",
+      "chatStatus": "Ready to record",
+      "userMessage": "lunch 45k with BCA, coffee 25k gopay",
+      "botMessage": "Got it! 2 transactions today. Take a look:",
+      "lunchTitle": "Lunch",
+      "lunchMeta": "Food · BCA",
+      "coffeeTitle": "Coffee",
+      "coffeeMeta": "Snacks · GoPay",
+      "saveAll": "Save all",
+      "edit": "Edit",
+      "composer": "Write a transaction…"
+    },
+    "pricing": {
+      "eyebrow": "Pricing",
+      "title": "Pay once. Use it forever.",
+      "subtitle": "No subscription, no monthly bills. Start free, then upgrade once when you're ready.",
+      "launchTag": "Launch price",
+      "launchSaving": "Save {{amount}} as an early buyer",
+      "unlimited": "Unlimited",
+      "trust": "Pay once with QRIS, an e-wallet or a virtual account. 7-day money-back guarantee.",
+      "free": {
+        "name": "Free",
+        "tagline": "For getting your daily finances in order.",
+        "per": "/ forever",
+        "note": "No credit card",
+        "cta": "Start for free",
+        "listTitle": "What you get",
+        "transactions": "Unlimited transactions",
+        "wallets": "{{count}} wallets",
+        "categories": "{{count}} categories",
+        "budgets": "{{count}} monthly budget",
+        "schedules": "{{count}} recurring schedules",
+        "instruments": "{{count}} investment instrument",
+        "reports": "Reports for this month & last month",
+        "export": "CSV export",
+        "ai": "Quick Entry AI · {{count}} messages/month"
+      },
+      "pro": {
+        "name": "Pro",
+        "tagline": "Unlock everything for life — no monthly bills, future updates included.",
+        "badge": "Pay once",
+        "per": "/ one-time",
+        "note": "Lifetime access",
+        "cta": "Buy once, use forever",
+        "listTitle": "Everything in Free, plus",
+        "wallets": "Unlimited wallets, categories & subcategories",
+        "budgets": "Unlimited budgets per category",
+        "schedules": "Unlimited recurring schedules",
+        "investment": "Unlimited investment instruments",
+        "reports": "Custom reports, comparisons & 12-month trend",
+        "export": "PDF & Excel export",
+        "ai": "Quick Entry AI · {{count}} messages/month + receipt scan",
+        "updates": "Every future Pro update, free"
+      }
+    },
+    "compare": {
+      "title": "Compare plans",
+      "proLifetime": "Pro Lifetime",
+      "groupRecording": "Recording",
+      "groupAnalysis": "Analysis",
+      "groupAi": "Quick Entry AI",
+      "price": "Price",
+      "priceOnce": "{{price}} once",
+      "transactions": "Transactions",
+      "wallets": "Wallets",
+      "categories": "Categories",
+      "subCategories": "Subcategories",
+      "schedules": "Recurring schedules",
+      "budgets": "Monthly budgets",
+      "instruments": "Investment instruments",
+      "reportPeriod": "Report period",
+      "reportFree": "Last 2 months",
+      "reportPro": "Custom + 12-month trend",
+      "export": "Export",
+      "aiMessages": "Messages per month",
+      "receiptScan": "Receipt scan (mobile app)"
+    },
+    "faq": {
+      "eyebrow": "FAQ",
+      "title": "Frequently asked questions",
+      "subtitle": "Still have a question? Send us a message and we'll help as soon as we can.",
+      "lifetimeQ": "Do I really pay for Pro only once?",
+      "lifetimeA": "Yes. One payment unlocks every Pro feature for life — including future updates. No monthly bills, no auto-renewal.",
+      "freeQ": "Is the Free plan really free forever?",
+      "freeA": "Yes. Record unlimited transactions without entering a credit card. Upgrade to Pro only if you need the advanced features.",
+      "aiQuotaQ": "What happens when my Quick Entry quota runs out?",
+      "aiQuotaA": "The quota refills at the start of every month. Meanwhile you can still add transactions manually as usual.",
+      "refundQ": "What if I'm not happy?",
+      "refundA": "Contact us within 7 days of paying and we'll refund you. Your data stays safe on the Free plan.",
+      "paymentQ": "Which payment methods are available?",
+      "paymentA": "Payments are processed by Midtrans: QRIS, GoPay, ShopeePay, bank virtual accounts and credit/debit cards."
+    },
+    "finalCta": {
+      "title": "Next month, you're in control.",
+      "subtitle": "Sign up in 30 seconds. Free, no credit card.",
+      "cta": "Start for free now"
+    }
   }
 }

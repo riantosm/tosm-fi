@@ -1,6 +1,8 @@
 import { useTranslation } from "react-i18next";
-import { LuHourglass, LuPlus, LuRotateCw, LuWifiOff } from "react-icons/lu";
+import { LuHourglass, LuLock, LuPlus, LuRotateCw, LuSparkles, LuWifiOff } from "react-icons/lu";
 import { Button } from "@/components/atoms/Button";
+import { usePlan } from "@/hooks/use-plan";
+import { useUpgrade } from "@/hooks/use-upgrade";
 import type { AssistantErrorKind } from "@/types/assistant.types";
 import { cn } from "@/utils/cn";
 
@@ -11,7 +13,7 @@ interface AssistantErrorBannerProps {
   isBusy?: boolean;
 }
 
-/** Quota-full (amber) / connection-failed (red) banner with recovery actions. */
+/** Quota-full or plan-limit (amber) / connection-failed (red) banner with recovery actions. */
 export function AssistantErrorBanner({
   error,
   onRetry,
@@ -19,7 +21,11 @@ export function AssistantErrorBanner({
   isBusy,
 }: AssistantErrorBannerProps) {
   const { t } = useTranslation();
-  const isQuota = error === "quota";
+  const { isPro, limits } = usePlan();
+  const { openUpgrade } = useUpgrade();
+  const isPlan = error === "plan";
+  // Both "AI busy" and "messages used up" are amber and offer manual entry.
+  const isQuota = error === "quota" || isPlan;
 
   return (
     <div className="flex w-full flex-col gap-2.5">
@@ -35,7 +41,7 @@ export function AssistantErrorBanner({
             isQuota ? "text-investment-text" : "text-expense-text",
           )}
         >
-          {isQuota ? <LuHourglass /> : <LuWifiOff />}
+          {isPlan ? <LuLock /> : isQuota ? <LuHourglass /> : <LuWifiOff />}
         </span>
         <div className="flex min-w-0 flex-col gap-0.5">
           <span
@@ -44,23 +50,46 @@ export function AssistantErrorBanner({
               isQuota ? "text-investment-text" : "text-expense-text",
             )}
           >
-            {isQuota ? t("assistant.quotaTitle") : t("assistant.networkTitle")}
+            {isPlan
+              ? t("assistant.planLimitTitle")
+              : isQuota
+                ? t("assistant.quotaTitle")
+                : t("assistant.networkTitle")}
           </span>
           <span className="text-[13px] leading-[1.45] text-text-2">
-            {isQuota ? t("assistant.quotaBody") : t("assistant.networkBody")}
+            {isPlan
+              ? t(isPro ? "assistant.planLimitBodyPro" : "assistant.planLimitBody", {
+                  count: limits.aiMessagesPerMonth ?? 0,
+                })
+              : isQuota
+                ? t("assistant.quotaBody")
+                : t("assistant.networkBody")}
           </span>
         </div>
       </div>
       <div className="flex flex-wrap gap-2">
-        <Button
-          type="button"
-          size="sm"
-          leftIcon={<LuRotateCw />}
-          onClick={onRetry}
-          disabled={isBusy}
-        >
-          {t("assistant.retry")}
-        </Button>
+        {isPlan ? (
+          !isPro && (
+            <Button
+              type="button"
+              size="sm"
+              leftIcon={<LuSparkles />}
+              onClick={() => openUpgrade("aiMessages")}
+            >
+              {t("plan.upgradeCta")}
+            </Button>
+          )
+        ) : (
+          <Button
+            type="button"
+            size="sm"
+            leftIcon={<LuRotateCw />}
+            onClick={onRetry}
+            disabled={isBusy}
+          >
+            {t("assistant.retry")}
+          </Button>
+        )}
         {isQuota && (
           <Button
             type="button"
