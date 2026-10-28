@@ -23,7 +23,7 @@ export default defineConfig({
         theme_color: "#f4f5fb",
         background_color: "#f4f5fb",
         display: "standalone",
-        start_url: "/",
+        start_url: "/dashboard",
         icons: [
           { src: "/favicon.svg", sizes: "any", type: "image/svg+xml", purpose: "any" },
           { src: "/favicon-32x32.png", sizes: "32x32", type: "image/png" },

@@ -18,6 +18,9 @@ function retryImport<T>(factory: () => Promise<T>, retriesLeft = 2, delayMs = 80
   });
 }
 
+const LandingPage = lazy(() =>
+  retryImport(() => import("@/app/pages/LandingPage").then((m) => ({ default: m.LandingPage }))),
+);
 const LoginPage = lazy(() =>
   retryImport(() => import("@/app/pages/LoginPage").then((m) => ({ default: m.LoginPage }))),
 );
@@ -97,7 +100,7 @@ export function AppRouter() {
   return (
     <Suspense fallback={<RouteFallback />}>
       <Routes>
-        <Route path="/" element={<Navigate to={ROUTES.DASHBOARD} replace />} />
+        <Route path={ROUTES.LANDING} element={<LandingPage />} />
         <Route path={ROUTES.LOGIN} element={<LoginPage />} />
         <Route path={ROUTES.REGISTER} element={<RegisterPage />} />
         <Route

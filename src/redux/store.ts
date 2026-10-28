@@ -17,6 +17,7 @@ import {
   scheduleSlice,
   settingsSlice,
   transactionSlice,
+  planSlice,
   userApprovalSlice,
   walletSlice,
   type IBudgetReduxState,
@@ -54,6 +55,9 @@ const reducer = combineReducers({
   // Not persisted — pending occurrences are always regenerated/refetched
   // fresh from the backend's lazy catch-up generator, same reasoning as transaction.
   scheduleOccurrence: scheduleOccurrenceSlice,
+  // Not persisted — plan + usage counts are refetched per session; the plan
+  // itself also rides on the persisted `authentication.userDetail`.
+  plan: planSlice,
 });
 
 // Persisted `status: "loaded"` would otherwise make every consumer's

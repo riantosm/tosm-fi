@@ -8,6 +8,7 @@ import { ChatFab } from "@/components/organisms/ChatFab";
 import { MoreMenuSheet } from "@/components/organisms/MoreMenuSheet";
 import { Rail } from "@/components/organisms/Rail";
 import { QuickAddProvider, useQuickAdd } from "@/hooks/use-quick-add";
+import { UpgradeProvider } from "@/hooks/use-upgrade";
 import { AddTransactionModal } from "@/layouts/transaction/AddTransactionModal";
 import { CatatCepat } from "@/layouts/assistant/CatatCepat";
 
@@ -61,7 +62,9 @@ function Shell() {
 export function AppLayout() {
   return (
     <QuickAddProvider>
-      <Shell />
+      <UpgradeProvider>
+        <Shell />
+      </UpgradeProvider>
     </QuickAddProvider>
   );
 }

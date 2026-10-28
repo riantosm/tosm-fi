@@ -105,12 +105,15 @@ interface ReportSummaryCardsProps {
   previousLabel: string;
   /** Shows skeleton values while the summary for the current period is being fetched. */
   isLoading?: boolean;
+  /** The vs-previous-period chip is Pro-only. */
+  showComparison?: boolean;
 }
 
 export function ReportSummaryCards({
   summary,
   previousLabel,
   isLoading = false,
+  showComparison = true,
 }: ReportSummaryCardsProps) {
   const { t } = useTranslation();
   const { symbol, formatNumber, formatCompact } = useMoneyFormat();
@@ -166,12 +169,14 @@ export function ReportSummaryCards({
                       {config.isMoney ? formatNumber(delta.value) : Math.round(delta.value)}
                     </span>
                   </p>
-                  <div className="flex min-w-0 items-center gap-1.5">
-                    <DeltaChip delta={delta} polarity={config.polarity} />
-                    <span className="hidden truncate text-[11.5px] text-text-3 sm:inline">
-                      {previousLabel}
-                    </span>
-                  </div>
+                  {showComparison && (
+                    <div className="flex min-w-0 items-center gap-1.5">
+                      <DeltaChip delta={delta} polarity={config.polarity} />
+                      <span className="hidden truncate text-[11.5px] text-text-3 sm:inline">
+                        {previousLabel}
+                      </span>
+                    </div>
+                  )}
                 </div>
               )}
             </Card>

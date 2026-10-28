@@ -1,5 +1,5 @@
 import { useEffect, useState, type SubmitEvent } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { AnimatePresence } from "motion/react";
 import axios from "axios";
@@ -13,6 +13,7 @@ import { AuthNotice, type AuthNoticeTone } from "@/layouts/auth/AuthNotice";
 import { ROUTES } from "@/constants/routes";
 import { useAuth } from "@/hooks/use-auth";
 import { onDismissSessionExpired, useAppDispatch, useAppSelector } from "@/redux";
+import { afterLoginPath } from "@/utils/auth-redirect";
 import { cn } from "@/utils/cn";
 
 interface LoginError {
@@ -35,6 +36,7 @@ function isPendingApproval(error: unknown): boolean {
 
 export function LoginForm() {
   const { t } = useTranslation();
+  const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { login } = useAuth();
   const dispatch = useAppDispatch();
@@ -70,7 +72,7 @@ export function LoginForm() {
 
     try {
       await login({ username, password, remember });
-      navigate(ROUTES.DASHBOARD, { replace: true });
+      navigate(afterLoginPath(searchParams), { replace: true });
     } catch (err) {
       setError(
         isPendingApproval(err)
@@ -158,7 +160,7 @@ export function LoginForm() {
       <p className="flex items-center justify-center gap-1.5 text-[13.5px] text-text-2">
         {t("auth.noAccount")}
         <Link
-          to={ROUTES.REGISTER}
+          to={{ pathname: ROUTES.REGISTER, search: searchParams.toString() }}
           className="font-semibold text-primary-text transition-colors hover:text-primary"
         >
           {t("auth.registerLink")}

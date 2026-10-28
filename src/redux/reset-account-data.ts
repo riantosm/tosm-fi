@@ -3,6 +3,7 @@ import {
   resetCategories,
   resetInstruments,
   resetInvestmentTransactions,
+  resetPlan,
   resetScheduleOccurrences,
   resetSchedules,
   resetTransactions,
@@ -23,4 +24,5 @@ export function resetAccountData(dispatch: AppDispatch) {
   dispatch(resetSchedules());
   dispatch(resetScheduleOccurrences());
   dispatch(resetBudgets());
+  dispatch(resetPlan());
 }

@@ -16,6 +16,7 @@ import { BalanceCorrectionModal } from "@/layouts/wallet/BalanceCorrectionModal"
 import { WalletReorderItem } from "@/layouts/wallet/WalletReorderItem";
 import { WalletSummaryCard } from "@/layouts/wallet/WalletSummaryCard";
 import { ViewModeToggle } from "@/layouts/wallet/ViewModeToggle";
+import { useUpgrade } from "@/hooks/use-upgrade";
 import { useWallets } from "@/hooks/use-wallets";
 import { useConfirmDialog } from "@/hooks/use-confirm-dialog";
 import { useWalletViewMode } from "@/hooks/use-wallet-view-mode";
@@ -57,6 +58,7 @@ export function WalletPage() {
     setPrimaryWallet,
     reorderWallets,
   } = useWallets();
+  const { guardLimit } = useUpgrade();
   const { confirm } = useConfirmDialog();
   const { viewMode, setViewMode } = useWalletViewMode();
   const { showToast } = useToast();
@@ -85,6 +87,7 @@ export function WalletPage() {
   const isEmpty = status === "loaded" && wallets.length === 0;
 
   function openCreateModal() {
+    if (!guardLimit("wallets", wallets.length)) return;
     setEditingWallet(null);
     setIsModalOpen(true);
   }

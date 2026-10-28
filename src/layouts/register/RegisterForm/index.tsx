@@ -1,5 +1,5 @@
 import { useState, type SubmitEvent } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { AnimatePresence } from "motion/react";
 import { LuAtSign, LuCircleAlert, LuIdCard, LuShieldCheck, LuUserPlus } from "react-icons/lu";
@@ -11,11 +11,13 @@ import { AuthNotice } from "@/layouts/auth/AuthNotice";
 import { ROUTES } from "@/constants/routes";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
+import { afterLoginPath } from "@/utils/auth-redirect";
 
 export function RegisterForm() {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const { register } = useAuth();
+  const { register, login } = useAuth();
+  const [searchParams] = useSearchParams();
   const { showToast } = useToast();
 
   const [nameUser, setNameUser] = useState("");
@@ -32,7 +34,13 @@ export function RegisterForm() {
     try {
       await register({ nameUser, username, password });
       showToast(t("auth.registerSuccess"), "success");
-      navigate(ROUTES.LOGIN, { replace: true });
+      // Accounts are active right away, so sign straight in.
+      try {
+        await login({ username, password, remember: true });
+        navigate(afterLoginPath(searchParams), { replace: true });
+      } catch {
+        navigate({ pathname: ROUTES.LOGIN, search: searchParams.toString() }, { replace: true });
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : t("auth.genericError"));
     } finally {
@@ -116,7 +124,7 @@ export function RegisterForm() {
       <p className="flex items-center justify-center gap-1.5 text-[13.5px] text-text-2">
         {t("auth.alreadyHaveAccount")}
         <Link
-          to={ROUTES.LOGIN}
+          to={{ pathname: ROUTES.LOGIN, search: searchParams.toString() }}
           className="font-semibold text-primary-text transition-colors hover:text-primary"
         >
           {t("auth.loginLink")}

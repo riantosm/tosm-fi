@@ -15,7 +15,9 @@ import { WalletQuickSwitcher } from "@/layouts/dashboard/WalletQuickSwitcher";
 import { AddTransactionModal } from "@/layouts/transaction/AddTransactionModal";
 import { BalanceCorrectionModal } from "@/layouts/wallet/BalanceCorrectionModal";
 import { WalletFormModal } from "@/layouts/wallet/WalletFormModal";
+import { UpgradeBanner } from "@/layouts/plan/UpgradeBanner";
 import { PayOccurrenceModal } from "@/layouts/schedule/PayOccurrenceModal";
+import { useUpgrade } from "@/hooks/use-upgrade";
 import { useCategories } from "@/hooks/use-categories";
 import { useWallets } from "@/hooks/use-wallets";
 import { useToast } from "@/hooks/use-toast";
@@ -50,6 +52,7 @@ export function DashboardPage() {
   // data instead of reading the full unpaginated history.
   const { transactions, queryTransactions } = useTransactions();
   const { budgets, status: budgetsStatus, loadBudgets } = useBudgets();
+  const { guardLimit } = useUpgrade();
   const { categoryBreakdown: budgetCategoryBreakdown, isLoading: isBudgetSpendingLoading } =
     useBudgetSpending();
   const { summary: dashboardSummary, isLoading: isDashboardSummaryLoading } = useDashboardSummary();
@@ -182,6 +185,10 @@ export function DashboardPage() {
         <FinanceOverview summary={dashboardSummary} isLoading={isDashboardSummaryLoading} />
       </Reveal>
 
+      <Reveal immediate delay={0.05}>
+        <UpgradeBanner />
+      </Reveal>
+
       <div className="flex flex-col gap-4 lg:grid lg:grid-cols-[minmax(0,1fr)_380px] lg:items-start lg:gap-5 xl:grid-cols-[minmax(0,1fr)_420px]">
         <div className="contents lg:flex lg:min-w-0 lg:flex-col lg:gap-5">
           <div className="contents xl:grid xl:grid-cols-[minmax(0,1fr)_300px] xl:items-start xl:gap-5">
@@ -239,7 +246,9 @@ export function DashboardPage() {
           <Reveal className="order-5 lg:order-none" delay={0.05}>
             <WalletQuickSwitcher
               onCorrectBalance={(wallet) => setCorrectionState({ wallet, transaction: null })}
-              onAddWallet={() => setIsAddWalletOpen(true)}
+              onAddWallet={() => {
+                if (guardLimit("wallets", wallets.length)) setIsAddWalletOpen(true);
+              }}
             />
           </Reveal>
           <Reveal className="order-1 lg:order-none" delay={0.1}>

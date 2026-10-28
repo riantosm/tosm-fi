@@ -111,9 +111,18 @@ Preferences that are genuinely local-only and not meant to sync to a future back
 - `src/layouts/<feature>/` — composite, feature-specific components (e.g. `layouts/transaction/AddTransactionModal`, `layouts/wallet/BalanceCorrectionModal`). This is where most feature work happens; `src/app/pages/*Page` components stay thin and mostly just wire hooks to layout components.
 - Amount entry (calculator-style keypad with `+ - × ÷`, keyboard input, and an expression preview) is shared via `src/hooks/use-amount-calculator.ts` + `src/components/molecules/AmountCalculatorKeypad`, reused by both `AmountCalculatorModal` (transaction amount) and `BalanceCorrectionModal` (new balance).
 
+### Plan (Free / Pro), landing page and payment
+
+- `/` is the public landing page (`app/pages/LandingPage` + `layouts/landing/*`). Every CTA goes to `/login` first; "buy Pro" uses `/login?next=upgrade`, which `afterLoginPath()` (`utils/auth-redirect.ts`) turns into `/dashboard?upgrade=1` after login or register (register signs straight in, since accounts are active immediately).
+- `AuthUser.plan` comes from `/user/me`; `usePlan()` adds `GET /user/me/plan` (limits + usage, `planSlice`, not persisted). Limits mirror the backend's `PLAN_LIMITS` in `constants/plans.ts` — keep both in sync.
+- `UpgradeProvider` (`hooks/use-upgrade.tsx`, mounted in `AppLayout`) owns the one `UpgradeModal`. It opens on `?upgrade=1`, on `openUpgrade(feature)`, and on any backend **403 `PLAN_LIMIT`** (http-client fires the `PLAN_LIMIT_EVENT` window event). Pages pre-check with `guardLimit(feature, count)` / `guardPro(feature)` in their "add" handlers so Free users usually see the dialog before filling a form.
+- Reports on Free: only last month among past months, "Tahun ini" and custom range open Upgrade, no vs-previous chip, the 12-month trend isn't requested (`useReports`' third argument) and shows `ProLockedCard`, PDF/Excel export are tagged Pro (CSV stays free). Catat Cepat maps the quota 403 to `AssistantErrorKind` `"plan"`.
+- Payment: `UpgradeModal` → `planService.checkoutPro()` → `paySnap()` (`utils/midtrans-snap.ts` loads Snap with the client key from the checkout response) → polls `GET /payments/orders/:orderId` → `refreshPlan()`. Set `VITE_MIDTRANS_IS_PRODUCTION=true` only for live payments (hides the sandbox notice).
+- Admin: Settings → Kelola Pengguna (`SettingsUserApprovalPage`, route unchanged) switches users between Free and Pro through `PATCH /user/:idUser/plan`, each behind a confirm dialog. Registration no longer needs approval.
+
 ### Routing and auth gating
 
-Routes are centralized in `src/constants/routes.ts` (`ROUTES`) and wired in `src/app/AppRouter/index.tsx`. Every route except `/login` is wrapped in `src/app/ProtectedRoute/index.tsx`, which redirects to `/login` when `useAuth().isAuthenticated` is false — there's no route-level code splitting or nested layouts beyond that single gate.
+Routes are centralized in `src/constants/routes.ts` (`ROUTES`) and wired in `src/app/AppRouter/index.tsx`. Every route except `/` (landing), `/login` and `/register` is wrapped in `src/app/ProtectedRoute/index.tsx`, which redirects to `/login` when `useAuth().isAuthenticated` is false — there's no route-level code splitting or nested layouts beyond that single gate.
 
 ### Styling
 

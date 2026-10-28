@@ -10,6 +10,8 @@ export { default as transactionSlice } from "./transactionSlice";
 export * from "./transactionSlice";
 export { default as settingsSlice } from "./settingsSlice";
 export * from "./settingsSlice";
+export { default as planSlice } from "./planSlice";
+export * from "./planSlice";
 export { default as userApprovalSlice } from "./userApprovalSlice";
 export * from "./userApprovalSlice";
 export { default as clientErrorSlice } from "./clientErrorSlice";

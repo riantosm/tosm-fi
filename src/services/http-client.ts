@@ -2,6 +2,7 @@ import axios from "axios";
 import { store } from "@/redux/store";
 import { onSessionExpired } from "@/redux/slices/authenticationSlice";
 import { resetAccountData } from "@/redux/reset-account-data";
+import { PLAN_LIMIT_CODE, PLAN_LIMIT_EVENT, type PlanLimitEventDetail } from "@/constants/plans";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:3000/api";
 
@@ -36,6 +37,16 @@ httpClient.interceptors.response.use(
     if (isUnauthorized && store.getState().authentication.isLogin) {
       store.dispatch(onSessionExpired());
       resetAccountData(store.dispatch);
+    }
+    // 403 PLAN_LIMIT = a Free plan limit blocked the request; UpgradeProvider
+    // opens the Upgrade dialog. The caller still gets the error (its usual toast).
+    const body = axios.isAxiosError(error) ? error.response?.data : undefined;
+    if (error.response?.status === 403 && body?.data?.code === PLAN_LIMIT_CODE) {
+      window.dispatchEvent(
+        new CustomEvent<PlanLimitEventDetail>(PLAN_LIMIT_EVENT, {
+          detail: { feature: body.data.feature, message: body.message },
+        }),
+      );
     }
     return Promise.reject(error);
   },

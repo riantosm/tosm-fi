@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { IconType } from "react-icons";
-import { LuDownload, LuFileCode2, LuFileSpreadsheet, LuFileText } from "react-icons/lu";
+import { LuDownload, LuFileCode2, LuFileSpreadsheet, LuFileText, LuLock } from "react-icons/lu";
 import { Button } from "@/components/atoms/Button";
 import { IconButton } from "@/components/atoms/IconButton";
 import { IconLoader } from "@/components/atoms/IconLoader";
@@ -22,6 +22,8 @@ interface ReportExportMenuProps {
   exportingFormat: ExportFormat | null;
   /** button = labelled primary button (desktop); icon = round app-bar button (phone). */
   variant?: "button" | "icon";
+  /** Formats outside the plan: shown with a Pro tag, still clickable (the page opens Upgrade). */
+  lockedFormats?: ExportFormat[];
 }
 
 /** "Export" — PDF / Excel / CSV of the current report period. */
@@ -29,6 +31,7 @@ export function ReportExportMenu({
   onExport,
   exportingFormat,
   variant = "button",
+  lockedFormats = [],
 }: ReportExportMenuProps) {
   const { t } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
@@ -94,7 +97,12 @@ export function ReportExportMenu({
                 {t(`reports.export.${format}Description`)}
               </span>
             </span>
-            {exportingFormat === format ? (
+            {lockedFormats.includes(format) ? (
+              <span className="flex shrink-0 items-center gap-1 rounded-full bg-primary-soft px-2 py-1 text-[11px] font-semibold text-primary-text">
+                <LuLock className="size-3" />
+                Pro
+              </span>
+            ) : exportingFormat === format ? (
               <IconLoader className="size-[18px] shrink-0 animate-spin text-primary-text" />
             ) : (
               <LuDownload className="size-[18px] shrink-0 text-text-3 transition-colors group-hover:text-primary-text" />
