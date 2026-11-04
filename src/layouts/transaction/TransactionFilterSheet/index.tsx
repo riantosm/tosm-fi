@@ -14,6 +14,7 @@ import {
 import { Button } from "@/components/atoms/Button";
 import { IconButton } from "@/components/atoms/IconButton";
 import { Chip } from "@/components/molecules/Chip";
+import { WalletChipIcon } from "@/components/molecules/WalletChipIcon";
 import { Modal, ModalActions } from "@/components/molecules/Modal";
 import { PickerField } from "@/components/molecules/PickerField";
 import { SegmentedControl } from "@/components/molecules/SegmentedControl";
@@ -248,9 +249,9 @@ function FilterSheetDialog({
                 <Chip
                   key={wallet.idWallet}
                   active={draft.walletIds.includes(wallet.idWallet)}
-                  dot={wallet.color}
+                  icon={<WalletChipIcon wallet={wallet} />}
                   onClick={() => set({ walletIds: toggleId(draft.walletIds, wallet.idWallet) })}
-                  className="max-w-[220px]"
+                  className="max-w-[220px] pl-1.5"
                 >
                   {wallet.nameWallet}
                 </Chip>

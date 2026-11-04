@@ -16,6 +16,7 @@ import {
 } from "react-icons/lu";
 import { Button } from "@/components/atoms/Button";
 import { TxRowBase, type TxAmountTone } from "@/components/molecules/TxRowBase";
+import { TxWalletBadge } from "@/components/molecules/TxWalletBadge";
 import { resolveCategoryIcon } from "@/constants/category-icons";
 import { useCurrency } from "@/hooks/use-currency";
 import { useLanguage } from "@/hooks/use-language";
@@ -202,6 +203,7 @@ export function AssistantPreviewCard({
     const shown = rowAmount(draft);
     let title = draft.title;
     let icon: ReactNode;
+    let badge: ReactNode;
     let color: string | undefined;
     let tone: "neutral" | "income" | "expense" | "investment" | "primary" = "neutral";
     let meta = "";
@@ -216,7 +218,8 @@ export function AssistantPreviewCard({
         icon = createElement(category ? resolveCategoryIcon(category.icon) : LuTag);
         color = category?.color;
         tone = draft.kind;
-        meta = [categoryLabel(draft), wallet?.nameWallet].filter(Boolean).join(" · ");
+        meta = [wallet?.nameWallet, categoryLabel(draft)].filter(Boolean).join(" · ");
+        badge = wallet && <TxWalletBadge wallet={wallet} />;
         break;
       }
       case "transfer":
@@ -228,6 +231,7 @@ export function AssistantPreviewCard({
         icon = <LuScale />;
         tone = "primary";
         meta = `${wallet?.nameWallet ?? "-"} · ${format(draft.balanceBefore ?? 0)} → ${format(draft.balanceAfter ?? 0)}`;
+        badge = wallet && <TxWalletBadge wallet={wallet} />;
         break;
       case "investmentIn":
         icon = <LuArrowDownLeft />;
@@ -273,6 +277,7 @@ export function AssistantPreviewCard({
     const row = (
       <TxRowBase
         icon={icon}
+        badge={badge}
         color={color}
         tone={tone}
         title={title}

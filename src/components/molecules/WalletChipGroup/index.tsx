@@ -1,4 +1,5 @@
 import { Chip } from "@/components/molecules/Chip";
+import { WalletChipIcon } from "@/components/molecules/WalletChipIcon";
 import type { WalletAccount } from "@/types/wallet.types";
 
 interface WalletChipGroupProps {
@@ -11,7 +12,7 @@ interface WalletChipGroupProps {
   size?: "sm" | "md";
 }
 
-/** Labelled single-select row of wallet chips (color dot + name). */
+/** Labelled single-select row of wallet chips (wallet logo/icon + name). */
 export function WalletChipGroup({
   label,
   wallets,
@@ -29,11 +30,11 @@ export function WalletChipGroup({
             key={wallet.idWallet}
             size={size}
             variant="outline"
-            dot={wallet.color}
+            icon={<WalletChipIcon wallet={wallet} />}
             active={selectedId === wallet.idWallet}
             disabled={wallet.idWallet === disabledId}
             onClick={() => onSelect(wallet.idWallet)}
-            className="max-w-[180px]"
+            className="max-w-[180px] pl-1.5"
           >
             {wallet.nameWallet}
           </Chip>

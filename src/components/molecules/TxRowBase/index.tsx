@@ -8,6 +8,8 @@ interface TxRowBaseProps {
   icon: ReactNode;
   /** Hex tile/icon color (category / wallet color). Omit for token tones. */
   color?: string;
+  /** Small mark on the tile's bottom-right corner (e.g. the transaction's wallet). */
+  badge?: ReactNode;
   /** Token tone for the tile when there is no hex color. */
   tone?: "neutral" | "income" | "expense" | "investment" | "primary";
   title: ReactNode;
@@ -46,6 +48,7 @@ const AMOUNT_CLASS: Record<TxAmountTone, string> = {
  */
 export function TxRowBase({
   icon,
+  badge,
   color,
   tone = "neutral",
   title,
@@ -75,13 +78,20 @@ export function TxRowBase({
     >
       <span
         className={cn(
-          "flex size-[42px] shrink-0 items-center justify-center rounded-full transition-transform duration-300 [&_svg]:size-[18px]",
+          "relative shrink-0 transition-transform duration-300",
           onClick && "group-hover:scale-105",
-          !color && TONE_TILE[tone],
         )}
-        style={tileStyle}
       >
-        {icon}
+        <span
+          className={cn(
+            "flex size-[42px] items-center justify-center rounded-full [&_svg]:size-[18px]",
+            !color && TONE_TILE[tone],
+          )}
+          style={tileStyle}
+        >
+          {icon}
+        </span>
+        {badge && <span className="absolute -right-0.5 -bottom-0.5 flex">{badge}</span>}
       </span>
       <span className="flex min-w-0 flex-1 flex-col gap-0.5">
         <span className="truncate text-[14px] font-semibold text-text">{title}</span>

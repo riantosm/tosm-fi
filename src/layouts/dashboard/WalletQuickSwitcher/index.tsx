@@ -5,6 +5,7 @@ import { m } from "motion/react";
 import { LuPlus, LuWallet } from "react-icons/lu";
 import { Button } from "@/components/atoms/Button";
 import { IconLoader } from "@/components/atoms/IconLoader";
+import { WalletTile } from "@/components/atoms/WalletTile";
 import { Skeleton } from "@/components/atoms/Skeleton";
 import { Card } from "@/components/molecules/Card";
 import { EmptyState } from "@/components/molecules/EmptyState";
@@ -97,14 +98,15 @@ export function WalletQuickSwitcher({ onCorrectBalance, onAddWallet }: WalletQui
             >
               <span className="flex w-full min-w-0 items-center gap-2.5">
                 {isPending ? (
-                  <IconLoader
-                    className="size-2.5 shrink-0 animate-spin"
-                    style={{ color: wallet.color }}
-                  />
+                  <span className="flex size-6 shrink-0 items-center justify-center">
+                    <IconLoader className="size-3.5 animate-spin" style={{ color: wallet.color }} />
+                  </span>
                 ) : (
-                  <span
-                    className="size-2.5 shrink-0 rounded-full"
-                    style={{ backgroundColor: wallet.color }}
+                  <WalletTile
+                    color={wallet.color}
+                    logoUrl={wallet.logoUrl}
+                    onTint
+                    className="size-6 rounded-full [&_svg]:size-3"
                   />
                 )}
                 <span className="truncate text-[14px] font-semibold text-text">

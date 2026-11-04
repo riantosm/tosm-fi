@@ -2,6 +2,7 @@ import { useTranslation } from "react-i18next";
 import { m } from "motion/react";
 import { LuWallet } from "react-icons/lu";
 import { Skeleton } from "@/components/atoms/Skeleton";
+import { WalletTile } from "@/components/atoms/WalletTile";
 import { Card } from "@/components/molecules/Card";
 import { EmptyState } from "@/components/molecules/EmptyState";
 import { SectionHead } from "@/components/molecules/SectionHead";
@@ -53,9 +54,11 @@ export function WalletUsageCard({
               className="flex animate-fade-in flex-col gap-2.5 rounded-control bg-surface-2 px-3.5 py-3"
             >
               <div className="flex items-center gap-2.5">
-                <span
-                  className="size-2.5 shrink-0 rounded-full"
-                  style={{ backgroundColor: item.color }}
+                <WalletTile
+                  color={item.color}
+                  logoUrl={item.logoUrl}
+                  onTint
+                  className="size-6 rounded-full [&_svg]:size-3"
                 />
                 <span className="min-w-0 flex-1 truncate text-[14px] font-semibold text-text">
                   {item.nameWallet}

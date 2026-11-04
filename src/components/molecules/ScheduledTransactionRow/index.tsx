@@ -42,7 +42,7 @@ export function ScheduledTransactionRow({
       : t("schedule.dueOn", {
           date: due.toLocaleDateString(toIntlLocale(language), { day: "numeric", month: "short" }),
         });
-  const meta = [category?.nameCategory, wallet?.nameWallet, dueLabel].filter(Boolean).join(" · ");
+  const meta = [wallet?.nameWallet, category?.nameCategory, dueLabel].filter(Boolean).join(" · ");
 
   // Container query: one line when the card is wide (Dashboard), actions on a
   // second line when it is narrow (Transaksi side list, phones).

@@ -1,6 +1,7 @@
 import { createElement } from "react";
 import { LuScale, LuTag } from "react-icons/lu";
 import { TxRowBase } from "@/components/molecules/TxRowBase";
+import { TxWalletBadge } from "@/components/molecules/TxWalletBadge";
 import { formatTxTime } from "@/utils/tx-time";
 import { resolveCategoryIcon } from "@/constants/category-icons";
 import { useCurrency } from "@/hooks/use-currency";
@@ -31,16 +32,17 @@ export function TransactionRow({
   const Icon = category ? resolveCategoryIcon(category.icon) : isCorrection ? LuScale : LuTag;
   const title = transaction.title || subCategory?.nameSubCategory || category?.nameCategory || "-";
   const metaParts = [
+    wallet?.nameWallet,
     subCategory
       ? `${category?.nameCategory ?? ""} › ${subCategory.nameSubCategory}`
       : category?.nameCategory,
-    wallet?.nameWallet,
   ].filter(Boolean);
 
   return (
     <TxRowBase
       onClick={onClick}
       icon={createElement(Icon)}
+      badge={wallet && <TxWalletBadge wallet={wallet} />}
       color={category?.color ?? (isCorrection ? "#8A94A0" : undefined)}
       title={title}
       meta={metaParts.join(" · ")}
