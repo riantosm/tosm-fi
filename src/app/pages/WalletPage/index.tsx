@@ -21,7 +21,7 @@ import { useWallets } from "@/hooks/use-wallets";
 import { useConfirmDialog } from "@/hooks/use-confirm-dialog";
 import { useWalletViewMode } from "@/hooks/use-wallet-view-mode";
 import { useToast } from "@/hooks/use-toast";
-import type { WalletAccount, WalletInput } from "@/types/wallet.types";
+import type { WalletAccount, WalletInput, WalletLogoChange } from "@/types/wallet.types";
 
 const EASE = [0.22, 1, 0.36, 1] as const;
 
@@ -54,6 +54,7 @@ export function WalletPage() {
     loadWallets,
     createWallet,
     editWallet,
+    changeWalletLogo,
     deleteWallet,
     setPrimaryWallet,
     reorderWallets,
@@ -97,13 +98,24 @@ export function WalletPage() {
     setIsModalOpen(true);
   }
 
-  async function handleSubmit(input: WalletInput) {
+  async function handleSubmit(input: WalletInput, logoChange?: WalletLogoChange) {
     setIsSubmitting(true);
     try {
+      let idWallet: string;
       if (editingWallet) {
-        await editWallet(editingWallet.idWallet, input);
+        idWallet = editingWallet.idWallet;
+        await editWallet(idWallet, input);
       } else {
-        await createWallet(input);
+        idWallet = (await createWallet(input)).idWallet;
+      }
+      // The wallet itself is saved by now, so a failed logo only toasts — the
+      // dialog still closes (retrying a create from it would duplicate the wallet).
+      if (logoChange) {
+        try {
+          await changeWalletLogo(idWallet, logoChange);
+        } catch (error) {
+          showToast(error instanceof Error ? error.message : t("wallet.logoUploadError"), "error");
+        }
       }
       setIsModalOpen(false);
     } catch (error) {

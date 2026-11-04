@@ -1,6 +1,6 @@
 import i18n from "@/helpers/i18n";
 import { getApiErrorMessage, httpClient } from "@/services/http-client";
-import type { WalletAccount, WalletInput } from "@/types/wallet.types";
+import type { WalletAccount, WalletInput, WalletLogoImage } from "@/types/wallet.types";
 
 export const walletService = {
   async fetchWallets(): Promise<WalletAccount[]> {
@@ -54,6 +54,26 @@ export const walletService = {
     try {
       const { data } = await httpClient.patch("/wallets/reorder", { orderedIds });
       return data.data as WalletAccount[];
+    } catch (error) {
+      throw new Error(getApiErrorMessage(error, i18n.t("wallet.genericError")), { cause: error });
+    }
+  },
+
+  async uploadWalletLogo(id: string, image: WalletLogoImage): Promise<WalletAccount> {
+    try {
+      const { data } = await httpClient.put(`/wallets/${id}/logo`, { image });
+      return data.data as WalletAccount;
+    } catch (error) {
+      throw new Error(getApiErrorMessage(error, i18n.t("wallet.logoUploadError")), {
+        cause: error,
+      });
+    }
+  },
+
+  async removeWalletLogo(id: string): Promise<WalletAccount> {
+    try {
+      const { data } = await httpClient.delete(`/wallets/${id}/logo`);
+      return data.data as WalletAccount;
     } catch (error) {
       throw new Error(getApiErrorMessage(error, i18n.t("wallet.genericError")), { cause: error });
     }

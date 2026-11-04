@@ -3,7 +3,7 @@ import { LuChevronRight, LuPencil } from "react-icons/lu";
 import { Badge } from "@/components/atoms/Badge";
 import { WalletAmount } from "@/layouts/wallet/WalletAmount";
 import { WalletShareTrack } from "@/layouts/wallet/WalletShareTrack";
-import { WalletTile } from "@/layouts/wallet/WalletTile";
+import { WalletTile } from "@/components/atoms/WalletTile";
 import { useMoneyFormat } from "@/hooks/use-money-format";
 import type { WalletAccount } from "@/types/wallet.types";
 import { cn } from "@/utils/cn";
@@ -34,6 +34,7 @@ export function WalletCard({ wallet, share, variant = "card", onClick }: WalletC
       >
         <WalletTile
           color={wallet.color}
+          logoUrl={wallet.logoUrl}
           className="size-[38px] rounded-[12px] transition-transform duration-300 group-hover:scale-105 sm:size-10"
         />
         <span className="flex min-w-0 flex-1 flex-col gap-0.5 md:w-[200px] md:flex-none lg:w-[260px]">
@@ -77,6 +78,7 @@ export function WalletCard({ wallet, share, variant = "card", onClick }: WalletC
       <span className="flex w-full items-center gap-3">
         <WalletTile
           color={wallet.color}
+          logoUrl={wallet.logoUrl}
           className="size-10 rounded-[12px] transition-transform duration-300 group-hover:scale-105 sm:size-11 sm:rounded-[14px]"
         />
         <span className="flex min-w-0 flex-1 flex-col gap-0.5">

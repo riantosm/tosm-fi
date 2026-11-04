@@ -1,6 +1,6 @@
 import { useCallback } from "react";
 import { walletService } from "@/services/wallet.service";
-import type { WalletInput } from "@/types/wallet.types";
+import type { WalletAccount, WalletInput, WalletLogoChange } from "@/types/wallet.types";
 import {
   addWallet,
   removeWallet,
@@ -23,9 +23,10 @@ export function useWallets() {
   }, [dispatch]);
 
   const createWallet = useCallback(
-    async (input: WalletInput) => {
+    async (input: WalletInput): Promise<WalletAccount> => {
       const created = await walletService.createWallet(input);
       dispatch(addWallet(created));
+      return created;
     },
     [dispatch],
   );
@@ -62,6 +63,17 @@ export function useWallets() {
     [dispatch],
   );
 
+  const changeWalletLogo = useCallback(
+    async (id: string, change: WalletLogoChange) => {
+      const updated =
+        change.type === "upload"
+          ? await walletService.uploadWalletLogo(id, change.image)
+          : await walletService.removeWalletLogo(id);
+      dispatch(updateWallet(updated));
+    },
+    [dispatch],
+  );
+
   return {
     wallets,
     status,
@@ -71,5 +83,6 @@ export function useWallets() {
     deleteWallet,
     setPrimaryWallet,
     reorderWallets,
+    changeWalletLogo,
   };
 }

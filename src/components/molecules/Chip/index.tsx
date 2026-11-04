@@ -58,7 +58,8 @@ export function Chip({
     >
       {dot && <span className="size-2 shrink-0 rounded-full" style={{ backgroundColor: dot }} />}
       {icon}
-      <span className="truncate">{children}</span>
+      {/* Inter's caps sit ~1px above the line box's center; the nudge lines them up with the icon. */}
+      <span className="translate-y-px truncate">{children}</span>
       {removable && <LuX className="!size-3 shrink-0 opacity-70" />}
     </button>
   );

@@ -2,7 +2,7 @@ import type { DragEvent } from "react";
 import { useTranslation } from "react-i18next";
 import { Badge } from "@/components/atoms/Badge";
 import { ReorderRow } from "@/components/molecules/ReorderRow";
-import { WalletTile } from "@/layouts/wallet/WalletTile";
+import { WalletTile } from "@/components/atoms/WalletTile";
 import { useCurrency } from "@/hooks/use-currency";
 import type { WalletAccount } from "@/types/wallet.types";
 
@@ -27,7 +27,13 @@ export function WalletReorderItem({ wallet, ...rowProps }: WalletReorderItemProp
   return (
     <ReorderRow
       {...rowProps}
-      leading={<WalletTile color={wallet.color} className="size-10 rounded-[12px]" />}
+      leading={
+        <WalletTile
+          color={wallet.color}
+          logoUrl={wallet.logoUrl}
+          className="size-10 rounded-[12px]"
+        />
+      }
       title={wallet.nameWallet}
       badge={wallet.isPrimary && <Badge tone="primary">{t("wallet.primary")}</Badge>}
       meta={t("wallet.transactionCount", { n: wallet.transactionCount })}

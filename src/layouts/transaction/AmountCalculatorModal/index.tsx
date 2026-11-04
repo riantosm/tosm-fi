@@ -2,6 +2,7 @@ import { useTranslation } from "react-i18next";
 import { Modal } from "@/components/molecules/Modal";
 import { AmountCalculatorKeypad } from "@/components/molecules/AmountCalculatorKeypad";
 import { Chip } from "@/components/molecules/Chip";
+import { WalletChipIcon } from "@/components/molecules/WalletChipIcon";
 import { useAmountCalculator } from "@/hooks/use-amount-calculator";
 import { useMoneyFormat } from "@/hooks/use-money-format";
 import type { WalletAccount } from "@/types/wallet.types";
@@ -111,10 +112,10 @@ function AmountCalculatorFields({
               key={wallet.idWallet}
               size="sm"
               variant="outline"
-              dot={wallet.color}
+              icon={<WalletChipIcon wallet={wallet} />}
               active={selectedWalletId === wallet.idWallet}
               onClick={() => onSelectWallet(wallet.idWallet)}
-              className="h-7 max-w-[160px] px-2.5 text-[12px]"
+              className="h-7 max-w-[160px] pr-2.5 pl-1 text-[12px]"
             >
               {wallet.nameWallet}
             </Chip>

@@ -1,8 +1,9 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { LuCalendarClock, LuTrash2, LuTrendingDown, LuTrendingUp, LuWallet } from "react-icons/lu";
+import { LuCalendarClock, LuTrash2, LuTrendingDown, LuTrendingUp } from "react-icons/lu";
 import { IconButton } from "@/components/atoms/IconButton";
 import { Textarea } from "@/components/atoms/Textarea";
+import { WalletTile } from "@/components/atoms/WalletTile";
 import { AmountCard } from "@/components/molecules/AmountCard";
 import { AmountCalculatorKeypad } from "@/components/molecules/AmountCalculatorKeypad";
 import { FormField } from "@/components/molecules/FormField";
@@ -188,12 +189,12 @@ function BalanceCorrectionFields({
           className="flex items-center gap-3 rounded-[18px] p-3.5"
           style={{ backgroundColor: `${wallet.color}1F` }}
         >
-          <span
-            className="flex size-10 shrink-0 items-center justify-center rounded-full bg-surface"
-            style={{ color: wallet.color }}
-          >
-            <LuWallet className="size-[18px]" />
-          </span>
+          <WalletTile
+            color={wallet.color}
+            logoUrl={wallet.logoUrl}
+            onTint
+            className="size-10 rounded-full [&_svg]:size-[18px]"
+          />
           <span className="flex min-w-0 flex-1 flex-col gap-px">
             <span className="flex min-w-0 items-center gap-2">
               <span className="truncate text-[14px] font-semibold text-text">
