@@ -1373,6 +1373,11 @@ export const API_DOC_GROUPS: ApiDocGroup[] = [
             required: false,
           },
           { name: "startDate", type: "string (ISO 8601)", required: true },
+          {
+            name: "idTransaction",
+            type: "string (source transaction; pays the first due date, which must be startDate)",
+            required: false,
+          },
         ],
         successExample: JSON.stringify(
           {
@@ -1522,6 +1527,45 @@ export const API_DOC_GROUPS: ApiDocGroup[] = [
             isSuccess: false,
             status: 400,
             data: { error: "Schedule tidak ditemukan" },
+          },
+          null,
+          2,
+        ),
+      },
+      {
+        id: "link-schedule-transaction",
+        title: "Link Source Transaction",
+        method: "POST",
+        endpoint: "/schedules/:idSchedule/link-transaction",
+        payload: [{ name: "idTransaction", type: "string", required: true }],
+        successExample: JSON.stringify(
+          {
+            message: "Transaksi berhasil ditautkan ke jadwal",
+            isSuccess: true,
+            status: 200,
+            data: {
+              idOccurrence: "occurrence-1",
+              idSchedule: "schedule-1",
+              dueDate: "2026-08-01T00:00:00.000Z",
+              status: "paid",
+              type: "income",
+              title: "Gaji Bulanan",
+              amount: 8000000,
+              idWallet: "wallet-1",
+              idCategory: "category-2",
+              idSubCategory: null,
+              idTransaction: "transaction-5",
+            },
+          },
+          null,
+          2,
+        ),
+        errorExample: JSON.stringify(
+          {
+            message: "Tanggal transaksi tidak sama dengan tanggal mulai jadwal",
+            isSuccess: false,
+            status: 400,
+            data: { error: "Tanggal transaksi tidak sama dengan tanggal mulai jadwal" },
           },
           null,
           2,

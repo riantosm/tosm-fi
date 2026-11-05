@@ -24,20 +24,31 @@ export function useSchedules() {
   const loadSchedules = useCallback(async () => {
     dispatch(setSchedulesLoading());
     try {
-      dispatch(setSchedules(await scheduleService.fetchSchedules()));
+      const schedules = await scheduleService.fetchSchedules();
+      dispatch(setSchedules(schedules));
+      return schedules;
     } catch {
       dispatch(setSchedulesFailed());
+      return null;
     }
   }, [dispatch]);
 
   const createSchedule = useCallback(
-    async (input: ScheduleInput) => {
-      const created = await scheduleService.createSchedule(input);
+    async (input: ScheduleInput, idTransaction?: string) => {
+      const created = await scheduleService.createSchedule(input, idTransaction);
       dispatch(addSchedule(created));
       void loadPendingOccurrences();
       return created;
     },
     [dispatch, loadPendingOccurrences],
+  );
+
+  const linkTransaction = useCallback(
+    async (idSchedule: string, idTransaction: string) => {
+      await scheduleService.linkTransaction(idSchedule, idTransaction);
+      void loadPendingOccurrences();
+    },
+    [loadPendingOccurrences],
   );
 
   const editSchedule = useCallback(
@@ -73,6 +84,7 @@ export function useSchedules() {
     schedules,
     status,
     loadSchedules,
+    linkTransaction,
     createSchedule,
     editSchedule,
     setScheduleActive,

@@ -6,6 +6,7 @@ import {
   LuArrowUpDown,
   LuCalendarClock,
   LuCheck,
+  LuChevronRight,
   LuCopy,
   LuTrash2,
   LuTrendingUp,
@@ -29,17 +30,23 @@ import { SelectSubCategoryModal } from "@/layouts/transaction/SelectSubCategoryM
 import { AmountCalculatorModal } from "@/layouts/transaction/AmountCalculatorModal";
 import { DateTimePickerModal } from "@/layouts/transaction/DateTimePickerModal";
 import { InvestmentAccountPickerButton } from "@/layouts/investment/InvestmentAccountPickerButton";
+import { AddScheduleModal } from "@/layouts/schedule/AddScheduleModal";
 import { useCategories } from "@/hooks/use-categories";
 import { useWallets } from "@/hooks/use-wallets";
 import { useTransactions } from "@/hooks/use-transactions";
 import { useInvestmentTransactions } from "@/hooks/use-investment-transactions";
+import { useSchedules } from "@/hooks/use-schedules";
+import { useUpgrade } from "@/hooks/use-upgrade";
 import { useLanguage } from "@/hooks/use-language";
 import { useToast } from "@/hooks/use-toast";
 import { useConfirmDialog } from "@/hooks/use-confirm-dialog";
 import { useDialogSession } from "@/hooks/use-dialog-session";
 import type { Category, CategoryType, SubCategory } from "@/types/category.types";
+import type { Schedule, ScheduleDraft } from "@/types/schedule.types";
 import type { Transaction, TransactionInput } from "@/types/transaction.types";
 import { formatDateTimeLabel } from "@/utils/tx-time";
+import { toIsoDateString } from "@/utils/report-period";
+import { isDueOnStartDate, parseScheduleDate } from "@/layouts/schedule/schedule-utils";
 
 type FormTransactionType = "income" | "expense" | "transfer";
 
@@ -102,6 +109,8 @@ function AddTransactionDialog({
   const { wallets, status: walletsStatus, loadWallets } = useWallets();
   const { createTransaction, editTransaction, deleteTransaction } = useTransactions();
   const { createMoneyIn } = useInvestmentTransactions();
+  const { schedules, status: schedulesStatus, loadSchedules, linkTransaction } = useSchedules();
+  const { guardLimit } = useUpgrade();
   const { showToast } = useToast();
   const { confirm } = useConfirmDialog();
 
@@ -134,6 +143,10 @@ function AddTransactionDialog({
   const [isSubCategoryPickerOpen, setIsSubCategoryPickerOpen] = useState(false);
   const [isAmountPickerOpen, setIsAmountPickerOpen] = useState(false);
   const [isDateTimePickerOpen, setIsDateTimePickerOpen] = useState(false);
+  const [scheduleDraft, setScheduleDraft] = useState<ScheduleDraft | null>(null);
+  const [isOpeningSchedule, setIsOpeningSchedule] = useState(false);
+  // A schedule made from this (still unsaved) new transaction; linked once it's saved.
+  const [linkedSchedule, setLinkedSchedule] = useState<Schedule | null>(null);
 
   useEffect(() => {
     if (categoriesStatus === "idle") void loadCategories();
@@ -235,6 +248,10 @@ function AddTransactionDialog({
       showToast(t("transaction.categoryRequiredError"), "error");
       return null;
     }
+    if (!title.trim()) {
+      showToast(t("transaction.titleRequiredError"), "error");
+      return null;
+    }
     if (!selectedWalletId) {
       showToast(t("transaction.walletRequiredError"), "error");
       return null;
@@ -282,6 +299,7 @@ function AddTransactionDialog({
 
     setIsSaving(true);
     let investmentErrorMessage: string | null = null;
+    let scheduleLinkErrorMessage: string | null = null;
     try {
       if (transaction) {
         await editTransaction(transaction.idTransaction, input);
@@ -304,6 +322,26 @@ function AddTransactionDialog({
                 : t("investment.moneyInFailedButTransactionSaved");
           }
         }
+
+        // This transaction pays the first due date of the schedule made from it, as long as its
+        // type and date still match (both can change after the schedule was created).
+        if (
+          linkedSchedule &&
+          linkedSchedule.type === input.type &&
+          linkedSchedule.startDate.slice(0, 10) === toIsoDateString(date) &&
+          isDueOnStartDate(
+            linkedSchedule.frequency,
+            linkedSchedule.weekdays,
+            parseScheduleDate(linkedSchedule.startDate),
+          )
+        ) {
+          try {
+            await linkTransaction(linkedSchedule.idSchedule, created.idTransaction);
+          } catch (linkError) {
+            scheduleLinkErrorMessage =
+              linkError instanceof Error ? linkError.message : t("schedule.genericError");
+          }
+        }
       }
     } catch (error) {
       setIsSaving(false);
@@ -313,6 +351,7 @@ function AddTransactionDialog({
 
     finishAndClose(transaction ? t("transaction.updateSuccess") : t("transaction.createSuccess"));
     if (investmentErrorMessage) showToast(investmentErrorMessage, "error");
+    if (scheduleLinkErrorMessage) showToast(scheduleLinkErrorMessage, "error");
   }
 
   async function handleDuplicate() {
@@ -351,6 +390,33 @@ function AddTransactionDialog({
     }
     finishAndClose(t("transaction.deleteSuccess"));
   }
+
+  // Schedules only know income/expense, so the row is hidden for transfers. The list is only
+  // needed for the Free-plan count, so it's loaded on demand instead of on every open.
+  async function handleMakeScheduled() {
+    if (type === "transfer") return;
+    setIsOpeningSchedule(true);
+    const list = schedulesStatus === "loaded" ? schedules : await loadSchedules();
+    setIsOpeningSchedule(false);
+    if (!guardLimit("schedules", (list ?? schedules).length)) return;
+    setScheduleDraft({
+      type,
+      idCategory: category?.idCategory,
+      idSubCategory: subCategory?.idSubCategory ?? null,
+      amount,
+      title: title.trim(),
+      idWallet: selectedWalletId ?? undefined,
+      notes: notes.trim(),
+      startDate: toIsoDateString(date),
+    });
+  }
+
+  // Editing: the saved transaction pays the first due date, unless its type or date was changed
+  // in the form (the backend checks against the saved transaction).
+  const savedTransactionMatches =
+    !!transaction &&
+    transaction.type === type &&
+    toIsoDateString(new Date(transaction.date)) === toIsoDateString(date);
 
   const isBusy = isSaving || isDuplicating || isDeleting;
   const isTransfer = type === "transfer";
@@ -520,10 +586,7 @@ function AddTransactionDialog({
             )}
           </AnimatePresence>
 
-          <FormField
-            label={isTransfer ? t("transaction.titleLabel") : t("transaction.titleLabelOptional")}
-            htmlFor="tx-title"
-          >
+          <FormField label={t("transaction.titleLabel")} htmlFor="tx-title">
             <Input
               id="tx-title"
               value={title}
@@ -607,8 +670,44 @@ function AddTransactionDialog({
               </AnimatePresence>
             </div>
           )}
+
+          {!isTransfer && (
+            <button
+              type="button"
+              onClick={() => void handleMakeScheduled()}
+              disabled={isBusy || isOpeningSchedule || linkedSchedule !== null}
+              className="group flex items-center gap-3 rounded-control border border-border px-3.5 py-3 text-left transition-colors duration-200 hover:bg-surface-2 disabled:opacity-60"
+            >
+              <span className="flex size-[38px] shrink-0 items-center justify-center rounded-[12px] bg-investment-soft text-investment-text [&_svg]:size-[18px]">
+                <LuCalendarClock />
+              </span>
+              <span className="flex min-w-0 flex-1 flex-col gap-px">
+                <span className="truncate text-[14px] font-semibold text-text">
+                  {t("transaction.makeScheduled")}
+                </span>
+                <span className="truncate text-[12.5px] text-text-3">
+                  {linkedSchedule
+                    ? t("transaction.makeScheduledDone")
+                    : t("transaction.makeScheduledHint")}
+                </span>
+              </span>
+              {linkedSchedule ? (
+                <LuCheck className="size-[18px] shrink-0 text-income-text" />
+              ) : (
+                <LuChevronRight className="size-4 shrink-0 text-text-3 transition-transform duration-200 group-hover:translate-x-0.5" />
+              )}
+            </button>
+          )}
         </div>
       </Modal>
+
+      <AddScheduleModal
+        isOpen={scheduleDraft !== null}
+        draft={scheduleDraft}
+        idTransaction={savedTransactionMatches ? transaction?.idTransaction : null}
+        onLinkPending={transaction ? undefined : setLinkedSchedule}
+        onClose={() => setScheduleDraft(null)}
+      />
 
       <SelectCategoryModal
         isOpen={isCategoryPickerOpen}

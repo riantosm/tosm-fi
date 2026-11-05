@@ -20,6 +20,7 @@ import {
   WEEKDAY_ORDER,
   describeRecurrencePreview,
   formatLongDate,
+  isDueOnStartDate,
   parseScheduleDate,
   weekdayLabel,
 } from "@/layouts/schedule/schedule-utils";
@@ -32,12 +33,26 @@ import { useToast } from "@/hooks/use-toast";
 import { toIsoDateString } from "@/utils/report-period";
 import { toIntlLocale } from "@/utils/locale";
 import type { Category, CategoryType } from "@/types/category.types";
-import type { Schedule, ScheduleFrequency, ScheduleInput } from "@/types/schedule.types";
+import type {
+  Schedule,
+  ScheduleDraft,
+  ScheduleFrequency,
+  ScheduleInput,
+} from "@/types/schedule.types";
 import { cn } from "@/utils/cn";
 
 interface AddScheduleModalProps {
   isOpen: boolean;
   schedule?: Schedule | null;
+  /** Initial values for a new schedule (ignored when editing). */
+  draft?: ScheduleDraft | null;
+  /**
+   * The saved transaction the draft came from: it becomes the first due date's payment. Without
+   * it, a draft that still matches its transaction hands the new schedule to `onLinkPending`.
+   */
+  idTransaction?: string | null;
+  /** The draft's transaction isn't saved yet — link it once it is. */
+  onLinkPending?: (schedule: Schedule) => void;
   onClose: () => void;
 }
 
@@ -50,13 +65,23 @@ const FREQUENCY_KEY: Record<ScheduleFrequency, string> = {
 };
 const EASE = [0.22, 1, 0.36, 1] as const;
 
-export function AddScheduleModal({ isOpen, schedule, onClose }: AddScheduleModalProps) {
+export function AddScheduleModal({
+  isOpen,
+  schedule,
+  draft,
+  idTransaction,
+  onLinkPending,
+  onClose,
+}: AddScheduleModalProps) {
   const session = useDialogSession(isOpen);
   return (
     <AddScheduleDialog
       key={session}
       isOpen={isOpen}
       schedule={schedule ?? null}
+      draft={draft ?? null}
+      idTransaction={idTransaction ?? null}
+      onLinkPending={onLinkPending}
       onClose={onClose}
     />
   );
@@ -65,10 +90,16 @@ export function AddScheduleModal({ isOpen, schedule, onClose }: AddScheduleModal
 function AddScheduleDialog({
   isOpen,
   schedule: scheduleProp,
+  draft: draftProp,
+  idTransaction: idTransactionProp,
+  onLinkPending,
   onClose,
 }: {
   isOpen: boolean;
   schedule: Schedule | null;
+  draft: ScheduleDraft | null;
+  idTransaction: string | null;
+  onLinkPending?: (schedule: Schedule) => void;
   onClose: () => void;
 }) {
   const { t } = useTranslation();
@@ -81,19 +112,24 @@ function AddScheduleDialog({
 
   // Frozen for this dialog's lifetime so the exit animation keeps the same content.
   const [schedule] = useState(scheduleProp);
-  const [type, setType] = useState<CategoryType>(schedule?.type ?? "expense");
-  const [categoryId, setCategoryId] = useState<string | null>(schedule?.idCategory ?? null);
-  const [subCategoryId, setSubCategoryId] = useState<string | null>(
-    schedule?.idSubCategory ?? null,
-  );
-  const [amount, setAmount] = useState(schedule?.amount ?? 0);
-  const [walletId, setWalletId] = useState<string | null>(schedule?.idWallet ?? null);
-  const [title, setTitle] = useState(schedule?.title ?? "");
-  const [notes, setNotes] = useState(schedule?.notes ?? "");
+  // Prefill from the transaction form ("Jadikan transaksi terjadwal"); new schedules only.
+  const [draft] = useState(scheduleProp ? null : draftProp);
+  const [idTransaction] = useState(idTransactionProp);
+  const initial = schedule ?? draft;
+  const [type, setType] = useState<CategoryType>(initial?.type ?? "expense");
+  const [categoryId, setCategoryId] = useState<string | null>(initial?.idCategory ?? null);
+  const [subCategoryId, setSubCategoryId] = useState<string | null>(initial?.idSubCategory ?? null);
+  const [amount, setAmount] = useState(initial?.amount ?? 0);
+  const [walletId, setWalletId] = useState<string | null>(initial?.idWallet ?? null);
+  const [title, setTitle] = useState(initial?.title ?? "");
+  const [notes, setNotes] = useState(initial?.notes ?? "");
   const [frequency, setFrequency] = useState<ScheduleFrequency>(schedule?.frequency ?? "monthly");
-  const [weekdays, setWeekdays] = useState<number[]>(schedule?.weekdays ?? []);
   const [startDate, setStartDate] = useState(() =>
-    schedule ? parseScheduleDate(schedule.startDate) : new Date(),
+    initial?.startDate ? parseScheduleDate(initial.startDate) : new Date(),
+  );
+  // From a transaction: its weekday is already picked if the user switches to weekly.
+  const [weekdays, setWeekdays] = useState<number[]>(
+    () => schedule?.weekdays ?? (draft ? [startDate.getDay()] : []),
   );
   const [isSaving, setIsSaving] = useState(false);
 
@@ -189,8 +225,19 @@ function AddScheduleDialog({
         await editSchedule(schedule.idSchedule, input);
         showToast(t("schedule.updateSuccess"), "success");
       } else {
-        await createSchedule(input);
+        // From a transaction: that transaction already pays the first due date, so it doesn't
+        // show up again as a bill — only while the type and start date still match it.
+        const fromTransaction =
+          !!draft &&
+          input.type === draft.type &&
+          input.startDate === draft.startDate &&
+          isDueOnStartDate(frequency, weekdays, startDate);
+        const created = await createSchedule(
+          input,
+          fromTransaction ? (idTransaction ?? undefined) : undefined,
+        );
         showToast(t("schedule.createSuccess"), "success");
+        if (fromTransaction && !idTransaction) onLinkPending?.(created);
       }
       onClose();
     } catch (error) {

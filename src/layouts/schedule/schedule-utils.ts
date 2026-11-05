@@ -43,6 +43,18 @@ export function parseScheduleDate(value: string): Date {
   return new Date(Number(match[1]), Number(match[2]) - 1, Number(match[3]));
 }
 
+/**
+ * True when the start date is itself the first due date (weekly: its weekday is picked) — what
+ * the backend requires to link the source transaction as the first occurrence's payment.
+ */
+export function isDueOnStartDate(
+  frequency: ScheduleFrequency,
+  weekdays: number[],
+  startDate: Date,
+): boolean {
+  return frequency !== "weekly" || weekdays.includes(startDate.getDay());
+}
+
 export function ruleFromSchedule(schedule: Schedule): RecurrenceRule {
   return {
     frequency: schedule.frequency,

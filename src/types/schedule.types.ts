@@ -24,3 +24,9 @@ export interface Schedule {
 }
 
 export type ScheduleInput = Omit<Schedule, "idSchedule" | "dayOfMonth" | "month" | "isActive">;
+
+/**
+ * Initial values for a new schedule (e.g. "Jadikan transaksi terjadwal" in the transaction
+ * form). The recurrence rule is left out on purpose — the user picks it in the schedule form.
+ */
+export type ScheduleDraft = Partial<Omit<ScheduleInput, "frequency" | "weekdays">>;
