@@ -128,7 +128,7 @@ Long labels in tight places (tiles, chips) are one line and `truncate`. They nev
   - **`CategoryPickerRow`**: the category + subcategory trigger.
   - **`PickerField`**: a labelled select-style trigger with a chevron (date & time, pickers).
   - **`WalletChipGroup`**: a labelled single-select row of wallet chips (`Chip variant="outline"`), with `disabledId` for the other side of a transfer.
-  - **`AmountCalculatorKeypad`**: rows `789÷ / 456× / 123− / 000 0 , +`. Passing `confirmLabel` + `onConfirm` turns the last row into ⌫ + confirm.
+  - **`AmountCalculatorKeypad`**: rows `123÷ / 456× / 789− / 000 0 , +` (phone-style, 1-2-3 on top; the pen still shows 7-8-9 on top). Passing `confirmLabel` + `onConfirm` turns the last row into ⌫ + confirm.
   - **`Chip variant="outline"`**: a white chip with a stroke (wallet pickers). The default `soft` is for filters and quick picks.
   - **`SegmentedControl thumbClassName`**: overrides the sliding thumb, e.g. a primary-soft thumb on a white track.
 - **`ReorderRow`**: one row of an "Atur urutan" list: a grip for dragging plus ↑/↓ buttons. Wallet, category and budget reorder items wrap it. `moveByIndex` and `moveItem` in `utils/reorder.ts` do the list moves.

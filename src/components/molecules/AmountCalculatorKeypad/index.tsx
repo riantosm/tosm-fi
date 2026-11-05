@@ -14,14 +14,16 @@ interface AmountCalculatorKeypadProps {
   confirmLabel?: string;
   onConfirm?: () => void;
   isConfirming?: boolean;
+  /** Dims and blocks the confirm button, e.g. while nothing has been entered yet. */
+  confirmDisabled?: boolean;
   /** Decimal key label — "," for id/jp style locales, "." otherwise. */
   decimalLabel?: string;
 }
 
 const ROWS: { keys: string[]; operator: CalculatorOperator; operatorLabel: string }[] = [
-  { keys: ["7", "8", "9"], operator: "÷", operatorLabel: "÷" },
+  { keys: ["1", "2", "3"], operator: "÷", operatorLabel: "÷" },
   { keys: ["4", "5", "6"], operator: "×", operatorLabel: "×" },
-  { keys: ["1", "2", "3"], operator: "-", operatorLabel: "−" },
+  { keys: ["7", "8", "9"], operator: "-", operatorLabel: "−" },
 ];
 
 export function AmountCalculatorKeypad({
@@ -33,6 +35,7 @@ export function AmountCalculatorKeypad({
   confirmLabel,
   onConfirm,
   isConfirming = false,
+  confirmDisabled = false,
   decimalLabel = ",",
 }: AmountCalculatorKeypadProps) {
   const { t } = useTranslation();
@@ -73,8 +76,11 @@ export function AmountCalculatorKeypad({
         <button
           type="button"
           onClick={onConfirm}
-          disabled={isConfirming}
-          className="pressable col-span-2 flex h-[52px] items-center justify-center gap-2 rounded-control bg-primary text-[14.5px] font-semibold text-primary-fg shadow-[0_6px_18px_color-mix(in_oklab,var(--primary)_30%,transparent)] hover:brightness-[1.06] disabled:opacity-70 sm:h-14"
+          disabled={isConfirming || confirmDisabled}
+          className={cn(
+            "pressable col-span-2 flex h-[52px] items-center justify-center gap-2 rounded-control bg-primary text-[14.5px] font-semibold text-primary-fg shadow-[0_6px_18px_color-mix(in_oklab,var(--primary)_30%,transparent)] hover:brightness-[1.06] disabled:opacity-70 sm:h-14",
+            confirmDisabled && !isConfirming && "disabled:cursor-not-allowed disabled:opacity-55 disabled:hover:brightness-100",
+          )}
         >
           {isConfirming && <IconLoader className="size-4 animate-spin" />}
           {confirmLabel}

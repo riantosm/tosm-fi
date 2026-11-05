@@ -142,6 +142,8 @@ function BalanceCorrectionFields({
   const baseBalance = transaction ? wallet.balance - transaction.amount : wallet.balance;
 
   async function handleSave(newBalance: number) {
+    // A new correction waits until a balance is entered, so the starting 0 is never saved by accident.
+    if (!isTouched) return;
     const delta = newBalance - baseBalance;
     if (delta === 0 && !transaction) {
       onClose();
@@ -177,8 +179,10 @@ function BalanceCorrectionFields({
     }
   }
 
-  const calc = useAmountCalculator(wallet.balance, { onEnter: (value) => void handleSave(value) });
+  // New correction starts at 0 so the actual balance can be typed right away; editing keeps the corrected balance.
+  const calc = useAmountCalculator(transaction ? wallet.balance : 0, { onEnter: (value) => void handleSave(value) });
 
+  const isTouched = Boolean(transaction) || calc.isDirty;
   const delta = calc.value - baseBalance;
   const DeltaIcon = delta < 0 ? LuTrendingDown : LuTrendingUp;
 
@@ -228,19 +232,21 @@ function BalanceCorrectionFields({
           }
           footer={
             <span
-              key={delta === 0 ? "same" : delta < 0 ? "down" : "up"}
+              key={!isTouched ? "idle" : delta === 0 ? "same" : delta < 0 ? "down" : "up"}
               className={cn(
                 "mt-1.5 inline-flex max-w-full animate-fade-in items-center gap-1.5 rounded-full px-2.5 py-1 text-[12px] font-semibold",
-                delta === 0
+                !isTouched || delta === 0
                   ? "bg-surface text-text-3"
                   : delta < 0
                     ? "bg-expense-soft text-expense-text"
                     : "bg-income-soft text-income-text",
               )}
             >
-              {delta !== 0 && <DeltaIcon className="size-3.5 shrink-0" />}
+              {isTouched && delta !== 0 && <DeltaIcon className="size-3.5 shrink-0" />}
               <span className="truncate">
-                {delta === 0
+                {!isTouched
+                  ? t("wallet.enterActualBalance")
+                  : delta === 0
                   ? t("wallet.noDifference")
                   : t("wallet.differenceNote", { amount: formatSigned(delta) })}
               </span>
@@ -279,6 +285,7 @@ function BalanceCorrectionFields({
           confirmLabel={t("wallet.saveCorrection")}
           onConfirm={() => void handleSave(calc.value)}
           isConfirming={isSaving}
+          confirmDisabled={!isTouched}
         />
       </div>
 

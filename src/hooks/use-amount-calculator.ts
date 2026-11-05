@@ -60,61 +60,69 @@ export function useAmountCalculator(
   const [terms, setTerms] = useState<string[]>([initialValue !== 0 ? String(initialValue) : "0"]);
   const [awaitingNewValue, setAwaitingNewValue] = useState(false);
 
+  // True once the user changed the input (keypad or keyboard), e.g. to hold a save until then.
+  const [isDirty, setIsDirty] = useState(false);
+
+  function updateTerms(next: string[]) {
+    setTerms(next);
+    setIsDirty(true);
+  }
+
   function handleDigit(digit: string) {
     if (awaitingNewValue) {
-      setTerms([...terms, digit]);
+      updateTerms([...terms, digit]);
       setAwaitingNewValue(false);
       return;
     }
     const last = terms[terms.length - 1];
-    setTerms([...terms.slice(0, -1), last === "0" ? digit : last + digit]);
+    updateTerms([...terms.slice(0, -1), last === "0" ? digit : last + digit]);
   }
 
   function handleDecimal() {
     if (awaitingNewValue) {
-      setTerms([...terms, "0."]);
+      updateTerms([...terms, "0."]);
       setAwaitingNewValue(false);
       return;
     }
     const last = terms[terms.length - 1];
     if (last.includes(".")) return;
-    setTerms([...terms.slice(0, -1), `${last}.`]);
+    updateTerms([...terms.slice(0, -1), `${last}.`]);
   }
 
   function handleTripleZero() {
     if (awaitingNewValue) {
-      setTerms([...terms, "0"]);
+      updateTerms([...terms, "0"]);
       setAwaitingNewValue(false);
       return;
     }
     const last = terms[terms.length - 1];
     if (last === "0") return;
-    setTerms([...terms.slice(0, -1), `${last}000`]);
+    updateTerms([...terms.slice(0, -1), `${last}000`]);
   }
 
   function handleBackspace() {
     const last = terms[terms.length - 1];
 
     if (isOperator(last)) {
-      setTerms(terms.slice(0, -1));
+      updateTerms(terms.slice(0, -1));
       setAwaitingNewValue(false);
       return;
     }
     if (last.length > 1) {
-      setTerms([...terms.slice(0, -1), last.slice(0, -1)]);
+      updateTerms([...terms.slice(0, -1), last.slice(0, -1)]);
       return;
     }
     if (terms.length === 1) {
-      setTerms(["0"]);
+      updateTerms(["0"]);
       return;
     }
-    setTerms(terms.slice(0, -1));
+    updateTerms(terms.slice(0, -1));
     setAwaitingNewValue(false);
   }
 
   function handleOperator(operator: CalculatorOperator) {
     const last = terms[terms.length - 1];
-    setTerms(isOperator(last) ? [...terms.slice(0, -1), operator] : [...terms, operator]);
+    updateTerms(isOperator(last) ? [...terms.slice(0, -1), operator] : [...terms, operator]);
     setAwaitingNewValue(true);
   }
 
@@ -192,6 +200,7 @@ export function useAmountCalculator(
     displayValue,
     expressionDisplay,
     hasExpression: terms.length > 1,
+    isDirty,
     /** Locale decimal separator, for the keypad's decimal key label. */
     decimalSeparator: getDecimalSeparator(locale),
     handleDigit,
