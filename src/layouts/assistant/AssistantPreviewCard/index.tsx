@@ -9,6 +9,7 @@ import {
   LuCircleAlert,
   LuCircleCheck,
   LuCircleX,
+  LuPencil,
   LuScale,
   LuTag,
   LuTrendingUpDown,
@@ -40,6 +41,8 @@ interface AssistantPreviewCardProps {
   instruments: Instrument[];
   onSave: () => void;
   onCancel: () => void;
+  /** Opens the manual editor for a row; rows are only tappable while the preview is pending. */
+  onEditDraft?: (draft: AssistantDraft) => void;
 }
 
 const TOTAL_CLASS: Record<TxAmountTone, string> = {
@@ -102,6 +105,7 @@ export function AssistantPreviewCard({
   instruments,
   onSave,
   onCancel,
+  onEditDraft,
 }: AssistantPreviewCardProps) {
   const { t } = useTranslation();
   const { format } = useCurrency();
@@ -129,6 +133,7 @@ export function AssistantPreviewCard({
   const { drafts, status } = message;
   const errorCount = drafts.filter((d) => d.error).length;
   const isPending = status === "pending" || status === "saving";
+  const isEditable = status === "pending" && Boolean(onEditDraft);
 
   const now = new Date();
   const today = dayKey(now.toISOString());
@@ -289,16 +294,42 @@ export function AssistantPreviewCard({
       />
     );
 
+    const edit = () => onEditDraft?.(draft);
     return (
       <div
         key={draft.idDraft}
+        role={isEditable ? "button" : undefined}
+        tabIndex={isEditable ? 0 : undefined}
+        aria-label={isEditable ? t("assistant.editRow", { title }) : undefined}
+        onClick={isEditable ? edit : undefined}
+        onKeyDown={
+          isEditable
+            ? (event) => {
+                if (event.key === "Enter" || event.key === " ") {
+                  event.preventDefault();
+                  edit();
+                }
+              }
+            : undefined
+        }
         className={cn(
-          "rounded-control transition-colors duration-300",
+          "group/draft relative rounded-control transition-colors duration-300",
           draft.error && "border border-expense bg-expense-soft px-2.5 pb-2.5",
           !draft.error && chips.length > 0 && "bg-primary-soft px-2.5 pb-2.5",
+          isEditable &&
+            "-mx-2 cursor-pointer px-2 outline-none hover:bg-surface-2 focus-visible:ring-2 focus-visible:ring-primary active:scale-[0.995]",
+          isEditable && draft.error && "hover:bg-expense-soft",
         )}
       >
         {row}
+        {isEditable && (
+          <span
+            aria-hidden="true"
+            className="pointer-events-none absolute top-1.5 left-1 flex size-5 items-center justify-center rounded-full bg-surface text-text-2 opacity-0 shadow-card transition-opacity duration-200 group-hover/draft:opacity-100 group-focus-visible/draft:opacity-100 [&_svg]:size-3"
+          >
+            <LuPencil />
+          </span>
+        )}
         {draft.notes && (
           <p className="truncate pb-1.5 pl-14 text-[12.5px] text-text-2">
             {t("assistant.noteLabel", { note: draft.notes })}
@@ -341,6 +372,12 @@ export function AssistantPreviewCard({
         <h3 className="font-display text-[17px] font-semibold text-text sm:text-[18px]">
           {t("assistant.previewTitle")}
         </h3>
+        {isEditable && (
+          <span className="mt-0.5 flex items-center gap-1.5 text-[12px] text-text-3 [&_svg]:size-3">
+            <LuPencil />
+            {t("assistant.editHint")}
+          </span>
+        )}
       </div>
 
       {errorCount > 0 && isPending && (

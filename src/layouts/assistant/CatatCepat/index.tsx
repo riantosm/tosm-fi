@@ -21,6 +21,7 @@ import { useHistoryExamples } from "@/hooks/use-history-examples";
 import { useLanguage } from "@/hooks/use-language";
 import { DESKTOP_QUERY, useMediaQuery } from "@/hooks/use-media-query";
 import { useQuickAdd } from "@/hooks/use-quick-add";
+import { AssistantDraftEditModal } from "@/layouts/assistant/AssistantDraftEditModal";
 import { AssistantErrorBanner } from "@/layouts/assistant/AssistantErrorBanner";
 import { AssistantPreviewCard } from "@/layouts/assistant/AssistantPreviewCard";
 import {
@@ -68,6 +69,9 @@ export function CatatCepat() {
         : EXAMPLE_KEYS.map((key) => t(`assistant.${key}`));
 
   const [isDatePickerOpen, setDatePickerOpen] = useState(false);
+  // The row being edited by hand; kept after closing so the dialog can animate out.
+  const [editing, setEditing] = useState<{ previewId: string; draft: AssistantDraft } | null>(null);
+  const [isEditOpen, setEditOpen] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const composerRef = useRef<ChatComposerHandle>(null);
 
@@ -75,15 +79,15 @@ export function CatatCepat() {
     if (isAssistantOpen) ensureData();
   }, [isAssistantOpen, ensureData]);
 
-  // Escape closes the panel unless a dialog (date picker) sits on top of it.
+  // Escape closes the panel unless a dialog (date picker, row editor) sits on top of it.
   useEffect(() => {
-    if (!isAssistantOpen || isDatePickerOpen) return;
+    if (!isAssistantOpen || isDatePickerOpen || isEditOpen) return;
     const onKey = (event: KeyboardEvent) => {
       if (event.key === "Escape") closeAssistant();
     };
     document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);
-  }, [isAssistantOpen, isDatePickerOpen, closeAssistant]);
+  }, [isAssistantOpen, isDatePickerOpen, isEditOpen, closeAssistant]);
 
   // The phone screen covers the page: stop it from scrolling underneath.
   useEffect(() => {
@@ -260,6 +264,14 @@ export function CatatCepat() {
               instruments={chat.instruments}
               onSave={() => void chat.save()}
               onCancel={chat.cancel}
+              onEditDraft={
+                chat.isThinking
+                  ? undefined
+                  : (draft) => {
+                      setEditing({ previewId: message.id, draft });
+                      setEditOpen(true);
+                    }
+              }
             />
           </ChatEntry>
         );
@@ -437,6 +449,19 @@ export function CatatCepat() {
           </m.aside>
         )}
       </AnimatePresence>
+
+      <AssistantDraftEditModal
+        isOpen={isEditOpen && isAssistantOpen}
+        draft={editing?.draft ?? null}
+        wallets={chat.wallets}
+        categories={chat.categories}
+        instruments={chat.instruments}
+        onClose={() => setEditOpen(false)}
+        onApply={(draft) => {
+          if (editing) chat.updateDraft(editing.previewId, draft);
+          setEditOpen(false);
+        }}
+      />
 
       <DateTimePickerModal
         isOpen={isDatePickerOpen}

@@ -77,6 +77,8 @@ export type AssistantMessage =
       text: string;
       quickReplies?: AssistantQuickReply[];
       examples?: boolean;
+      /** The batch was cancelled here: nothing said before it is sent to the assistant again. */
+      endsBatch?: boolean;
     }
   | {
       id: string;

@@ -29,9 +29,17 @@ function toLocalDateTime(date: Date): string {
   return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())} ${pad(date.getHours())}:${pad(date.getMinutes())}`;
 }
 
+/**
+ * The conversation the assistant reasons over. It starts after the last
+ * closed batch (saved, or cancelled), otherwise the model reads the old
+ * messages again and brings those transactions back as new drafts.
+ */
 function toHistory(messages: AssistantMessage[]): AssistantRequest["history"] {
   const history: AssistantRequest["history"] = [];
-  for (const message of messages) {
+  const lastClosed = messages.findLastIndex(
+    (m) => m.role === "assistant" && (m.kind === "success" || (m.kind === "text" && m.endsBatch)),
+  );
+  for (const message of messages.slice(lastClosed + 1)) {
     if (message.role === "user") {
       if (!message.failed) history.push({ role: "user", text: message.payload ?? message.text });
     } else if ((message.kind === "text" || message.kind === "preview") && message.text) {
@@ -165,7 +173,13 @@ export function useAssistantChat() {
     setDrafts([]);
     setMessages((list) => [
       ...list,
-      { id: newMessageId(), role: "assistant", kind: "text", text: t("assistant.cancelledReply") },
+      {
+        id: newMessageId(),
+        role: "assistant",
+        kind: "text",
+        text: t("assistant.cancelledReply"),
+        endsBatch: true,
+      },
     ]);
   }, [pendingPreview, setPreviewStatus, t]);
 
@@ -297,6 +311,19 @@ export function useAssistantChat() {
     [send],
   );
 
+  /** Manual edit of one row of the pending preview (tap a preview row). Nothing is saved yet. */
+  const updateDraft = useCallback(
+    (previewId: string, draft: AssistantDraft) => {
+      const preview = messagesRef.current.find((m) => m.id === previewId);
+      if (preview?.role !== "assistant" || preview.kind !== "preview") return;
+      if (preview.status !== "pending") return;
+      const drafts = preview.drafts.map((d) => (d.idDraft === draft.idDraft ? draft : d));
+      setPreviewStatus(previewId, "pending", { drafts });
+      setDrafts(drafts);
+    },
+    [setPreviewStatus],
+  );
+
   const reset = useCallback(() => {
     sessionRef.current += 1;
     setMessages([]);
@@ -317,6 +344,7 @@ export function useAssistantChat() {
     pickDate,
     save,
     cancel,
+    updateDraft,
     reset,
   };
 }
